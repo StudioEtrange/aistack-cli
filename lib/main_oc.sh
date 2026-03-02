@@ -79,23 +79,20 @@ case "$sub_command" in
         opencode_launcher_manage
 
         local folder=
-        case "$1" in
-            "--" | "");;
-            *)
-                folder="$1"
-                 if [ -n "$folder" ]; then
-                    if [ -d "$folder" ]; then
-                        echo "change to context folder : $folder"
-                        cd "$folder"
-                    else
-                        echo "Error: Directory '$folder' not found"
-                        exit 1
-                    fi
-                fi
+        if [ -n "$1" ] && [ "$1" != "--" ]; then
+            folder="$1"
+            if [ -d "$folder" ]; then
+                echo "change to context folder : $folder"
+                cd "$folder" || exit 1
                 shift
-                ;;
-        esac
-        opencode_launch
+            else
+                echo "Error: Directory '$folder' not found"
+                exit 1
+            fi
+        fi
+        [ "$1" = "--" ] && shift
+
+        opencode_launch "$@"
         ;;
     mcp)
         mcp_server_manage "$1" "$2" "$command" "$3"
