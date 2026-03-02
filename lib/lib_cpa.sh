@@ -81,9 +81,7 @@ cpa_launcher_manage() {
 
 cpa_settings_configure() {
 
-    $STELLA_API feature_info "cliproxyapi" "CPA"
-
-    [ ! -f "${IATOOLS_CLIPROXYAPI_CONFIG_FILE}" ] && cp -f "$CPA_FEAT_INSTALL_ROOT/config.example.yaml" "$IATOOLS_CLIPROXYAPI_CONFIG_FILE"
+   [ ! -f "${IATOOLS_CLIPROXYAPI_CONFIG_FILE}" ] && cp -f "$CPA_FEAT_INSTALL_ROOT/config.example.yaml" "$IATOOLS_CLIPROXYAPI_CONFIG_FILE"
     # TODO
     echo "add some default settings :"
     cpa_settings_set_host "localhost"
@@ -107,7 +105,7 @@ cpa_info() {
         local scheme="http"
         [ "$tls" = "true" ] && scheme="https"
         local api_uri="${scheme}://$(cpa_get_config ".host"):$(cpa_get_config ".port")"
-                
+
         echo "Management UI : ${api_uri}/management.html"
         echo "Management key : $(cat "$IATOOLS_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE")"
 
