@@ -1,18 +1,18 @@
 cpa_path() {
-    # iatools path for cli proxy api
-    export IATOOLS_CLIPROXYAPI_CONFIG_HOME="${HOME}/.cli-proxy-api"
-    mkdir -p "${IATOOLS_CLIPROXYAPI_CONFIG_HOME}"
+    # aistack path for cli proxy api
+    export AISTACK_CLIPROXYAPI_CONFIG_HOME="${HOME}/.cli-proxy-api"
+    mkdir -p "${AISTACK_CLIPROXYAPI_CONFIG_HOME}"
 
-    export IATOOLS_CLIPROXYAPI_LAUNCHER_HOME="${IATOOLS_LAUNCHER_HOME}/cli-proxy-api"
-    mkdir -p "${IATOOLS_CLIPROXYAPI_LAUNCHER_HOME}"
+    export AISTACK_CLIPROXYAPI_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/cli-proxy-api"
+    mkdir -p "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}"
 
 
     # cli proxy api specific paths
-    export IATOOLS_CLIPROXYAPI_CONFIG_FILE="${IATOOLS_CLIPROXYAPI_CONFIG_HOME}/config.yaml"
+    export AISTACK_CLIPROXYAPI_CONFIG_FILE="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/config.yaml"
     
-    export IATOOLS_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE="${IATOOLS_CLIPROXYAPI_CONFIG_HOME}/management-api-key"
+    export AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/management-api-key"
 
-    export CPA_FEAT_INSTALL_ROOT="$IATOOLS_ISOLATED_DEPENDENCIES_ROOT/cli-proxy-api"
+    export CPA_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_DEPENDENCIES_ROOT/cli-proxy-api"
     mkdir -p "${CPA_FEAT_INSTALL_ROOT}"
     
 }
@@ -69,19 +69,19 @@ cpa_uninstall() {
 cpa_launcher_manage() {
     if [ "${CPA_TEST_FEATURE}" = "1" ]; then
         # launcher based on a symbolic link - test link does not exist OR is not valid
-        if [ ! -L "${IATOOLS_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api" ] || [ ! -e "${IATOOLS_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api" ]; then
+        if [ ! -L "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api" ] || [ ! -e "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api" ]; then
             echo "Create an CLIProxyAPI launcher"
-            ln -fsv "${CPA_FEAT_INSTALL_ROOT}/cli-proxy-api" "${IATOOLS_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+            ln -fsv "${CPA_FEAT_INSTALL_ROOT}/cli-proxy-api" "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
         fi
     else
-        rm -f "${IATOOLS_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+        rm -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
     fi
 }
 
 
 cpa_settings_configure() {
 
-   [ ! -f "${IATOOLS_CLIPROXYAPI_CONFIG_FILE}" ] && cp -f "$CPA_FEAT_INSTALL_ROOT/config.example.yaml" "$IATOOLS_CLIPROXYAPI_CONFIG_FILE"
+   [ ! -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ] && cp -f "$CPA_FEAT_INSTALL_ROOT/config.example.yaml" "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
     # TODO
     echo "add some default settings :"
     cpa_settings_set_host "localhost"
@@ -93,13 +93,13 @@ cpa_settings_configure() {
 }
 
 cpa_settings_remove() {
-    rm -Rf "$IATOOLS_CLIPROXYAPI_CONFIG_HOME"
+    rm -Rf "$AISTACK_CLIPROXYAPI_CONFIG_HOME"
 }
 
 
 cpa_info() {
-    if [ -f "$IATOOLS_CLIPROXYAPI_CONFIG_FILE" ]; then
-        echo "CLIProxyAPI configuration file : $IATOOLS_CLIPROXYAPI_CONFIG_FILE"
+    if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+        echo "CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
 
         local tls="$(cpa_get_config ".tls.enable")"
         local scheme="http"
@@ -107,21 +107,21 @@ cpa_info() {
         local api_uri="${scheme}://$(cpa_get_config ".host"):$(cpa_get_config ".port")"
 
         echo "Management UI : ${api_uri}/management.html"
-        echo "Management key : $(cat "$IATOOLS_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE")"
+        echo "Management key : $(cat "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE")"
 
         echo "CLIProxyAPI API endpoint : $api_uri" 
         echo "CLIProxyAPI API keys list :" 
         cpa_settings_api_key_list
     else
-        echo "No CLIProxyAPI configuration file found. $IATOOLS_CLIPROXYAPI_CONFIG_FILE"
+        echo "No CLIProxyAPI configuration file found. $AISTACK_CLIPROXYAPI_CONFIG_FILE"
     fi
 }
 
 cpa_launch() {
     local list_args=()
 
-    if [ -f "$IATOOLS_CLIPROXYAPI_CONFIG_FILE" ]; then
-        list_args+=("--config" "$IATOOLS_CLIPROXYAPI_CONFIG_FILE")
+    if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+        list_args+=("--config" "$AISTACK_CLIPROXYAPI_CONFIG_FILE")
     fi
 
     for arg in "$@"; do
@@ -162,7 +162,7 @@ cpa_login_qwen_oauth() {
 # generic config management -----------------
 cpa_remove_config() {
     local key_path="$1"
-    yaml_del_key_from_file "$IATOOLS_CLIPROXYAPI_CONFIG_FILE" "$key_path"
+    yaml_del_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$key_path"
 }
 
 cpa_set_config() {
@@ -175,7 +175,7 @@ cpa_set_config() {
         *)  key_path=".$key_path" ;;
     esac
 
-    yaml_set_key_into_file "$IATOOLS_CLIPROXYAPI_CONFIG_FILE" "$key_path" "$value" "$string_style"
+    yaml_set_key_into_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$key_path" "$value" "$string_style"
 }
 
 cpa_get_config() {
@@ -186,7 +186,7 @@ cpa_get_config() {
         *)  key_path=".$key_path" ;;
     esac
 
-    yaml_get_key_from_file "$IATOOLS_CLIPROXYAPI_CONFIG_FILE" "$key_path"
+    yaml_get_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$key_path"
 }
 
 
@@ -212,14 +212,14 @@ cpa_settings_management_api_disable() {
 cpa_settings_management_api_key_reset() {
     cpa_set_config ".remote-management.secret-key" "" "double"
 
-    echo "" > "$IATOOLS_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE"
+    echo "" > "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE"
 }
 
 cpa_settings_management_api_key_create() {
     local key="$($STELLA_API generate_password 12 "[:alnum:]")"
     cpa_settings_management_api_key_set "$key"
 
-    echo "$key" > "$IATOOLS_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE"
+    echo "$key" > "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE"
 
     echo "New management API key created : $key"
     echo "WARN : management API key is hashed in config file, so save it now"
@@ -245,7 +245,7 @@ cpa_settings_api_key_create() {
 cpa_settings_api_key_add() {
     local key="$1"
 
-    if ! KEY="$key" yq eval -i '.["api-keys"] += [strenv(KEY)] | .["api-keys"][] style="double"' "$IATOOLS_CLIPROXYAPI_CONFIG_FILE"; then
+    if ! KEY="$key" yq eval -i '.["api-keys"] += [strenv(KEY)] | .["api-keys"][] style="double"' "$AISTACK_CLIPROXYAPI_CONFIG_FILE"; then
         echo "ERROR: Failed to add API key to configuration" >&2
         return 1
     fi
@@ -254,17 +254,17 @@ cpa_settings_api_key_add() {
 cpa_settings_api_key_del() {
     local key="$1"
 
-    [ -f "$IATOOLS_CLIPROXYAPI_CONFIG_FILE" ] || { echo "ERROR: file $IATOOLS_CLIPROXYAPI_CONFIG_FILE not found" >&2; return 1; }
+    [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ] || { echo "ERROR: file $AISTACK_CLIPROXYAPI_CONFIG_FILE not found" >&2; return 1; }
 
     KEY="$key" yq eval -i '
         .["api-keys"] |= (
         (. // [])
         | map(select(. != strenv(KEY)))
         )
-    ' "$IATOOLS_CLIPROXYAPI_CONFIG_FILE"
+    ' "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
 }
 
 
 cpa_settings_api_key_list() {
-    yaml_get_key_from_file "$IATOOLS_CLIPROXYAPI_CONFIG_FILE" ".api-keys" 
+    yaml_get_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ".api-keys" 
 }

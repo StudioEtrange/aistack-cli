@@ -12,7 +12,7 @@ An open-source AI agent that brings the power of Gemini directly into your termi
 
 ## NOTES
 
-* Installing Gemini CLI with iatools set some convenient default settings
+* Installing Gemini CLI with aistack set some convenient default settings
   * disable usage statistics
   * gemini-cli will read AGENTS.md by default
 * Gemini CLI supports MCP Prompts as slash commands

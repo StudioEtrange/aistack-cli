@@ -1,8 +1,8 @@
-# IATools
+# AIStack CLI
 
-IATools is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode` and various MCP servers. The main goal is to provide a convenient way to install and configure AI tools, ensuring minimal system, to test or use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode` and various MCP servers. The main goal is to provide a convenient way to install and configure AI tools, ensuring minimal system, to test or use them.
 
-## Key Features of IATools
+## Key Features of AIStack
 
 *   **AI Tool Management**: Streamlines the installation and configuration of AI agents like `gemini-cli` and `opencode`. Provides some minimal convenient default settings.
 *   **MCP Server Integration**: Easily configure and manage connections to various MCP (Model Context Protocol) servers.
@@ -18,13 +18,13 @@ IATools is an experimental swiss-knife command-line application designed to stre
 
 ### Commands
 
-`iatools` provides a simple command-line interface to manage your tools and environments.
+`aistack` provides a simple command-line interface to manage your tools and environments.
 
 | Command | Description |
 | - | - |
 | **init** | Install/Reinstall dependencies |
 | **help** | Display help message |
-| **shell** | Enter a sub-shell with the `iatools` environment and paths configured |
+| **shell** | Enter a sub-shell with the `aistack` environment and paths configured |
 
 ### How-To
 
@@ -32,28 +32,28 @@ IATools is an experimental swiss-knife command-line application designed to stre
 **Install and configure gemini-cli from scratch**
 
 ```
-git clone https://github.com/StudioEtrange/iatools
-cd iatools
-./iatools init
-./iatools gc install
-./iatools gc register bash
+git clone https://github.com/StudioEtrange/aistack
+cd aistack
+./aistack init
+./aistack gc install
+./aistack gc register bash
 ```
 
 **Register local MCP server calculator**
 ```
-cd iatools
-./iatools mcp calculator install
+cd aistack
+./aistack mcp calculator install
 ```
 
 **Configure the underlying nodejs to add a local npm registry**
 ```
-cd iatools
-./iatools npm-config set registry https://registry.local.org/
+cd aistack
+./aistack npm-config set registry https://registry.local.org/
 ```
 
 ## Directory Structure
 
-*   `iatools/`: Contains the main application logic for the `iatools` wrapper script.
+*   `aistack/`: Contains the main application logic for the `aistack` wrapper script.
 *   `lib/`: ITools internal libraries and code.
 *   `pool/`: Contains configuration files templates and framework.
 *   `workspace/`: The directory where all isolated environments and installed software ("features") are stored.
@@ -78,7 +78,7 @@ See [CLIProxyAPI](doc/cliproxyapi.md)
 
 ### MCP Servers
 
-IATools simplifies connecting to MCP (Model Context Protocol) servers, allowing your AI agents to interact with external tools and services.
+AIStack simplifies connecting to MCP (Model Context Protocol) servers, allowing your AI agents to interact with external tools and services.
 * **Catalogs**: [MCPMarket](https://mcpmarket.com/), [PulseMCP](https://www.pulsemcp.com/servers), [MCPServers.org](https://mcpservers.org/)
 
 **Supported MCP Servers:**
@@ -97,7 +97,7 @@ IATools simplifies connecting to MCP (Model Context Protocol) servers, allowing 
 
 ### Notes on underlying Framework: Stella
 
-IATools leverages the **Stella** framework for its core functionality. Stella provides the infrastructure for application structure, environment isolation, and package management. **Package Management**: Stella uses a concept of "Features" (software packages) which are defined by "Recipes" (Bash scripts). `iatools` uses this system to provide all the tools it manages. The recipes are located in `pool/stella/nix/pool/feature-recipe/`.
+AIStack leverages the **Stella** framework for its core functionality. Stella provides the infrastructure for application structure, environment isolation, and package management. **Package Management**: Stella uses a concept of "Features" (software packages) which are defined by "Recipes" (Bash scripts). `aistack` uses this system to provide all the tools it manages. The recipes are located in `pool/stella/nix/pool/feature-recipe/`.
 
 ### Notes on using nodejs, npx, npm
 
@@ -118,7 +118,7 @@ IATools leverages the **Stella** framework for its core functionality. Stella pr
           "@wonderwhy-er/desktop-commander"
         ],
         "env": {
-            "PATH": "${IATOOLS_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}"
+            "PATH": "${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}"
         }
       }
     }
@@ -131,7 +131,7 @@ IATools leverages the **Stella** framework for its core functionality. Stella pr
   {
     "mcpServers": {
       "context7": {
-        "command": "${IATOOLS_MCP_LAUNCHER_HOME}/context7"
+        "command": "${AISTACK_MCP_LAUNCHER_HOME}/context7"
       }
     }
   }
@@ -139,7 +139,7 @@ IATools leverages the **Stella** framework for its core functionality. Stella pr
   * script launcher for context7 :
   ```
   #!/bin/sh
-  export PATH="/home/nomorgan/workspace/iatools/workspace/isolated_dependencies/nodejs/bin/:${PATH}"
+  export PATH="/home/nomorgan/workspace/aistack/workspace/isolated_dependencies/nodejs/bin/:${PATH}"
   exec "npx" -y @upstash/context7-mcp --api-key "${CONTEXT7_API_KEY}"
   ```
 

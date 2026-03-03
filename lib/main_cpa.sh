@@ -1,4 +1,4 @@
-if ! check_requirements "yq"; then echo " -- ERROR : yq missing, launch iatools init"; exit 1; fi;
+if ! check_requirements "yq"; then echo " -- ERROR : yq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
 case "$sub_command" in
@@ -31,9 +31,9 @@ case "$sub_command" in
         cpa_info
         ;;
     show-config)
-        if [ -f "$IATOOLS_CLIPROXYAPI_CONFIG_FILE" ]; then
-            echo "Current CLIProxyAPI configuration file : $IATOOLS_CLIPROXYAPI_CONFIG_FILE"
-            cat "$IATOOLS_CLIPROXYAPI_CONFIG_FILE"
+        if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+            echo "Current CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
+            cat "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
         else
             echo "No CLIProxyAPI configuration file found."
         fi

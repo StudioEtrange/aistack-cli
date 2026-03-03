@@ -19,12 +19,12 @@
   * 1.connect with SSH to remote host
     ```
     cd $HOME
-    git clone https://github.com/StudioEtrange/iatools
+    git clone https://github.com/StudioEtrange/aistack
     ```
 
   * 2.build custom glibc runtime. Default parameters are suitable for rhel/centos 7 with glibc2.28 with gcc 8.5.0 for kernel 3.10
     ```
-    cd $HOME/iatools/pool/scripts
+    cd $HOME/aistack/pool/scripts
     export NB_PROC="AUTO" # AUTO to use all your processor at build time
     ./build-custom-glibc-runtime.sh $HOME/custom-glibc2228-runtime
 
@@ -38,7 +38,7 @@
 
   * 3.install a hook to patch vs code server at each SSH connection
     ```
-    cd $HOME/iatools/pool/scripts
+    cd $HOME/aistack/pool/scripts
     ./install-vscode-server-patch-hook.sh
     # To uninstall hook use : ./install-vscode-server-patch-hook.sh uninstall
     ```

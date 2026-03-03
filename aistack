@@ -17,27 +17,27 @@ STELLA_LOG_STATE="OFF"
 # --- USAGE ---
 usage() {
     cat << EOF
-IATools
+AIStack CLI
 
-Usage: iatools [options]
+Usage: aistack [options]
 
 Options:
     init                    Install/Reinstall dependencies.
-    uninstall               Uninstall iatools, all tools, mcp servers and unregister everything from PATH.
+    uninstall               Uninstall aistack, all tools, mcp servers and unregister everything from PATH.
     help                    Display this help message.
-    shell                   Enter iatools context and path.
+    shell                   Enter aistack context and path.
     ----
     gc : gemini-cli - https://google-gemini.github.io/gemini-cli
-    gc install [@version]           Install and configure Gemini CLI. (main versions are latest, nightly, preview) (when asked to relaunch gemini cli, use 'iatools gc launch' command)
-    gc uninstall                    Uninstalling Gemini CLI and unregister Gemini CLI PATH (keep all configuration unchanged, to remove configuration use 'iatools gc reset' command)
-    gc configure                    Configure Gemini CLI. ('iatools gc install' include configuration)
+    gc install [@version]           Install and configure Gemini CLI. (main versions are latest, nightly, preview) (when asked to relaunch gemini cli, use 'aistack gc launch' command)
+    gc uninstall                    Uninstalling Gemini CLI and unregister Gemini CLI PATH (keep all configuration unchanged, to remove configuration use 'aistack gc reset' command)
+    gc configure                    Configure Gemini CLI. ('aistack gc install' include configuration)
     gc show-config                  Show current Gemini CLI configuration.
     gc reset                        Reset all Gemini CLI configuration.
     gc register <shell>|vs          Register Gemini CLI PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
     gc unregister <shell>|vs        Unregister Gemini CLI PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs")
     gc launch [context folder] -- <other gemini options>                  
-                                    Launch Gemini CLI. Instead use 'gemini' command if ${IATOOLS_GEMINI_LAUNCHER_HOME} is in your PATH,
-                                    you could use 'iatools gc register <shell>'
+                                    Launch Gemini CLI. Instead use 'gemini' command if ${AISTACK_GEMINI_LAUNCHER_HOME} is in your PATH,
+                                    you could use 'aistack gc register <shell>'
     gc mcp calculator install|uninstall         Add mcp-calculator local server configuration.
     gc mcp github install|uninstall             Add mcp-github remote server configuration.
     gc mcp desktop-commander install|uninstall  Add mcp-desktop-commander local server configuration.
@@ -46,15 +46,15 @@ Options:
     ----
     oc : opencode - https://opencode.ai
     oc install                          Install and configure Opencode.
-    oc uninstall                        Uninstall Opencode and unregister Opencode PATH (keep all configuration unchanged, to remove configuration use 'iatools oc reset' command)
-    oc configure                        Configure Opencode. ('iatools oc install' include configuration)
+    oc uninstall                        Uninstall Opencode and unregister Opencode PATH (keep all configuration unchanged, to remove configuration use 'aistack oc reset' command)
+    oc configure                        Configure Opencode. ('aistack oc install' include configuration)
     oc show-config                      Show current Opencode configuration.
     oc reset                            Reset all Opencode configuration.
     oc register <shell>|vs              Register Opencode PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
     oc unregister <shell>|vs            Unregister Opencode PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs")
     oc launch [context folder] -- <other opencode options>
-                                        Launch Opencode. Instead use 'opencode' command if ${IATOOLS_OPENCODE_LAUNCHER_HOME} is in your PATH,
-                                        you could use 'iatools oc register <shell>'
+                                        Launch Opencode. Instead use 'opencode' command if ${AISTACK_OPENCODE_LAUNCHER_HOME} is in your PATH,
+                                        you could use 'aistack oc register <shell>'
     oc mcp calculator install|uninstall         Add mcp-calculator local server configuration.
     oc mcp github install|uninstall             Add mcp-github remote server configuration.
     oc mcp context7 install|uninstall           Add mcp-context7 local server configuration.
@@ -65,8 +65,8 @@ Options:
     ----
     cpa : CLIProxyAPI - https://github.com/router-for-me/CLIProxyAPI
     cpa install                          Install and configure CLIProxyAPI.
-    cpa uninstall                        Uninstall CLIProxyAPI (keeping all configuration unchanged. to remove configuration use 'iatools cpa reset' command)
-    cpa configure                        Configure CLIProxyAPI. ('iatools cpa install' include configuration)
+    cpa uninstall                        Uninstall CLIProxyAPI (keeping all configuration unchanged. to remove configuration use 'aistack cpa reset' command)
+    cpa configure                        Configure CLIProxyAPI. ('aistack cpa install' include configuration)
     cpa info                             Print CLIProxyAPI informations.
     cpa show-config                      Show current CLIProxyAPI configuration.
     cpa reset                            Reset all CLIProxyAPI configuration.
@@ -112,13 +112,13 @@ main() {
             $STELLA_API boot_app_shell "local"
             ;;
         init)
-            iatools_init
+            aistack_init
             ;;
         uninstall)
-            iatools_uninstall
+            aistack_uninstall
             ;;
         npm-config)
-            if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch iatools init"; exit 1; fi;
+            if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
             local sub_command="$1"
             shift
             case "$sub_command" in
@@ -133,7 +133,7 @@ main() {
                         exit 1
                     fi
                     echo "Setting npm config: $key = $value"
-                    PATH="${IATOOLS_NODEJS_BIN_PATH}:${PATH}" npm config set "$key" "$value" -g
+                    PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" npm config set "$key" "$value" -g
                     ;;
                 *)
                     echo "Error: Unknown command $sub_command for npm-config"
@@ -186,7 +186,7 @@ main() {
 }
 
 
-iatools_path
+aistack_path
 runtime_path
 
 

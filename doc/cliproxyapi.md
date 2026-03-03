@@ -14,26 +14,26 @@ CLIProxyAPI is a tool that bridges the gap between command-line interfaces and A
 
 install
 ```
-./iatools cpa install
+./aistack cpa install
 ```
 
 launch
 ```
-./iatools cpa launch
+./aistack cpa launch
 ```
 
 authenticate to gemini cli
-requirements : gemini-cli configured `./iatools gc install`
+requirements : gemini-cli configured `./aistack gc install`
 note : The local OAuth callback for Gemini via OAuth uses port 8085.
 ```
-./iatools cpa login gemini [--project_id <your_project_id>]
+./aistack cpa login gemini [--project_id <your_project_id>]
 ```
 choose Google One to use free tier with google personnal account
 alternative : go to http://localhost:8317/management.html go to OAuth login / Gemini CLI OAuth
 
 info
 ```
-./iatools cpa info
+./aistack cpa info
 ```
 
 list endpoints sample test
@@ -69,7 +69,7 @@ You will have to use the web browser of your current host to auth to gemini. And
 On your current host, where run your vscode desktop, use a ssh client and launch `ssh -L 127.0.0.1:8085:127.0.0.1:8085 root@xxx.xxx.xxx.xxx -p 22`.
 
 - Launch `ssh -L 127.0.0.1:8085:127.0.0.1:8085 remote_ssh_user@remote_ssh_host -p remote_ssh_port`
-- Then `./iatools cpa launch -- --login --no-browser`
+- Then `./aistack cpa launch -- --login --no-browser`
 - Then open the browser by following the link to auth
 
 Instead ssh command you can use the "forward port" functionnality in vscode :

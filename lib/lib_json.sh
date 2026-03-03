@@ -151,7 +151,7 @@ sanitize_json() {
     
     if [ ! -t 0 ]; then
         # parse stream
-        PATH="${IATOOLS_NODEJS_BIN_PATH}:${PATH}" json5 -s 2
+        PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" json5 -s 2
         return $?
     fi
 
@@ -161,14 +161,14 @@ sanitize_json() {
     fi
 
     if [ ! -f "$arg" ]; then
-        echo "$arg" | PATH="${IATOOLS_NODEJS_BIN_PATH}:${PATH}" json5 -s 2
+        echo "$arg" | PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" json5 -s 2
         return $?
     fi
 
 
     local tmp_file="$(mktemp)"
 
-    PATH="${IATOOLS_NODEJS_BIN_PATH}:${PATH}" json5 -s 2 "$arg" 2>/dev/null >"$tmp_file" 
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" json5 -s 2 "$arg" 2>/dev/null >"$tmp_file" 
     if [ $? -ne 0 ]; then
         echo "ERROR : failed to sanitize json from $arg"
         rm -f "$tmp_file"

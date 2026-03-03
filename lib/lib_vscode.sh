@@ -19,44 +19,44 @@ vscode_path() {
     done
 
     # root folder for all vs code server files
-    IATOOLS_VSCODE_SERVER_HOME="$HOME/.vscode-server"
+    AISTACK_VSCODE_SERVER_HOME="$HOME/.vscode-server"
     
     # depending of the vscode server version, the layout has changed
     # old form "$HOME/.vscode-server/bin/<commit>/..."
     # new form : "$HOME/.vscode-server/cli/servers/<something>/..."
     # other new form : "$HOME/.vscode-server/cli/servers/Stable-<commit>/..."
-    if [ -d "$IATOOLS_VSCODE_SERVER_HOME" ]; then
+    if [ -d "$AISTACK_VSCODE_SERVER_HOME" ]; then
         if [ -d "$HOME/.vscode-server/bin" ]; then
-            IATOOLS_VSCODE_ALL_SERVERS_ROOT="$HOME/.vscode-server/bin"
+            AISTACK_VSCODE_ALL_SERVERS_ROOT="$HOME/.vscode-server/bin"
 
         elif [ -d "$HOME/.vscode-server/cli/servers" ]; then
-            IATOOLS_VSCODE_ALL_SERVERS_ROOT="$HOME/.vscode-server/cli/servers"
+            AISTACK_VSCODE_ALL_SERVERS_ROOT="$HOME/.vscode-server/cli/servers"
         fi
 
         # test there is at least one server installed
-        if [ "$(ls -A "${IATOOLS_VSCODE_ALL_SERVERS_ROOT}/"* 2>/dev/null)" ]; then
+        if [ "$(ls -A "${AISTACK_VSCODE_ALL_SERVERS_ROOT}/"* 2>/dev/null)" ]; then
             # root install folder of the most recent vs code server
             # to select the latest vscode version, pick one of these :
             #       - use $HOME/.vscode-server/cli/servers/lru.json which stores the last used vscode version
             #       - [MY CHOICE :] filter ls result ordered by date $HOME/.vscode-server/cli/servers/Stable-*
             #       - filter value of VSCODE_GIT_ASKPASS_NODE env variable setted by the core Git extension 
-            IATOOLS_VSCODE_RECENTLY_SERVER_ROOT="$(ls -1dt "${IATOOLS_VSCODE_ALL_SERVERS_ROOT}/"* 2>/dev/null | grep -v '/legacy-mode$' | head -n 1 | xargs -I {} echo {})"
+            AISTACK_VSCODE_RECENTLY_SERVER_ROOT="$(ls -1dt "${AISTACK_VSCODE_ALL_SERVERS_ROOT}/"* 2>/dev/null | grep -v '/legacy-mode$' | head -n 1 | xargs -I {} echo {})"
         fi
     fi
 
-    IATOOLS_VSCODE_MODE="$target"
+    AISTACK_VSCODE_MODE="$target"
     if [ "$target" = "guess" ]; then
-        if [ -d "$IATOOLS_VSCODE_ALL_SERVERS_ROOT" ]; then
-            IATOOLS_VSCODE_MODE="remote"
+        if [ -d "$AISTACK_VSCODE_ALL_SERVERS_ROOT" ]; then
+            AISTACK_VSCODE_MODE="remote"
         else
-            IATOOLS_VSCODE_MODE="local"
+            AISTACK_VSCODE_MODE="local"
         fi
     fi
 
-    case "$IATOOLS_VSCODE_MODE" in
+    case "$AISTACK_VSCODE_MODE" in
         "remote")
                 # "VS Code Remote - Remote SSH or WSL config file"
-                export IATOOLS_VSCODE_CONFIG_FILE="$IATOOLS_VSCODE_SERVER_HOME/data/Machine/settings.json"
+                export AISTACK_VSCODE_CONFIG_FILE="$AISTACK_VSCODE_SERVER_HOME/data/Machine/settings.json"
                 ;;
 
         "local")
@@ -67,11 +67,11 @@ vscode_path() {
                 #   coder (web) linux : $HOME/.vscode/User/settings.json (AND $HOME/.vscode/Machine/settings.json ?)
                 case "$STELLA_CURRENT_PLATFORM" in
                     "linux") 
-                        [ -d "$HOME/.vscode/User" ] && export IATOOLS_VSCODE_CONFIG_FILE="$HOME/.vscode/User/settings.json"
-                        [ -d "$HOME/.config/Code/User" ] && export IATOOLS_VSCODE_CONFIG_FILE="$HOME/.config/Code/User/settings.json"
+                        [ -d "$HOME/.vscode/User" ] && export AISTACK_VSCODE_CONFIG_FILE="$HOME/.vscode/User/settings.json"
+                        [ -d "$HOME/.config/Code/User" ] && export AISTACK_VSCODE_CONFIG_FILE="$HOME/.config/Code/User/settings.json"
                         ;;
                     "darwin") 
-                        [ -d "$HOME/Library/Application Support/Code/User" ] && export IATOOLS_VSCODE_CONFIG_FILE="$HOME/Library/Application Support/Code/User/settings.json"
+                        [ -d "$HOME/Library/Application Support/Code/User" ] && export AISTACK_VSCODE_CONFIG_FILE="$HOME/Library/Application Support/Code/User/settings.json"
                         ;;
                 esac
                 ;;
@@ -80,9 +80,9 @@ vscode_path() {
                 ;;
     esac
 
-    # iatools path for vs
-    #export IATOOLS_VSCODE_LAUNCHER_HOME="${IATOOLS_LAUNCHER_HOME}/vscode"
-    #mkdir -p "${IATOOLS_VSCODE_LAUNCHER_HOME}"
+    # aistack path for vs
+    #export AISTACK_VSCODE_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/vscode"
+    #mkdir -p "${AISTACK_VSCODE_LAUNCHER_HOME}"
 }
 
 # inject specific target settings for vscode
@@ -91,10 +91,10 @@ vscode_settings_configure() {
 
     case "$target" in
         "gemini" )
-            merge_json_file "${IATOOLS_POOL}/settings/gemini-cli/settings-for-vscode.json" "$IATOOLS_VSCODE_CONFIG_FILE"
+            merge_json_file "${AISTACK_POOL}/settings/gemini-cli/settings-for-vscode.json" "$AISTACK_VSCODE_CONFIG_FILE"
         ;;
         "opencode" )
-            merge_json_file "${IATOOLS_POOL}/settings/opencode/settings-for-vscode.json" "$IATOOLS_VSCODE_CONFIG_FILE"
+            merge_json_file "${AISTACK_POOL}/settings/opencode/settings-for-vscode.json" "$AISTACK_VSCODE_CONFIG_FILE"
         ;;
     esac
 }
@@ -131,7 +131,7 @@ vscode_path_register_for_vs_terminal() {
     # C/ specific cli path --------------
     echo "- configure VS Code : add ${target} PATH to terminal.integrated.env.linux and terminal.integrated.env.osx PATH environment variable "
     vscode_settings_add_path_for_vs_terminal "${path_to_add}" "ALWAYS_PREPEND"
-    #vscode_settings_add_path_for_vs_terminal "${IATOOLS_NODEJS_BIN_PATH}" "ALWAYS_PREPEND"
+    #vscode_settings_add_path_for_vs_terminal "${AISTACK_NODEJS_BIN_PATH}" "ALWAYS_PREPEND"
     #vscode_settings_add_path_for_vs_terminal "$(command -v gemini | xargs dirname)" "ALWAYS_PREPEND"
 
 }
@@ -152,15 +152,15 @@ vscode_path_register_cli_for_vs_terminal() {
     local code_found=0
     local vscode_remote_cli_path
 
-    case "$IATOOLS_VSCODE_MODE" in
+    case "$AISTACK_VSCODE_MODE" in
         "remote")
-            if [ -d "$IATOOLS_VSCODE_SERVER_HOME" ]; then
-                if [ -n "$IATOOLS_VSCODE_RECENTLY_SERVER_ROOT" ]; then
-                    vscode_remote_cli_path="$IATOOLS_VSCODE_RECENTLY_SERVER_ROOT/bin/remote-cli"
+            if [ -d "$AISTACK_VSCODE_SERVER_HOME" ]; then
+                if [ -n "$AISTACK_VSCODE_RECENTLY_SERVER_ROOT" ]; then
+                    vscode_remote_cli_path="$AISTACK_VSCODE_RECENTLY_SERVER_ROOT/bin/remote-cli"
 
                     if [ -x "${vscode_remote_cli_path}/code" ]; then
                         code_found=1
-                        vscode_settings_remove_path_for_vs_terminal "^${IATOOLS_VSCODE_ALL_SERVERS_ROOT}/.*" "REMOVE_REGEXP"
+                        vscode_settings_remove_path_for_vs_terminal "^${AISTACK_VSCODE_ALL_SERVERS_ROOT}/.*" "REMOVE_REGEXP"
                         vscode_settings_add_path_for_vs_terminal "$vscode_remote_cli_path" "ALWAYS_PREPEND"
                         echo "- configure VS Code : remote-cli code found in $vscode_remote_cli_path"
                     fi
@@ -198,18 +198,18 @@ vscode_path_register_cli_for_vs_terminal() {
 # generic config management -----------------
 vscode_merge_config() {
     local file_to_merge="$1"
-    merge_json_file "$file_to_merge" "$IATOOLS_VSCODE_CONFIG_FILE"
+    merge_json_file "$file_to_merge" "$AISTACK_VSCODE_CONFIG_FILE"
 }
 
 vscode_remove_config() {
     local key_path="$1"
-    json_del_key_from_file "$IATOOLS_VSCODE_CONFIG_FILE" "$key_path"
+    json_del_key_from_file "$AISTACK_VSCODE_CONFIG_FILE" "$key_path"
 }
 
 vscode_set_config() {
     local key_path="$1"
     local value="$2"
-    json_set_key_into_file "$IATOOLS_VSCODE_CONFIG_FILE" "$key_path" "$value"
+    json_set_key_into_file "$AISTACK_VSCODE_CONFIG_FILE" "$key_path" "$value"
 }
 
 # http proxy management ------------------------
@@ -254,7 +254,7 @@ vscode_settings_tweak_path_for_vs_terminal() {
 
     local tmp_file="$(mktemp)"
 
-    cat "$IATOOLS_VSCODE_CONFIG_FILE" \
+    cat "$AISTACK_VSCODE_CONFIG_FILE" \
         | jq '
             # replace ":" inside ${...} with \u0001
             # case of ${env:FOO}
@@ -278,7 +278,7 @@ vscode_settings_tweak_path_for_vs_terminal() {
             rm -f "$tmp_file"
             exit 1
         else
-            mv "$tmp_file" "$IATOOLS_VSCODE_CONFIG_FILE"
+            mv "$tmp_file" "$AISTACK_VSCODE_CONFIG_FILE"
             rm -f "$tmp_file"
         fi
 }

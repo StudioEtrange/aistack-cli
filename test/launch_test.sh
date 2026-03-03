@@ -8,11 +8,11 @@ _CURRENT_RUNNING_DIR="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
 $STELLA_API require "bats" "bats" "INTERNAL"
 
 
-function init_iatools_test_env() {
+function init_aistack_test_env() {
 	# create a temporary working directory for tests
 	mkdir -p "$STELLA_APP_WORK_ROOT"
 
-	# load iatools libraries
+	# load aistack libraries
 	. "$STELLA_APP_ROOT/../lib/lib.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_json.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_yaml.sh"
@@ -22,12 +22,12 @@ function init_iatools_test_env() {
 	. "$STELLA_APP_ROOT/../lib/lib_opencode.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_mcp.sh"
 
-	# initialize iatools paths
-	iatools_path 1>/dev/null 2>&1
+	# initialize aistack paths
+	aistack_path 1>/dev/null 2>&1
 	runtime_path 1>/dev/null 2>&1
 
 	# install dependencies
-	( iatools_install_dependencies 1>/dev/null 2>&1 )
+	( aistack_install_dependencies 1>/dev/null 2>&1 )
 }
 
 function test_launch_bats() {
@@ -55,12 +55,12 @@ case $1 in
 	echo "$0 common test1"
     ;;
   all|"" )
-	init_iatools_test_env
+	init_aistack_test_env
     test_launch_bats common_json $2
 	test_launch_bats common_yaml $2
     ;;
   * )
-	init_iatools_test_env
+	init_aistack_test_env
     test_launch_bats $1 $2
     ;;
 esac

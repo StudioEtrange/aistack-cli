@@ -1,19 +1,19 @@
 
 
 
-iatools_path() {
-    export IATOOLS_POOL="${STELLA_APP_ROOT}/pool"
+aistack_path() {
+    export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
     
-    export IATOOLS_LAUNCHER_HOME="${STELLA_APP_WORK_ROOT}/launcher"
-    mkdir -p "${IATOOLS_LAUNCHER_HOME}"
+    export AISTACK_LAUNCHER_HOME="${STELLA_APP_WORK_ROOT}/launcher"
+    mkdir -p "${AISTACK_LAUNCHER_HOME}"
 
-    export IATOOLS_MCP_LAUNCHER_HOME="${IATOOLS_LAUNCHER_HOME}/mcp"
-    mkdir -p "${IATOOLS_MCP_LAUNCHER_HOME}"
+    export AISTACK_MCP_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/mcp"
+    mkdir -p "${AISTACK_MCP_LAUNCHER_HOME}"
 
-    export IATOOLS_ISOLATED_DEPENDENCIES_ROOT="${STELLA_APP_WORK_ROOT}/isolated_dependencies"
-    mkdir -p "${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}"
+    export AISTACK_ISOLATED_DEPENDENCIES_ROOT="${STELLA_APP_WORK_ROOT}/isolated_dependencies"
+    mkdir -p "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}"
 
-    export IATOOLS_RUNTIME_PATH_FILE="${STELLA_APP_WORK_ROOT}/path/runtime_path.sh"
+    export AISTACK_RUNTIME_PATH_FILE="${STELLA_APP_WORK_ROOT}/path/runtime_path.sh"
     mkdir -p "${STELLA_APP_WORK_ROOT}/path"
 
 
@@ -26,48 +26,48 @@ iatools_path() {
 
 runtime_path() {
     # add launchers to current path
-    export PATH="${IATOOLS_GEMINI_LAUNCHER_HOME}:${IATOOLS_OPENCODE_LAUNCHER_HOME}:${PATH}"
+    export PATH="${AISTACK_GEMINI_LAUNCHER_HOME}:${AISTACK_OPENCODE_LAUNCHER_HOME}:${PATH}"
 
     # NOTE : we do not permanently add runtime paths (nodejs, python, ...)  to current system path to not override eventually existing runtime
     # used by gemini, opencode and several MCP local server
     if check_requirements "nodejs"; then
-        export IATOOLS_NODEJS_BIN_PATH="${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/"
+        export AISTACK_NODEJS_BIN_PATH="${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/"
     else
-        # we use an already installed nodejs, not iatools nodejs
-        export IATOOLS_NODEJS_BIN_PATH=""
+        # we use an already installed nodejs, not aistack nodejs
+        export AISTACK_NODEJS_BIN_PATH=""
     fi
     
     # used by MCP local server
     if check_requirements "python"; then
-        export IATOOLS_PYTHON_BIN_PATH="${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/"
+        export AISTACK_PYTHON_BIN_PATH="${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/"
     else
-        # we use an already installed python, not iatools python
-        export IATOOLS_PYTHON_BIN_PATH=""
+        # we use an already installed python, not aistack python
+        export AISTACK_PYTHON_BIN_PATH=""
     fi
 }
 
 runtime_path_files_generate() {
     # create files to add runtime dependencies needed fpr any tool to run
-    echo '#!/bin/sh' > "${IATOOLS_RUNTIME_PATH_FILE}"
-    [ -n "$IATOOLS_NODEJS_BIN_PATH" ] && echo "export PATH=\"${IATOOLS_NODEJS_BIN_PATH}:\${PATH}\"" >> "${IATOOLS_RUNTIME_PATH_FILE}"
-    [ -n "$IATOOLS_PYTHON_BIN_PATH" ] && echo "export PATH=\"${IATOOLS_PYTHON_BIN_PATH}:\${PATH}\"" >> "${IATOOLS_RUNTIME_PATH_FILE}"
-    chmod +x "${IATOOLS_RUNTIME_PATH_FILE}"
+    echo '#!/bin/sh' > "${AISTACK_RUNTIME_PATH_FILE}"
+    [ -n "$AISTACK_NODEJS_BIN_PATH" ] && echo "export PATH=\"${AISTACK_NODEJS_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
+    [ -n "$AISTACK_PYTHON_BIN_PATH" ] && echo "export PATH=\"${AISTACK_PYTHON_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
+    chmod +x "${AISTACK_RUNTIME_PATH_FILE}"
 }
 
 runtime_path_files_remove() {
-    rm -f "${IATOOLS_RUNTIME_PATH_FILE}"
+    rm -f "${AISTACK_RUNTIME_PATH_FILE}"
 }
 
-iatools_install_dependency() {
+aistack_install_dependency() {
     local dep="$1"
 
     case "$dep" in
         yq*)
-            # internal dependencies for iatools (which will be added to iatools PATH while running)
+            # internal dependencies for aistack (which will be added to aistack PATH while running)
             $STELLA_API get_feature "yq"
             ;;
         jq*)
-            # internal dependencies for iatools (which will be added to iatools PATH while running)
+            # internal dependencies for aistack (which will be added to aistack PATH while running)
             $STELLA_API get_feature "jq"
             ;;
         patchelf*|cliproxyapi*);;
@@ -92,8 +92,8 @@ iatools_install_dependency() {
             $STELLA_API select_official_schema "$dep" "_feature" "_feature_name"
             if [ ! "$_feature" = "" ]; then
                 echo "-- install $_feature"
-                mkdir -p "${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}/${_feature_name}"
-                $STELLA_API feature_install "$dep" "EXPORT ${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}/${_feature_name}"
+                mkdir -p "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/${_feature_name}"
+                $STELLA_API feature_install "$dep" "EXPORT ${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/${_feature_name}"
             else
                 echo "!! WARN : $dep is not a valid feature for stella framework"
             fi
@@ -101,20 +101,20 @@ iatools_install_dependency() {
         ;;&
         miniforge3)
             echo "-- install python pipx and uv package/project manager"
-            ${IATOOLS_PYTHON_BIN_PATH}mamba install -y pipx uv
+            ${AISTACK_PYTHON_BIN_PATH}mamba install -y pipx uv
         ;;
     esac
 }
 
-iatools_install_dependencies() {
+aistack_install_dependencies() {
 
-    echo "- Install internal dependencies for iatools (which will be added to iatools PATH while running)"
-    iatools_install_dependency "jq"
-    iatools_install_dependency "yq"
+    echo "- Install internal dependencies for aistack (which will be added to aistack PATH while running)"
+    aistack_install_dependency "jq"
+    aistack_install_dependency "yq"
 
     echo "- Install other dependencies (for mcp servers and other commands) in an isolated way. (None of those will never been added to any PATH)"
     for f in $STELLA_APP_FEATURE_LIST; do
-        iatools_install_dependency "$f"
+        aistack_install_dependency "$f"
     done
 
     # generate runtime path files with dependencies path to use them in launchers and other tools
@@ -122,9 +122,9 @@ iatools_install_dependencies() {
 }
 
 
-iatools_remove_dependencies() {
+aistack_remove_dependencies() {
     # remove isolated dependencies and runtime
-    rm -Rf "${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}"
+    rm -Rf "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}"
     # remove dependencies
     rm -Rf "${STELLA_APP_FEATURE_ROOT}"
 
@@ -132,22 +132,22 @@ iatools_remove_dependencies() {
 }
 
 
-iatools_init() {
-    iatools_remove_dependencies
-    iatools_install_dependencies
+aistack_init() {
+    aistack_remove_dependencies
+    aistack_install_dependencies
 }
 
-iatools_uninstall() {
+aistack_uninstall() {
     gemini_path_unregister_for_shell "all"
     gemini_path_unregister_for_vs_terminal
     opencode_path_unregister_for_shell "all"
     opencode_path_unregister_for_vs_terminal
     
-    iatools_remove_dependencies
+    aistack_remove_dependencies
     runtime_path_files_remove
 
-    rm -Rf "${IATOOLS_MCP_LAUNCHER_HOME}"
-    rm -Rf "${IATOOLS_LAUNCHER_HOME}"
+    rm -Rf "${AISTACK_MCP_LAUNCHER_HOME}"
+    rm -Rf "${AISTACK_LAUNCHER_HOME}"
 
     rm -Rf "${STELLA_APP_WORK_ROOT}"
 }
@@ -161,8 +161,8 @@ path_register_for_shell() {
 
     local rc_file
 
-    local BEGIN_MARK="# >>> iatools-${name}-path >>>"
-    local END_MARK="# <<< iatools-${name}-path <<<"
+    local BEGIN_MARK="# >>> aistack-${name}-path >>>"
+    local END_MARK="# <<< aistack-${name}-path <<<"
 
     [ "$shell_name" = "bash" ] && rc_file="$HOME/.bashrc"
     [ "$shell_name" = "zsh" ] && rc_file="$HOME/.zshrc"
@@ -204,8 +204,8 @@ path_unregister_for_shell() {
     local shell_name="$2"
     local rc_file
 
-    local BEGIN_MARK="# >>> iatools-${name}-path >>>"
-    local END_MARK="# <<< iatools-${name}-path <<<"
+    local BEGIN_MARK="# >>> aistack-${name}-path >>>"
+    local END_MARK="# <<< aistack-${name}-path <<<"
 
     local shell_list
     [ "$shell_name" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name"
@@ -256,8 +256,8 @@ check_requirements() {
             fi
             ;;
         "nodejs") 
-            if [ -f "${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/node" ]; then
-                [ "$mode" = "VERBOSE" ] && echo "-- nodejs detected in ${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/node"
+            if [ -f "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/node" ]; then
+                [ "$mode" = "VERBOSE" ] && echo "-- nodejs detected in ${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/node"
                 return 0
             else
                 if command -v node >/dev/null 2>&1; then
@@ -269,8 +269,8 @@ check_requirements() {
             ;;
         
         "python")
-            if [ -f "${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/python" ]; then
-                [ "$mode" = "VERBOSE" ] && echo "-- python detected in ${IATOOLS_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/python"
+            if [ -f "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/python" ]; then
+                [ "$mode" = "VERBOSE" ] && echo "-- python detected in ${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/python"
                 return 0
             else
                 if command -v python >/dev/null 2>&1; then
@@ -290,10 +290,10 @@ require() {
 
     case "$feature" in
         "json5")
-            if ! PATH="${IATOOLS_NODEJS_BIN_PATH}:${PATH}" type json5 >/dev/null 2>&1; then
+            if ! PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" type json5 >/dev/null 2>&1; then
                 # install json5 nodejs package (to correct invalid json)
                 # https://github.com/json5/json5
-                PATH="${IATOOLS_NODEJS_BIN_PATH}:${PATH}" npm install -g json5 1>/dev/null
+                PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" npm install -g json5 1>/dev/null
                 [ $? -ne 0 ] && {
                     echo "ERROR : installing json5 nodejs package"
                     return 1

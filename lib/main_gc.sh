@@ -1,9 +1,9 @@
-if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch iatools init"; exit 1; fi;
+if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
 case "$sub_command" in
     install)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch iatools init"; exit 1; fi;
+        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
         local version="$1"
         [ -z "${version}" ] && version="@latest"
@@ -11,7 +11,7 @@ case "$sub_command" in
         echo "Installing Gemini CLI ${version}"
         # available versions : https://www.npmjs.com/package/@google/gemini-cli-core
         # latest is stable version
-        PATH="${IATOOLS_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
+        PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
         
         echo "Configuring Gemini CLI"
         gemini_settings_configure
@@ -26,11 +26,11 @@ case "$sub_command" in
         echo "$0 gc register vs"      
         ;;
     uninstall)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch iatools init"; exit 1; fi;
+        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
         echo "Uninstalling Gemini CLI and unregister Gemini CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
         
-        PATH="${IATOOLS_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
+        PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
         gemini_path_unregister_for_shell "all"
         gemini_path_unregister_for_vs_terminal
 
@@ -66,9 +66,9 @@ case "$sub_command" in
         esac
         ;;
     show-config)
-        if [ -f "$IATOOLS_GEMINI_CONFIG_FILE" ]; then
-            echo "Current Gemini CLI configuration file : $IATOOLS_GEMINI_CONFIG_FILE"
-            cat "$IATOOLS_GEMINI_CONFIG_FILE"
+        if [ -f "$AISTACK_GEMINI_CONFIG_FILE" ]; then
+            echo "Current Gemini CLI configuration file : $AISTACK_GEMINI_CONFIG_FILE"
+            cat "$AISTACK_GEMINI_CONFIG_FILE"
         else
             echo "No Gemini CLI configuration file found."
         fi
@@ -102,7 +102,7 @@ case "$sub_command" in
     cmd-plan)
         case "$1" in
             "install")
-                gemini_add_command "${IATOOLS_POOL}/cmd/plan/plan.toml"
+                gemini_add_command "${AISTACK_POOL}/cmd/plan/plan.toml"
                 ;;
             "uninstall")
                 gemini_remove_command "plan.toml"

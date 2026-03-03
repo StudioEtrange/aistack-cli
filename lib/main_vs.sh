@@ -1,4 +1,4 @@
-if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch iatools init"; exit 1; fi;
+if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
 case "$sub_command" in
@@ -9,9 +9,9 @@ case "$sub_command" in
         vscode_remove_config "$1"
         ;;
     show-config)
-         if [ -f "$IATOOLS_VSCODE_CONFIG_FILE" ]; then
-            echo "Current VSCode configuration file : $IATOOLS_VSCODE_CONFIG_FILE"
-            cat "$IATOOLS_VSCODE_CONFIG_FILE"
+         if [ -f "$AISTACK_VSCODE_CONFIG_FILE" ]; then
+            echo "Current VSCode configuration file : $AISTACK_VSCODE_CONFIG_FILE"
+            cat "$AISTACK_VSCODE_CONFIG_FILE"
         else
             echo "No VSCode configuration file found."
         fi

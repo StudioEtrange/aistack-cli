@@ -1,12 +1,12 @@
-if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch iatools init"; exit 1; fi;
+if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
 case "$sub_command" in
     install)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch iatools init"; exit 1; fi;
+        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
         echo "Installing Opencode CLI"
-        PATH="${IATOOLS_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai@latest
+        PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai@latest
     
         echo "Configuring Opencode CLI"
         opencode_settings_configure
@@ -21,11 +21,11 @@ case "$sub_command" in
         echo "$0 oc register vs"
         ;;
     uninstall)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch iatools init"; exit 1; fi;
+        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
         echo "Uninstalling Opencode and unregister Opencode PATH (keep all configuration unchanged, to remove configuration use reset command)"
         
-        PATH="${IATOOLS_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
+        PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
         opencode_path_unregister_for_shell "all"
         opencode_path_unregister_for_vs_terminal
 
@@ -61,9 +61,9 @@ case "$sub_command" in
         esac
         ;;
     show-config)
-        if [ -f "$IATOOLS_OPENCODE_CONFIG_FILE" ]; then
-            echo "Current Opencode configuration file : $IATOOLS_OPENCODE_CONFIG_FILE"
-            cat "$IATOOLS_OPENCODE_CONFIG_FILE"
+        if [ -f "$AISTACK_OPENCODE_CONFIG_FILE" ]; then
+            echo "Current Opencode configuration file : $AISTACK_OPENCODE_CONFIG_FILE"
+            cat "$AISTACK_OPENCODE_CONFIG_FILE"
         else
             echo "No Opencode configuration file found."
         fi
