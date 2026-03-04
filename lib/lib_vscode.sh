@@ -156,6 +156,7 @@ vscode_path_register_cli_for_vs_terminal() {
         "remote")
             if [ -d "$AISTACK_VSCODE_SERVER_HOME" ]; then
                 if [ -n "$AISTACK_VSCODE_RECENTLY_SERVER_ROOT" ]; then
+                    # TODO : check path is current
                     vscode_remote_cli_path="$AISTACK_VSCODE_RECENTLY_SERVER_ROOT/bin/remote-cli"
 
                     if [ -x "${vscode_remote_cli_path}/code" ]; then
