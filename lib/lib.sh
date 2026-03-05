@@ -308,6 +308,30 @@ require() {
 }
 
 
+# Generate a self-signed certificate
+# @param {string} $1 - key file path
+# @param {string} $2 - cert file path
+# @param {string} $3 - CN (optional, default to localhost)
+generate_self_signed_cert() {
+    local key_path="$1"
+    local cert_path="$2"
+    local cn="${3:-localhost}"
+
+    if ! command -v openssl >/dev/null 2>&1; then
+        echo "ERROR: openssl is not installed." >&2
+        return 1
+    fi
+
+    echo "Generating self-signed certificate..."
+    openssl req -x509 -newkey rsa:2048 -keyout "$key_path" -out "$cert_path" -days 365 -nodes -subj "/CN=$cn"
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to generate self-signed certificate." >&2
+        return 1
+    fi
+    echo "Self-signed certificate generated successfully at $cert_path expires in 365 days"
+}
+
+
 process_kill_by_port() {
     local port="$1"
     local pid

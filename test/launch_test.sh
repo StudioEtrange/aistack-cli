@@ -2,7 +2,7 @@
 _CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 _CURRENT_RUNNING_DIR="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
 
-#STELLA_LOG_STATE=OFF
+STELLA_LOG_STATE=OFF
 . "$_CURRENT_FILE_DIR/stella-link.sh" include
 
 $STELLA_API require "bats" "bats" "INTERNAL"
@@ -50,17 +50,26 @@ function test_launch_bats() {
 STELLA_LOG_STATE=ON
 case $1 in
   h|help|--help|-h)
-    echo " * Usage $0 common_json|common_yaml|all [test-name]"
+    echo " * Usage $0 json|yaml|all [test-name]"
 	echo "sample:"
-	echo "$0 common test1"
+	echo "$0 json json_has_path"
     ;;
-  all|"" )
+  all|"")
 	init_aistack_test_env
     test_launch_bats common_json $2
 	test_launch_bats common_yaml $2
     ;;
-  * )
+  json)
 	init_aistack_test_env
-    test_launch_bats $1 $2
+    test_launch_bats common_json $2
+  	;;
+  yaml)
+	init_aistack_test_env
+    test_launch_bats common_yaml $2
+  	;;
+  *)
+	echo " * Usage $0 json|yaml|all [test-name]"
+	echo "sample:"
+	echo "$0 json json_has_path"
     ;;
 esac

@@ -19,7 +19,6 @@ cpa_path() {
 
 
 # Download and install cliproxyapi from GitHub releases.
-
 # @param {string} $1 - Optional version to install (e.g., "0.1.0").
 #                      If not provided, the latest version will be fetched.
 #
@@ -85,11 +84,14 @@ cpa_settings_configure() {
     # TODO
     echo "add some default settings :"
     cpa_settings_set_host "localhost"
+    cpa_settings_set_port "8317"
     cpa_settings_api_key_reset
     cpa_settings_api_key_create
     
     cpa_settings_management_api_key_reset
     cpa_settings_management_api_key_create
+
+    cpa_settings_configure_tls
 }
 
 cpa_settings_remove() {
@@ -194,6 +196,7 @@ cpa_get_config() {
 # host management ------------------------
 cpa_settings_set_host() {
     local host="$1"
+    # TODO check double option
     cpa_set_config ".host" "$host" "double"
 }
 
@@ -267,4 +270,34 @@ cpa_settings_api_key_del() {
 
 cpa_settings_api_key_list() {
     yaml_get_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ".api-keys" 
+}
+
+
+# tls management ------------------------
+cpa_settings_configure_tls() {
+    echo "Configuring TLS"
+    local key_path="${1:-}"
+    local cert_path="${2:-}"
+
+    local self_signed=0
+    [ "$key_path" = "" ] && self_signed=1
+    [ "$cert_path" = "" ] && self_signed=1
+
+    if [ $self_signed -eq 1 ]; then
+        echo "generate auto signed certificate"
+        key_path="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/server.key"
+        cert_path="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/server.crt"
+
+        generate_self_signed_cert "$key_path" "$cert_path" "localhost"
+        if [ $? -ne 0 ]; then
+            echo "ERROR: Failed to generate self-signed certificate for CLIProxyAPI." >&2
+            return 1
+        fi
+    fi 
+
+    cpa_set_config ".tls.enable" "true"
+    cpa_set_config ".tls.cert" "$cert_path" "double"
+    cpa_set_config ".tls.key" "$key_path" "double"
+
+    echo "TLS with certificate configured successfully with $cert_path and $key_path."
 }

@@ -203,7 +203,8 @@ yaml_get_key_from_file() {
 # key_path : can contains index for array
 # value: must be a valid YAML value
 # string_style (optional) : double|single|literal|folded|flow https://mikefarah.gitbook.io/yq/operators/style
-#
+#   single: string with single quote
+#   double: string with double quote
 # yaml_set_key "a.b.c" "new_value"
 yaml_set_key() {
     local key_path="$1"

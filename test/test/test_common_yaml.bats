@@ -13,52 +13,8 @@ teardown() {
 
 # GENERIC -------------------------------------------------------------------
 
-# @test "yaml_has_key1" {
-
-# 	run yaml_has_key "a.b.c" <<'EOF'
-# a:
-#   b:
-# EOF
-# 	assert_failure
-# }
-
-# @test "yaml_has_key2" {
-
-# 	run yaml_has_key "a.b.c" <<'EOF'
-# a:
-#   b:
-#     c: "foo"
-# EOF
-# 	assert_success
-# }
-
-# @test "yaml_has_key3" {
-
-# 	run yaml_has_key ".a.b.c" <<'EOF'
-# a:
-#   b:
-#     c:
-# d:
-# EOF
-# 	assert_success
-# 	assert_output "yes"
-# }
-
 
 @test "yaml_set_key1" {
-
-	run yaml_set_key ".a.b.c" "new_value" "double"
-	expected=$(cat <<'EOF'
-a:
-  b:
-    c: "new_value"
-EOF
-	)
-	assert_output "$expected"
-}
-
-
-@test "yaml_set_key2" {
 
 	run yaml_set_key "a.b.c" 'new_value' <<'EOF'
 a:
@@ -76,7 +32,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_set_key3" {
+@test "yaml_set_key2" {
 
 	run yaml_set_key "users.admins" '[alice, bob]' <<'EOF'
 a:
@@ -100,7 +56,7 @@ EOF
 
 
 
-@test "yaml_set_key4" {
+@test "yaml_set_key3" {
 
 	run yaml_set_key "a.b.array.3" '999' <<'EOF'
 a:
@@ -121,20 +77,86 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_set_key5" {
+@test "yaml_set_key4" {
 
-	run yaml_set_key "a.b.c" 'true' <<'EOF'
+	run yaml_set_key "a.b.c" 'new_value' <<'EOF'
 a:
   b:
 EOF
 	expected=$(cat <<'EOF'
 a:
   b:
-    c: true
+    c: new_value
 EOF
 	)
 	assert_output "$expected"
 }
+
+
+@test "yaml_set_key6" {
+
+	run yaml_set_key ".a.b.c" "new_value" "single"
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: 'new_value'
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "yaml_set_key7" {
+
+	run yaml_set_key ".a.b.c" "new_value" "double"
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: "new_value"
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "yaml_set_key8" {
+
+	run yaml_set_key ".a.b.c" "new_value" "folded"
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: >-
+      new_value
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "yaml_set_key9" {
+
+	run yaml_set_key ".a.b.c" "new_value" "literal"
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: |-
+      new_value
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "yaml_set_key10" {
+
+	run yaml_set_key ".a.b.c" "new_value" "flow"
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: new_value
+EOF
+	)
+	assert_output "$expected"
+}
+
+
+
 
 
 
@@ -415,6 +437,28 @@ EOF
 a:
   b:
     c: 'test'
+EOF
+	)
+	assert_equal "$(cat "$tmp")" "$expected"
+
+}
+
+
+@test "yaml_set_key_into_file3" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
+a:
+  b:
+    c: value
+EOF
+
+	run yaml_set_key_into_file "$tmp" ".a.b.c" 'test' "double"
+	assert_success
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: "test"
 EOF
 	)
 	assert_equal "$(cat "$tmp")" "$expected"
