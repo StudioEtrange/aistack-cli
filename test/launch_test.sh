@@ -5,8 +5,8 @@ _CURRENT_RUNNING_DIR="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
 STELLA_LOG_STATE=OFF
 . "$_CURRENT_FILE_DIR/stella-link.sh" include
 
-$STELLA_API require "bats" "bats" "INTERNAL"
-
+#$STELLA_API require "bats" "bats" "INTERNAL"
+$STELLA_API get_feature "bats"
 
 function init_aistack_test_env() {
 	# create a temporary working directory for tests
@@ -27,7 +27,8 @@ function init_aistack_test_env() {
 	runtime_path 1>/dev/null 2>&1
 
 	# install dependencies
-	( aistack_install_dependencies 1>/dev/null 2>&1 )
+	#( aistack_install_dependencies 1>/dev/null 2>&1 )
+	aistack_install_dependencies
 }
 
 function test_launch_bats() {
@@ -47,7 +48,7 @@ function test_launch_bats() {
 	rm -f "$_v"
 }
 
-STELLA_LOG_STATE=ON
+#STELLA_LOG_STATE=ON
 case $1 in
   h|help|--help|-h)
     echo " * Usage $0 json|yaml|all [test-name]"

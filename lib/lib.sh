@@ -70,7 +70,7 @@ aistack_install_dependency() {
             # internal dependencies for aistack (which will be added to aistack PATH while running)
             $STELLA_API get_feature "jq"
             ;;
-        patchelf*|cliproxyapi*);;
+        bats*|patchelf*|cliproxyapi*);;
         nodejs)
             # other dependencies (for mcp servers and other commands) in an isolated way. (None of those will never been added to any PATH)
             if [ "$STELLA_CURRENT_PLATFORM" = "linux" ]; then

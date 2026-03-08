@@ -236,8 +236,8 @@ yaml_set_key() {
        *) 
             # default: yq parse value as YAML (true, 12, [a,b], {k:v}, ...)
             prog='eval(strenv(PATH_VAR)) = env(VAL)'
-            # use of -P (pretty output) cancel style argument)
-            yq_opt="$yq_opt -P"
+            # NOTE : avoid -P usage because it simplfy style and remove some quotes
+            #yq_opt="$yq_opt -P"
             ;;
     esac
 
@@ -254,7 +254,9 @@ yaml_set_key() {
 
 # set a yaml key into a file
 # yaml_set_key_into_file <file> <key_path> <value> <string_style>
-#
+# string_style (optional) : double|single|literal|folded|flow https://mikefarah.gitbook.io/yq/operators/style
+#   single: string with single quote
+#   double: string with double quote
 # yaml_set_key_into_file "input.yaml" ".a.b.c" 'value' 
 yaml_set_key_into_file() {
     local target_file="$1"
@@ -286,19 +288,24 @@ yaml_set_key_into_file() {
        *) 
             # default: yq parse value as YAML (true, 12, [a,b], {k:v}, ...)
             prog='eval(strenv(PATH_VAR)) = env(VAL)'
-            # use of -P (pretty output) cancel style argument)
-            yq_opt="$yq_opt -P"
+            # NOTE : avoid -P usage because it simplfy style and remove some quotes
+            #yq_opt="$yq_opt -P"
             ;;
     esac
 
     local yq_path
     yq_path="$(build_yq_expr_from_path "$key_path")" || return 1
 
-    if ! STRING_STYLE="${string_style}" PATH_VAR="${yq_path}" VAL="${value}" yq eval -i $yq_opt "$prog" "$target_file"; then
+    local tmp_target_file="$(mktemp)"
+    # NOTE : avoid using -i to preserve file formatting like quote style for values
+    if ! STRING_STYLE="${string_style}" PATH_VAR="${yq_path}" VAL="${value}" yq eval $yq_opt "$prog" "$target_file" > "$tmp_target_file"; then
         echo "ERROR : generating yaml from key_path/value" >&2
+        rm -f "$tmp_target_file"
         return 1
     fi
 
+    cp -f "$tmp_target_file" "$target_file"
+    rm -f "$tmp_target_file"
 
 }
 
@@ -317,6 +324,7 @@ yaml_del_key() {
     local yq_expr
     yq_expr="$(build_yq_expr_from_path "$key_path")" || return 1
 
+    # NOTE TODO : avoid -P usage because it simplfy style and remove some quotes
     if [ ! -t 0 ]; then
         yq -P "del($yq_expr)"
     fi
@@ -348,10 +356,17 @@ yaml_del_key_from_file() {
         return 1
     fi
    
-    if ! yq -i -P "del($yq_expr)" "$target_file"; then
+    local tmp_target_file="$(mktemp)"
+    # NOTE : avoid using -i (and -P) to preserve file formatting like quote style for values
+    #if ! yq -i -P "del($yq_expr)" "$target_file"; then
+    if ! yq "del($yq_expr)" "$target_file" > "$tmp_target_file"; then
         echo "ERROR : processing with yq"
+        rm -f "$tmp_target_file"
         exit 1
     fi
+
+    cp -f "$tmp_target_file" "$target_file"
+    rm -f "$tmp_target_file"
 }
 
 

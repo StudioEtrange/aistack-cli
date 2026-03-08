@@ -14,6 +14,104 @@ teardown() {
 # GENERIC -------------------------------------------------------------------
 
 
+@test "yaml_get_key1" {
+
+	run yaml_get_key "a.b.c" <<'EOF'
+a:
+  b:
+EOF
+	assert_success
+	assert_output ""
+}
+
+@test "yaml_get_key2" {
+
+	run yaml_get_key "a.b.c" <<'EOF'
+a:
+  b:
+    c: true
+EOF
+	expected=$(cat <<'EOF'
+true
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+
+@test "yaml_get_key3" {
+
+	run yaml_get_key "a.b.c" <<'EOF'
+a:
+  b:
+    c: false
+EOF
+	expected=$(cat <<'EOF'
+false
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+@test "yaml_get_key4" {
+
+	run yaml_get_key "a.b.c" <<'EOF'
+a:
+  b:
+    c: "localhost"
+EOF
+	expected=$(cat <<'EOF'
+localhost
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+@test "yaml_get_key5" {
+
+	run yaml_get_key ".a.b.c" <<'EOF'
+a:
+  b:
+    c: "localhost"
+EOF
+	expected=$(cat <<'EOF'
+localhost
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+@test "yaml_get_key6" {
+
+	run yaml_get_key "a.b.c" <<'EOF'
+a:
+  b:
+    c: ""
+EOF
+	expected=$(cat <<'EOF'
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+
+@test "yaml_get_key7" {
+
+	run yaml_get_key "a.b.c" <<'EOF'
+a:
+  b:
+    c:
+d: 4
+EOF
+	assert_success
+	assert_output ""
+}
+
 @test "yaml_set_key1" {
 
 	run yaml_set_key "a.b.c" 'new_value' <<'EOF'
@@ -46,9 +144,7 @@ a:
     c: value
     d: value
 users:
-  admins:
-    - alice
-    - bob
+  admins: [alice, bob]
 EOF
 	)
 	assert_output "$expected"
@@ -62,6 +158,28 @@ EOF
 a:
   b:
     array: [10, 20, 30, 40, 50]
+EOF
+	expected=$(cat <<'EOF'
+a:
+  b:
+    array: [10, 20, 30, 999, 50]
+EOF
+	)
+	assert_output "$expected"
+}
+
+
+@test "yaml_set_key31" {
+
+	run yaml_set_key "a.b.array.3" '999' <<'EOF'
+a:
+  b:
+    array:
+      - 10
+      - 20
+      - 30
+      - 40
+      - 50
 EOF
 	expected=$(cat <<'EOF'
 a:
@@ -159,89 +277,6 @@ EOF
 
 
 
-
-@test "yaml_get_key1" {
-
-	run yaml_get_key "a.b.c" <<'EOF'
-a:
-  b:
-EOF
-	assert_success
-	assert_output ""
-}
-
-@test "yaml_get_key2" {
-
-	run yaml_get_key "a.b.c" <<'EOF'
-a:
-  b:
-    c: true
-EOF
-	expected=$(cat <<'EOF'
-true
-EOF
-	)
-	assert_success
-	assert_output "$expected"
-}
-
-
-@test "yaml_get_key3" {
-
-	run yaml_get_key "a.b.c" <<'EOF'
-a:
-  b:
-    c: false
-EOF
-	expected=$(cat <<'EOF'
-false
-EOF
-	)
-	assert_success
-	assert_output "$expected"
-}
-
-@test "yaml_get_key4" {
-
-	run yaml_get_key "a.b.c" <<'EOF'
-a:
-  b:
-    c: "localhost"
-EOF
-	expected=$(cat <<'EOF'
-localhost
-EOF
-	)
-	assert_success
-	assert_output "$expected"
-}
-
-@test "yaml_get_key5" {
-
-	run yaml_get_key "a.b.c" <<'EOF'
-a:
-  b:
-    c: ""
-EOF
-	expected=$(cat <<'EOF'
-EOF
-	)
-	assert_success
-	assert_output "$expected"
-}
-
-
-@test "yaml_get_key6" {
-
-	run yaml_get_key "a.b.c" <<'EOF'
-a:
-  b:
-    c:
-d: 4
-EOF
-	assert_success
-	assert_output ""
-}
 
 @test "yaml_del_key1" {
 

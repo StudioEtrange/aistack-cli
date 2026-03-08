@@ -81,7 +81,7 @@ cpa_launcher_manage() {
 cpa_settings_configure() {
 
    [ ! -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ] && cp -f "$CPA_FEAT_INSTALL_ROOT/config.example.yaml" "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
-    # TODO
+
     echo "add some default settings :"
     cpa_settings_set_host "localhost"
     cpa_settings_set_port "8317"
@@ -178,6 +178,7 @@ cpa_set_config() {
     esac
 
     yaml_set_key_into_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$key_path" "$value" "$string_style"
+
 }
 
 cpa_get_config() {
@@ -197,12 +198,12 @@ cpa_get_config() {
 cpa_settings_set_host() {
     local host="$1"
     # TODO check double option
-    cpa_set_config ".host" "$host" "double"
+    cpa_set_config "host" "$host" "double"
 }
 
 cpa_settings_set_port() {
     local port="$1"
-    cpa_set_config ".port" "$port"
+    cpa_set_config "port" "$port"
 }
 
 # remote management ------------------------
@@ -248,10 +249,17 @@ cpa_settings_api_key_create() {
 cpa_settings_api_key_add() {
     local key="$1"
 
-    if ! KEY="$key" yq eval -i '.["api-keys"] += [strenv(KEY)] | .["api-keys"][] style="double"' "$AISTACK_CLIPROXYAPI_CONFIG_FILE"; then
+    local tmp_target_file="$(mktemp)"
+    # NOTE : avoid using -i (and -P) to preserve file formatting like quote style for values
+    #if ! KEY="$key" yq eval -i '.["api-keys"] += [strenv(KEY)] | .["api-keys"][] style="double"' "$AISTACK_CLIPROXYAPI_CONFIG_FILE"; then
+    if ! KEY="$key" yq eval '.["api-keys"] += [strenv(KEY)] | .["api-keys"][] style="double"' "$AISTACK_CLIPROXYAPI_CONFIG_FILE" > "$tmp_target_file"; then
         echo "ERROR: Failed to add API key to configuration" >&2
+        rm -f "$tmp_target_file"
         return 1
     fi
+
+    cp -f "$tmp_target_file" "$target_file"
+    rm -f "$tmp_target_file"
 }
 
 cpa_settings_api_key_del() {
@@ -259,12 +267,22 @@ cpa_settings_api_key_del() {
 
     [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ] || { echo "ERROR: file $AISTACK_CLIPROXYAPI_CONFIG_FILE not found" >&2; return 1; }
 
-    KEY="$key" yq eval -i '
+    local tmp_target_file="$(mktemp)"
+    # NOTE : avoid using -i (and -P) to preserve file formatting like quote style for values
+    KEY="$key" yq eval '
         .["api-keys"] |= (
         (. // [])
         | map(select(. != strenv(KEY)))
         )
-    ' "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
+    ' "$AISTACK_CLIPROXYAPI_CONFIG_FILE" > "$tmp_target_file" || {
+        echo "ERROR: Failed to remove API key from configuration" >&2
+        rm -f "$tmp_target_file"
+        return 1
+    }
+
+    
+    cp -f "$tmp_target_file" "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
+    rm -f "$tmp_target_file"
 }
 
 
@@ -284,14 +302,20 @@ cpa_settings_configure_tls() {
     [ "$cert_path" = "" ] && self_signed=1
 
     if [ $self_signed -eq 1 ]; then
-        echo "generate auto signed certificate"
-        key_path="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/server.key"
-        cert_path="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/server.crt"
-
-        generate_self_signed_cert "$key_path" "$cert_path" "localhost"
-        if [ $? -ne 0 ]; then
-            echo "ERROR: Failed to generate self-signed certificate for CLIProxyAPI." >&2
+        
+        if ! command -v openssl >/dev/null 2>&1; then
+            echo "WARN: cannot generate self-signed certificate because openssl is missing." >&2
             return 1
+        else
+            echo "generate auto signed certificate"
+            key_path="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/server.key"
+            cert_path="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/server.crt"
+
+            generate_self_signed_cert "$key_path" "$cert_path" "localhost"
+            if [ $? -ne 0 ]; then
+                echo "ERROR: Failed to generate self-signed certificate for CLIProxyAPI." >&2
+                return 1
+            fi
         fi
     fi 
 
