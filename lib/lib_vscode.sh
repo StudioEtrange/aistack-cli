@@ -28,6 +28,7 @@ vscode_path() {
     if [ -d "$AISTACK_VSCODE_SERVER_HOME" ]; then
         if [ -d "$HOME/.vscode-server/bin" ]; then
             AISTACK_VSCODE_ALL_SERVERS_ROOT="$HOME/.vscode-server/bin"
+            # TODO do we set here AISTACK_VSCODE_RECENTLY_SERVER_ROOT ?
 
         elif [ -d "$HOME/.vscode-server/cli/servers" ]; then
             AISTACK_VSCODE_ALL_SERVERS_ROOT="$HOME/.vscode-server/cli/servers"
@@ -40,22 +41,25 @@ vscode_path() {
             #       - use $HOME/.vscode-server/cli/servers/lru.json which stores the last used vscode version
             #       - [MY CHOICE :] filter ls result ordered by date $HOME/.vscode-server/cli/servers/Stable-*
             #       - filter value of VSCODE_GIT_ASKPASS_NODE env variable setted by the core Git extension 
-            AISTACK_VSCODE_RECENTLY_SERVER_ROOT="$(ls -1dt "${AISTACK_VSCODE_ALL_SERVERS_ROOT}/"* 2>/dev/null | grep -v '/legacy-mode$' | head -n 1 | xargs -I {} echo {})"
+            export AISTACK_VSCODE_RECENTLY_SERVER_ROOT="$(ls -1dt "${AISTACK_VSCODE_ALL_SERVERS_ROOT}/"*/ 2>/dev/null | grep -v '/legacy-mode$' | head -n 1 | xargs -I {} echo {})/server"
+            [ -d "$AISTACK_VSCODE_RECENTLY_SERVER_ROOT" ] || export AISTACK_VSCODE_RECENTLY_SERVER_ROOT=""
         fi
     fi
 
     AISTACK_VSCODE_MODE="$target"
     if [ "$target" = "guess" ]; then
         if [ -d "$AISTACK_VSCODE_ALL_SERVERS_ROOT" ]; then
-            AISTACK_VSCODE_MODE="remote"
+            export AISTACK_VSCODE_MODE="remote"
         else
-            AISTACK_VSCODE_MODE="local"
+            export AISTACK_VSCODE_MODE="local"
         fi
     fi
 
     case "$AISTACK_VSCODE_MODE" in
         "remote")
                 # "VS Code Remote - Remote SSH or WSL config file"
+                export AISTACK_VSCODE_HOME="$AISTACK_VSCODE_SERVER_HOME"
+                export AISTACK_VSCODE_USER_HOME="$AISTACK_VSCODE_HOME/data/User"
                 export AISTACK_VSCODE_CONFIG_FILE="$AISTACK_VSCODE_SERVER_HOME/data/Machine/settings.json"
                 ;;
 
@@ -67,11 +71,22 @@ vscode_path() {
                 #   coder (web) linux : $HOME/.vscode/User/settings.json (AND $HOME/.vscode/Machine/settings.json ?)
                 case "$STELLA_CURRENT_PLATFORM" in
                     "linux") 
-                        [ -d "$HOME/.vscode/User" ] && export AISTACK_VSCODE_CONFIG_FILE="$HOME/.vscode/User/settings.json"
-                        [ -d "$HOME/.config/Code/User" ] && export AISTACK_VSCODE_CONFIG_FILE="$HOME/.config/Code/User/settings.json"
+                        if [ -d "$HOME/.vscode/User" ]; then
+                            export AISTACK_VSCODE_HOME="$HOME/.vscode"
+                            export AISTACK_VSCODE_USER_HOME="$AISTACK_VSCODE_HOME/User"
+                            export AISTACK_VSCODE_CONFIG_FILE="$AISTACK_VSCODE_USER_HOME/settings.json"
+                        elif [ -d "$HOME/.config/Code/User" ]; then
+                            export AISTACK_VSCODE_HOME="$HOME/.config/Code"
+                            export AISTACK_VSCODE_USER_HOME="$AISTACK_VSCODE_HOME/User"
+                            export AISTACK_VSCODE_CONFIG_FILE="$AISTACK_VSCODE_USER_HOME/settings.json"
+                        fi
                         ;;
                     "darwin") 
-                        [ -d "$HOME/Library/Application Support/Code/User" ] && export AISTACK_VSCODE_CONFIG_FILE="$HOME/Library/Application Support/Code/User/settings.json"
+                        if [ -d "$HOME/Library/Application Support/Code/User" ]; then
+                            export AISTACK_VSCODE_HOME="$HOME/Library/Application Support/Code"
+                            export AISTACK_VSCODE_USER_HOME="$AISTACK_VSCODE_HOME/User"
+                            export AISTACK_VSCODE_CONFIG_FILE="$AISTACK_VSCODE_USER_HOME/settings.json"
+                        fi
                         ;;
                 esac
                 ;;
@@ -79,6 +94,8 @@ vscode_path() {
                 echo "WARN : undefined VS Code mode between remore or local"
                 ;;
     esac
+
+
 
     # aistack path for vs
     #export AISTACK_VSCODE_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/vscode"
@@ -146,7 +163,7 @@ vscode_path_unregister_for_vs_terminal() {
 
 # ADD vscode cli PATH to local binary 'code' CLI OR path to remote-cli binary 'code'
 #       for vscode integrated terminal
-# on linux server :
+# on linux vscode server :
 #   remote-cli code is in $HOME/.vscode-server/bin/<commit>/bin/remote-cli/code
 vscode_path_register_cli_for_vs_terminal() {
     local code_found=0
@@ -176,6 +193,7 @@ vscode_path_register_cli_for_vs_terminal() {
             # local "code" cli
             case "$STELLA_CURRENT_PLATFORM" in
                 "linux")
+                    # TODO
                     echo "- TODO NOT IMPLEMENTED configure VS Code : linux code found in ------"
                     ;;
                 "darwin") 
