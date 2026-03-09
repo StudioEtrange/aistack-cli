@@ -91,7 +91,8 @@ cpa_settings_configure() {
     cpa_settings_management_api_key_reset
     cpa_settings_management_api_key_create
 
-    cpa_settings_configure_tls
+    # TODO : kilocode do not support yet insecure self signed certificate : https://github.com/Kilo-Org/kilocode/issues/6827
+    #cpa_settings_configure_tls
 }
 
 cpa_settings_remove() {
