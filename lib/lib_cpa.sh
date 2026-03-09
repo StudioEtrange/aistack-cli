@@ -257,8 +257,8 @@ cpa_settings_api_key_add() {
         rm -f "$tmp_target_file"
         return 1
     fi
-
-    cp -f "$tmp_target_file" "$target_file"
+    
+    cp -f "$tmp_target_file" "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
     rm -f "$tmp_target_file"
 }
 
