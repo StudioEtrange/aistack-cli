@@ -38,6 +38,8 @@ Options:
     gc launch [context folder] -- <other gemini options>                  
                                     Launch Gemini CLI. Instead use 'gemini' command if ${AISTACK_GEMINI_LAUNCHER_HOME} is in your PATH,
                                     you could use 'aistack gc register <shell>'
+    gc set <key> <value>            Set a Gemini CLI configuration in settings file.
+    gc del <key>                    Delete a Gemini CLI configuration in settings file.
     gc mcp calculator install|uninstall         Add mcp-calculator local server configuration.
     gc mcp github install|uninstall             Add mcp-github remote server configuration.
     gc mcp desktop-commander install|uninstall  Add mcp-desktop-commander local server configuration.

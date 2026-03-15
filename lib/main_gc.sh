@@ -112,6 +112,12 @@ case "$sub_command" in
     mcp)
         mcp_server_manage "$1" "$2" "$command" "$3"
         ;;
+    set)
+        gemini_set_config "$1" "$2"
+        ;;
+    del)
+        gemini_remove_config "$1"
+        ;;
     *)
         echo "Error: Unknown command $sub_command for gc"
         usage
