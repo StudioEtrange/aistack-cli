@@ -75,15 +75,6 @@ gemini_settings_remove() {
     rm -Rf "$AISTACK_GEMINI_CONFIG_HOME"
 }
 
-gemini_merge_config() {
-    local file_to_merge="$1"
-    merge_json_file "$file_to_merge" "$AISTACK_GEMINI_CONFIG_FILE"
-}
-
-gemini_remove_config() {
-    local key_path="$1"
-    json_del_key_from_file "$AISTACK_GEMINI_CONFIG_FILE" "$key_path"
-}
 
 gemini_launch() {
     local list_args=()
@@ -99,6 +90,26 @@ gemini_launch() {
     fi
 }
 
+
+# generic config management -----------------
+gemini_merge_config() {
+    local file_to_merge="$1"
+    merge_json_file "$file_to_merge" "$AISTACK_GEMINI_CONFIG_FILE"
+}
+
+gemini_remove_config() {
+    local key_path="$1"
+    json_del_key_from_file "$AISTACK_GEMINI_CONFIG_FILE" "$key_path"
+}
+
+gemini_set_config() {
+    local key_path="$1"
+    local value="$2"
+    json_set_key_into_file "$AISTACK_GEMINI_CONFIG_FILE" "$key_path" "$value"
+}
+
+
+# gemini command management ------------------------
 gemini_add_command() {
     local command_file="$1"
 
