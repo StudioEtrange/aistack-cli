@@ -34,7 +34,7 @@ case "$sub_command" in
         gemini_path_unregister_for_shell "all"
         gemini_path_unregister_for_vs_terminal
 
-        gemini_launcher_manage
+        gemini_launcher_manage "delete"
         ;;
     configure)
         echo "Configuring Gemini CLI"
