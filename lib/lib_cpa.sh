@@ -104,15 +104,12 @@ cpa_info() {
     if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
         echo "CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
 
-        local tls="$(cpa_get_config ".tls.enable")"
-        local scheme="http"
-        [ "$tls" = "true" ] && scheme="https"
-        local api_uri="${scheme}://$(cpa_get_config ".host"):$(cpa_get_config ".port")"
+        local address="$(cpa_get_address)"
 
-        echo "Management UI : ${api_uri}/management.html"
+        echo "Management UI : ${address}/management.html"
         echo "Management key : $(cat "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE")"
 
-        echo "CLIProxyAPI API endpoint : $api_uri" 
+        echo "CLIProxyAPI API endpoint : $address" 
         echo "CLIProxyAPI API keys list :" 
         cpa_settings_api_key_list
     else
@@ -205,6 +202,14 @@ cpa_settings_set_host() {
 cpa_settings_set_port() {
     local port="$1"
     cpa_set_config "port" "$port"
+}
+
+cpa_get_address() {
+    local tls="$(cpa_get_config ".tls.enable")"
+    local scheme="http"
+    [ "$tls" = "true" ] && scheme="https"
+    local api_uri="${scheme}://$(cpa_get_config ".host"):$(cpa_get_config ".port")"
+    echo -n $api_uri
 }
 
 # remote management ------------------------

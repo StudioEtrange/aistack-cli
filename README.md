@@ -165,6 +165,7 @@ AIStack leverages the **Stella** framework for its core functionality. Stella pr
 * security tool : https://github.com/TheAuditorTool/Auditor
 * Chrome DevTools MCP https://korben.info/chrome-devtools-mcp.html
 * change all launcher manage with action arg create/delete
+* move gc and oc install in functions
 
 ## Contributors
 
