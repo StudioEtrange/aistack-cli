@@ -30,28 +30,35 @@ gemini_path_unregister_for_vs_terminal() {
 
 
 gemini_launcher_manage() {
-    if [ -f "${AISTACK_NODEJS_BIN_PATH}gemini" ]; then
+    local action="${1:-create}"
 
-        runtime_path_files_generate
+    case $action in
+        create)
+            if [ -f "${AISTACK_NODEJS_BIN_PATH}gemini" ]; then
 
-        echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-        echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-        echo "gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-        chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                runtime_path_files_generate
 
-        # launcher based on a wrapper
-        # echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-        # echo "${AISTACK_NODEJS_BIN_PATH}node ${AISTACK_NODEJS_BIN_PATH}/gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-        # chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                echo "gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
 
-        # launcher based on a symbolic link - test link does not exist OR is not valid
-        # if [ ! -L "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini" ] || [ ! -e "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini" ]; then
-        #     echo "Create a gemini launcher"
-        #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}/gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-        # fi
-    else
-        rm -f "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-    fi
+                # launcher based on a wrapper
+                # echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                # echo "${AISTACK_NODEJS_BIN_PATH}node ${AISTACK_NODEJS_BIN_PATH}/gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                # chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+
+                # launcher based on a symbolic link - test link does not exist OR is not valid
+                # if [ ! -L "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini" ] || [ ! -e "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini" ]; then
+                #     echo "Create a gemini launcher"
+                #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}/gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                # fi
+            fi
+            ;;
+        delete)
+            rm -f "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+            ;;
+    esac
 }
 
 
