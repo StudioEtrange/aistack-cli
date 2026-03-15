@@ -28,16 +28,16 @@ cpa_install() {
     local version="$1"
     
     if [ -z "$version" ] || [ "$version" = "latest" ]; then
-        echo "CLIProxyAPI : No version provided, fetching the latest version..."
+        echo "No version provided, fetching the latest version..."
         local latest_tag
         latest_tag=$(curl -s "https://api.github.com/repos/router-for-me/CLIProxyAPI/releases/latest" | yq -r .tag_name)
         if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
-            echo "ERROR: Could not fetch the latest CLIProxyAPI version from GitHub." >&2
+            echo "ERROR: Could not fetch the latest version from GitHub." >&2
             return 1
         fi
         # remove v prefix
         version="${latest_tag#v}"
-        echo "CLIProxyAPI latest version is ${version}"
+        echo "latest version is ${version}"
     fi
 
     local os_arch
