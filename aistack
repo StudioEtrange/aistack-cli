@@ -79,7 +79,7 @@ Options:
     cpa login gemini-oauth [--project_id <your_project_id>]                     Login to Gemini OAuth.
     cpa login openai-oauth               Login to OpenAI OAuth.
     cpa login qwen-oauth                 Login to Qwen OAuth.
-    cpa set <key> <value> ["string"]     Set a CLIProxyAPI key in setting file. (i.e: cpa set port 8000) Use optionnal "string" option value is a string.
+    cpa set <key> <value> ["string"]     Set a CLIProxyAPI key in setting file. (i.e: cpa set port 8000) Use optional "string" if option value is a string.
     cpa get <key>                        Get a CLIProxyAPI key from setting file. (i.e: cpa get api-key.0)
     cpa key generate                     Generate a new API key for CLIProxyAPI and add it to the configuration.
     cpa key list                        List all API keys from CLIProxyAPI configuration. 
