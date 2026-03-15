@@ -21,6 +21,7 @@ aistack_path() {
     opencode_path
     vscode_path
     cpa_path
+    orla_path
 }
 
 
