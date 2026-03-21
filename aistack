@@ -94,9 +94,11 @@ Options:
     cpa set <key> <value> ["string"]     Set a CLIProxyAPI key in setting file. (i.e: cpa set port 8000) Use optional "string" if option value is a string.
     cpa get <key>                        Get a CLIProxyAPI key from setting file. (i.e: cpa get api-key.0)
     cpa key generate                     Generate a new API key for CLIProxyAPI and add it to the configuration.
-    cpa key list                         List all API keys from CLIProxyAPI configuration. 
+    cpa key list                         List all API keys from CLIProxyAPI configuration.
+    cpa key get <N>                      Get API key N. (i.e: cpa key get 0)
     cpa key reset                        Remove all API keys from CLIProxyAPI configuration.
     cpa key delete <key>                 Remove an API key from CLIProxyAPI configuration.
+    cpa model list                       List all available LLM models from CLIProxyAPI endpoint.
     ----
     npm-config set <key> <value>    Set a npm configuration for the internal nodejs.
     ----

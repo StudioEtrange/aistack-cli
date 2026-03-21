@@ -14,7 +14,11 @@ case "$sub_command" in
         ;;
     uninstall)
         # clean running process
-        process_kill_by_port "8317" 1>/dev/null 2>&1
+        local port="8317"
+        if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+            port="$(cpa_get_config ".port")"
+        fi
+        process_kill_by_port "$port" 1>/dev/null 2>&1
         
         echo "Uninstalling CLIProxyAPI (keeping all configuration unchanged. to remove configuration use reset command)"
         cpa_uninstall
@@ -71,6 +75,9 @@ case "$sub_command" in
             list)
                 cpa_settings_api_key_list
                 ;;
+            get)
+                cpa_settings_api_key_get "$2"
+                ;;
             *)
                 echo "Error: Unknown command $1 for CLIProxyAPI key"
                 usage
@@ -97,7 +104,18 @@ case "$sub_command" in
 
         cpa_launch "$@"
         ;;
-    
+    model)
+        case "$1" in
+            list)
+                cpa_get_model_list
+                ;;
+            *)
+                echo "Error: Unknown command $1 for CLIProxyAPI model"
+                usage
+                exit 1
+                ;;
+        esac
+        ;;
     login)
         case "$1" in
             gemini-oauth)

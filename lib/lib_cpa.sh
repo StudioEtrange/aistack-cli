@@ -11,6 +11,7 @@ cpa_path() {
     export AISTACK_CLIPROXYAPI_CONFIG_FILE="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/config.yaml"
     
     export AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/management-api-key"
+    
 
     export CPA_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_DEPENDENCIES_ROOT/cli-proxy-api"
     mkdir -p "${CPA_FEAT_INSTALL_ROOT}"
@@ -104,12 +105,12 @@ cpa_info() {
     if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
         echo "CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
 
-        local address="$(cpa_get_address)"
+        local address="$(cpa_settings_get_address)"
 
         echo "Management UI : ${address}/management.html"
-        echo "Management key : $(cat "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE")"
+        echo "Management key : $(cpa_settings_management_api_key_get)"
 
-        echo "CLIProxyAPI API endpoint : $address" 
+        echo "CLIProxyAPI API endpoint : $(cpa_settings_get_api_endpoint)" 
         echo "CLIProxyAPI API keys list :" 
         cpa_settings_api_key_list
     else
@@ -129,9 +130,9 @@ cpa_launch() {
     done
 
     if [ ${#list_args[@]} -gt 0 ]; then
-        $CPA_FEAT_INSTALL_ROOT/cli-proxy-api "${list_args[@]}"
+        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api" "${list_args[@]}"
     else
-        $CPA_FEAT_INSTALL_ROOT/cli-proxy-api
+        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api"
     fi
 }
 
@@ -162,6 +163,12 @@ cpa_login_qwen_oauth() {
 # generic config management -----------------
 cpa_remove_config() {
     local key_path="$1"
+
+    case "$key_path" in
+        .*) ;;
+        *)  key_path=".$key_path" ;;
+    esac
+
     yaml_del_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$key_path"
 }
 
@@ -204,12 +211,16 @@ cpa_settings_set_port() {
     cpa_set_config "port" "$port"
 }
 
-cpa_get_address() {
+cpa_settings_get_address() {
     local tls="$(cpa_get_config ".tls.enable")"
     local scheme="http"
     [ "$tls" = "true" ] && scheme="https"
     local api_uri="${scheme}://$(cpa_get_config ".host"):$(cpa_get_config ".port")"
-    echo -n $api_uri
+    echo -n "$api_uri"
+}
+
+cpa_settings_get_api_endpoint() {
+    echo -n "$(cpa_settings_get_address)/v1"
 }
 
 # remote management ------------------------
@@ -239,6 +250,10 @@ cpa_settings_management_api_key_create() {
 cpa_settings_management_api_key_set() {
     local key="$1"
     cpa_set_config ".remote-management.secret-key" "$key" "double"
+}
+
+cpa_settings_management_api_key_get() {
+    [ -f "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE" ] && cat "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE"
 }
 
 # API key management ------------------------
@@ -293,7 +308,14 @@ cpa_settings_api_key_del() {
 
 
 cpa_settings_api_key_list() {
-    yaml_get_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ".api-keys" 
+    yaml_get_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ".api-keys" | yq -r '.[]'
+}
+
+cpa_settings_api_key_get() {
+    local index="${1:-0}"
+    if ! cat "$AISTACK_CLIPROXYAPI_CONFIG_FILE" 2>/dev/null | yq '.api-keys['$index'] | sub("^null$"; "")' 2>/dev/null; then
+        return 1
+    fi
 }
 
 
@@ -330,4 +352,13 @@ cpa_settings_configure_tls() {
     cpa_set_config ".tls.key" "$key_path" "double"
 
     echo "TLS with certificate configured successfully with $cert_path and $key_path."
+}
+
+
+
+cpa_get_model_list() {
+    curl -skL -X GET http://localhost:8317/v1/models \
+        -H "Authorization: Bearer $(cpa_settings_api_key_get 0)" \
+        -H "Content-Type: application/json" | jq -r '.data[]?.id // empty' | sort
+
 }
