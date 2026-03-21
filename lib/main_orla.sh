@@ -57,7 +57,9 @@ case "$sub_command" in
 
         orla_launcher_manage
         ;;
-   
+    agent|serve)
+        orla_launch "$sub_command" "$@"
+        ;;
     launch)
         orla_launcher_manage
 
@@ -77,7 +79,28 @@ case "$sub_command" in
 
         orla_launch "$@"
         ;;
-    
+    connect)
+        case "$2" in
+            cpa)
+                case "$1" in
+                    agent)
+                        echo "Connecting Orla agent mode to CLIProxyAPI"
+                        orla_connect_cpa "agent" "$3"
+                        ;;
+                    serve)
+                        echo "Connecting Orla API service mode to CLIProxyAPI"
+                        orla_connect_cpa "serve" "$3"
+                        ;;
+                    *)
+                        echo "Error: Unknown service $1 for Orla connect command"
+                        usage
+                        exit 1
+                        ;;
+                esac
+                ;;
+        esac
+        ;;
+       
     *)
         echo "Error: Unknown command $sub_command for Orla"
         usage

@@ -74,11 +74,14 @@ Options:
     orla reset                        Reset all Orla configuration.
     orla register <shell>|vs          Register Orla PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
     orla unregister <shell>|vs        Unregister Orla PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs")
+    orla agent <other Orla options>   Execute Orla agent command. (i.e: aistack orla agent "Hello world" -m "gemini-2.5-flash")
+    orla serve <other Orla options>   Execute Orla serve command - Launch Orla API service.
     orla launch [context folder] -- <other Orla options>                  
                                       Launch Orla. Instead use 'orla' command if ${AISTACK_ORLA_LAUNCHER_HOME} is in your PATH,
                                       you could use 'aistack orla register <shell>'
     orla set <key> <value> ["string"]     Set a Orla key in setting file. (i.e: cpa set listen_address localhost:8081) Use optional "string" option if value is a string.
-    orla get <key>                        Get a key key from setting file. (i.e: cpa get api-key.0)
+    orla get <key>                        Get a Orla key from setting file. (i.e: cpa get api-key.0)
+    orla connect agent|serve cpa [<model>]                      Connect Orla agent or service mode to CLIProxyAPI. By default will set the first model from CLIProxyAPI as the default model. You can provide a specific model.
     ----
     cpa : CLIProxyAPI - https://github.com/router-for-me/CLIProxyAPI
     cpa install                          Install and configure CLIProxyAPI.
