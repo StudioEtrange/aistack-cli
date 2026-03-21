@@ -10,6 +10,9 @@ orla_path() {
     # orla specific paths
     export AISTACK_ORLA_CONFIG_FILE="${AISTACK_ORLA_CONFIG_HOME}/orla.yaml"
     
+    # cpa key for orla to connect to cpa backend
+    export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE="${AISTACK_ORLA_CONFIG_HOME}/cpa_key_for_orla"
+    [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE")"
 
     export ORLA_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_DEPENDENCIES_ROOT/orla"
     mkdir -p "${ORLA_FEAT_INSTALL_ROOT}"
@@ -108,10 +111,16 @@ orla_settings_configure() {
     echo "add some default settings :"
     echo " - set default listening address for orla service to localhost:8081"
     orla_settings_set_listen_address "localhost:8081"
+    echo " - set for orla agent mode a default backend named ollama with endpoint http://localhost:11434"
+    orla_agent_register_default_backend "default_ollama" "ollama" "http://localhost:11434"
+    orla_agent_register_default_model
 
+    echo " - generate a CLIProxyAPI API key for Orla to connect to CPA backend"
+    orla_generate_cpa_key
 }
 
 orla_settings_remove() {
+    orla_unregister_cpa_key
     rm -Rf "$AISTACK_ORLA_CONFIG_HOME"
 }
 
@@ -120,10 +129,9 @@ orla_info() {
     if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
         echo "CLIProxyAPI configuration file : $AISTACK_ORLA_CONFIG_FILE"
 
-        local scheme="http"
-        local api_uri="${scheme}://$(orla_get_config ".listen_address")"
+        echo "Orla API endpoint : $(orla_settings_get_api_endpoint)"
 
-        echo "Orla API endpoint : $api_uri" 
+        [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ] && echo "Connected to CLIProxyAPI using API key : $AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
     else
         echo "No Orla configuration file found. $AISTACK_ORLA_CONFIG_FILE"
     fi
@@ -152,6 +160,12 @@ orla_launch() {
 # generic config management -----------------
 orla_remove_config() {
     local key_path="$1"
+
+    case "$key_path" in
+        .*) ;;
+        *)  key_path=".$key_path" ;;
+    esac
+    
     yaml_del_key_from_file "$AISTACK_ORLA_CONFIG_FILE" "$key_path"
 }
 
@@ -185,52 +199,120 @@ orla_get_config() {
 # host management ------------------------
 orla_settings_set_listen_address() {
     local address="$1"
-    # default is localhost:8081
+    # Orla API endpoint - default is localhost:8081
     orla_set_config "listen_address" "$address"
 }
-# model management ------------------------
-orla_settings_register_default_backend() {
+
+orla_settings_get_listen_address() {
+    orla_get_config ".listen_address"
+}
+
+orla_settings_get_api_endpoint() {
+    local scheme="http"
+    echo -n "${scheme}://$(orla_settings_get_listen_address)/api/v1"
+}
+
+# orla agent management ------------------------
+# the default backend is defined in orla configuration
+# https://github.com/dorcha-inc/orla/blob/main/internal/config/config.go
+orla_agent_register_default_backend() {
     local nickname="$1"
-    local type"$2" # ollama or openai or sglang
+    local type="$2" # ollama or openai or sglang
     local endpoint="$3"
-    local max_concurrency="${4:-1}"
-    local api_key_env_var="$5"
+    local api_key_env_var="$4"
+    local default_model="$5"
+    local max_concurrency="$6"
+    local queue_capacity="$7"
+
+
+    # Default llm backend used for AGENT mode only ---
+    orla_remove_config "llm_backend"
 
     orla_set_config "llm_backend.name" "$nickname"
     orla_set_config "llm_backend.type" "$type"
     orla_set_config "llm_backend.endpoint" "$endpoint"
-    orla_set_config "llm_backend.max_concurrency" "$max_concurrency"
-
+    
     [ -n "$api_key_env_var" ] && orla_set_config "llm_backend.api_key_env_var" "$api_key_env_var"
+
+    # MaxConcurrency is the maximum number of concurrent inference requests dispatched to this backend
+    # A value of 0 or 1 means serial dispatch.
+    # https://github.com/dorcha-inc/orla/blob/4eb6ca0ebcd5f4fe9e21116cb866d749f0877bdd/internal/core/types.go#L30
+    [ -n "$max_concurrency" ] && orla_set_config "llm_backend.max_concurrency" "$max_concurrency"
+    # QueueCapacity is the maximum number of requests that may be queued for this backend.
+    [ -n "$queue_capacity" ] && orla_set_config "llm_backend.queue_capacity" "$queue_capacity"
+
+    # Default model used for orla AGENT mode only ---
+    orla_remove_config "model"
+    [ -n "$default_model" ] && orla_set_config "model" "${type}:${default_model}"
+    
 }
 
 
-orla_connect_cpa() {
+
+orla_agent_register_default_model() {
+    local type="$1"
+    local default_model="$2"
+
+    # Default model used for orla AGENT mode only ---
+    orla_remove_config "model"
+    [ -n "$type" ] &&  [ -n "$default_model" ] && orla_set_config "model" "${type}:${default_model}"
+    
+}
+
+# cliproxy api connection management ------------------------
+
+orla_generate_cpa_key() {
+    orla_unregister_cpa_key
+
+    # Generating a CPA API key for Orla
     export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA="$($STELLA_API generate_password 48 "[:alnum:]")"
     cpa_settings_api_key_add "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
-    
-    orla_settings_register_default_backend "cpa" "openai" "$(cpa_get_address)/v1" "1" "AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
+    echo "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" > "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE"
 }
 
-# curl -X POST http://localhost:8081/api/v1/backends \
-#   -H "Content-Type: application/json" \
-#   -d '{
-#     "name": "ollama",
-#     "endpoint": "http://ollama:11434",
-#     "type": "ollama",
-#     "model_id": "ollama:llama3.2:3b",
-#     "api_key_env_var": ""
-#   }'
+orla_unregister_cpa_key() {
+    if [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ]; then
+        # Remove existing CPA API key for Orla
+        cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
+    fi
+}
 
-# model: "ollama:qwen3:0.6b"
-# llm_backend:
-#   type: "ollama"
-#   endpoint: "http://localhost:11434"
-#   max_concurrency: 1
+orla_connect_cpa() {
+    local orla_mode="${1}" # agent or serve
+    local model="${2}"
 
-# model: "openai:gpt-4.1"
-# llm_backend:
-#   type: "openai"
-#   endpoint: "https://mon-endpoint-openai-compatible/v1"
-#   api_key_env_var: "MY_LLM_API_KEY"
-#   max_concurrency: 8
+    local default_model
+    if [ -n "${model}" ]; then
+        default_model="$model"
+    else
+        # request cpa to get the first model available as the default model for orla AGENT mode
+        default_model="$(cpa_get_model_list | head -n 1)"
+    fi
+
+    case "$orla_mode" in
+        agent)
+            orla_agent_register_default_backend "cpa" "openai" "$(cpa_settings_get_api_endpoint)" "AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
+            [ -n "$default_model" ] && orla_agent_register_default_model "openai" "$default_model"
+            ;;
+        serve)
+            # register cpa as a backend for orla service mode (orla service mode do not read the default backend from configuration file))
+            curl -skL -X POST "$(orla_settings_get_api_endpoint)/backends" \
+                        -H "Content-Type: application/json" \
+                        -d \
+                            '{
+                                "name": "cpa",
+                                "endpoint": "'$(cpa_settings_get_api_endpoint)'",
+                                "type": "openai",
+                                "api_key_env_var": "AISTACK_CLIPROXYAPI_KEY_FOR_ORLA",
+                                "model_id": "openai:'${default_model}'"
+                            }'
+            ;;
+        *)
+            echo "Error: Unknown Orla mode $orla_mode for CPA connection"
+            exit 1
+            ;;
+    esac
+
+}
+
+
