@@ -271,34 +271,9 @@ vscode_settings_tweak_path_for_vs_terminal() {
     # POSTPEND_IF_NOT_EXISTS add path at the end position only if not already present
     local mode="${2:-ALWAYS_PREPEND}" 
 
-    local tmp_file="$(mktemp)"
+    json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.linux.PATH' "$path" ':' "$AISTACK_VSCODE_CONFIG_FILE" "$mode"
 
-    cat "$AISTACK_VSCODE_CONFIG_FILE" \
-        | jq '
-            # replace ":" inside ${...} with \u0001
-            # case of ${env:FOO}
-            def shield:
-                if (type=="string") then
-                    gsub("\\$\\{env:(?<var>[^}]+)\\}"; "${env\u0001" + .var + "}")
-                else
-                    .
-                end;
-            walk(shield)' \
-        | json_tweak_value_of_list '.terminal\.integrated\.env\.linux.PATH' "$path" ':' "$mode" \
-        | json_tweak_value_of_list '.terminal\.integrated\.env\.osx.PATH' "$path" ':' "$mode" \
-        | jq '
-            # restore ":"
-            def unshield:
-                if (type=="string") then gsub("\u0001"; ":") else . end;
-            walk(unshield)' > "$tmp_file"
-        
-        if [ $? -ne 0 ]; then
-            echo "ERROR : vscode_settings_tweak_path processing with jq"
-            rm -f "$tmp_file"
-            exit 1
-        else
-            mv "$tmp_file" "$AISTACK_VSCODE_CONFIG_FILE"
-            rm -f "$tmp_file"
-        fi
+    json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.osx.PATH' "$path" ':' "$AISTACK_VSCODE_CONFIG_FILE" "$mode"
+
 }
 
