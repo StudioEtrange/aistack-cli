@@ -27,7 +27,34 @@ gemini_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}"
 }
 
+gemini_install() {
+    local version="$1"
+    [ -z "${version}" ] && version="@latest"
 
+    echo "Installing Gemini CLI ${version}"
+    # available versions : https://www.npmjs.com/package/@google/gemini-cli-core
+    # latest is stable version
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
+}
+
+gemini_uninstall() {
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
+}
+
+gemini_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
+gemini_launch() {
+    set -- "$@"
+
+    (
+        . "${AISTACK_RUNTIME_PATH_FILE}"
+
+        if [ "$#" -gt 0 ]; then
+            "$AISTACK_NODEJS_BIN_PATH/gemini" "$@"
+        else
+            "$AISTACK_NODEJS_BIN_PATH/gemini"
+        fi
+    )
+}
 
 gemini_launcher_manage() {
     local action="${1:-create}"
@@ -36,12 +63,12 @@ gemini_launcher_manage() {
         create)
             if [ -f "${AISTACK_NODEJS_BIN_PATH}gemini" ]; then
 
-                runtime_path_files_generate
+                #runtime_path_file_generate
 
-                echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-                echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-                echo "gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-                chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                # echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                # echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                # echo "gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+                # chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
 
                 # launcher based on a wrapper
                 # echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
@@ -53,6 +80,18 @@ gemini_launcher_manage() {
                 #     echo "Create a gemini launcher"
                 #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}/gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
                 # fi
+
+                {
+                    echo '#!/bin/sh'
+                    for v in $gemini_launch_export_variables; do
+                        printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                    done
+
+                    declare -f gemini_launch
+
+                    echo gemini_launch \"\$@\"
+                } > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+
             fi
             ;;
         delete)
@@ -76,19 +115,7 @@ gemini_settings_remove() {
 }
 
 
-gemini_launch() {
-    local list_args=()
 
-    for arg in "$@"; do
-        list_args+=("$arg")
-    done
-
-    if [ ${#list_args[@]} -gt 0 ]; then
-        gemini "${list_args[@]}"
-    else
-        gemini
-    fi
-}
 
 
 # generic config management -----------------

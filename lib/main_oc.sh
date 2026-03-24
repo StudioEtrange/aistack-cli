@@ -5,13 +5,11 @@ case "$sub_command" in
     install)
         if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
-        echo "Installing Opencode CLI"
-        PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai@latest
-    
+        opencode_install  "latest"
+
         echo "Configuring Opencode CLI"
         opencode_settings_configure
         vscode_settings_configure "opencode"
-        #opencode_path_register_for_vs_terminal
         
         opencode_launcher_manage
 
@@ -23,18 +21,25 @@ case "$sub_command" in
     uninstall)
         if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
-        echo "Uninstalling Opencode and unregister Opencode PATH (keep all configuration unchanged, to remove configuration use reset command)"
+        echo "Uninstalling Opencode CLI and Opencode Gemini CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
+        opencode_uninstall
         
-        PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
         opencode_path_unregister_for_shell "all"
         opencode_path_unregister_for_vs_terminal
 
-        opencode_launcher_manage
+        opencode_launcher_manage "delete"
         ;;
     configure)
         echo "Configuring Opencode CLI"
         opencode_settings_configure
         vscode_settings_configure "opencode"
+
+        opencode_launcher_manage
+        ;;
+    reset)
+        echo "Resetting Opencode configuration"
+        opencode_settings_remove
+        vscode_settings_remove "opencode"
 
         opencode_launcher_manage
         ;;
@@ -68,13 +73,7 @@ case "$sub_command" in
             echo "No Opencode configuration file found."
         fi
         ;;
-    reset)
-        echo "Resetting Opencode configuration"
-        opencode_settings_remove
-        vscode_settings_remove "opencode"
 
-        opencode_launcher_manage
-        ;;
     launch)
         opencode_launcher_manage
 

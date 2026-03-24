@@ -4,13 +4,17 @@ shift
 case "$sub_command" in
     install)
 
-        echo "Installing Orla"
         orla_install "latest"
         
         echo "Configuring Orla"
         orla_settings_configure
 
         orla_launcher_manage
+
+        echo "You could now register it's path in shell OR vscode terminal"
+        echo "$0 orla register bash|zsh|fish"
+        echo "   OR"
+        echo "$0 orla register vs"
         ;;
     uninstall)
         # clean running process
@@ -19,6 +23,9 @@ case "$sub_command" in
         echo "Uninstalling Orla (keeping all configuration unchanged. to remove configuration use reset command)"
         orla_uninstall
 
+        orla_path_unregister_for_shell "all"
+        orla_path_unregister_for_vs_terminal
+
         orla_launcher_manage "delete"
         ;;
     configure)
@@ -26,6 +33,34 @@ case "$sub_command" in
         orla_settings_configure
 
         orla_launcher_manage
+        ;;
+    reset)
+        echo "Resetting Orla configuration"
+        orla_settings_remove
+
+        orla_launcher_manage
+        ;;
+    register)
+        echo "Registering Orla launcher in PATH for $1"
+        case "$1" in
+            "vs")
+                orla_path_register_for_vs_terminal
+                ;;
+            *)
+                orla_path_register_for_shell "$1"
+                ;;
+        esac
+        ;;
+    unregister)
+        echo "Unegistering Orla launcher PATH from $1"
+        case "$1" in
+            "vs")
+                orla_path_unregister_for_vs_terminal
+                ;;
+            *)
+                orla_path_unregister_for_shell "$1"
+                ;;
+        esac
         ;;
     info)
         orla_info
@@ -38,28 +73,7 @@ case "$sub_command" in
             echo "No Orla configuration file found."
         fi
         ;;
-    set)
-        case "$3" in
-            "string")
-                orla_set_config "$1" "$2" "double"
-                ;;
-            *)
-                orla_set_config "$1" "$2"
-                ;;
-        esac
-        ;;
-    get)
-        orla_get_config "$1"
-        ;;
-    reset)
-        echo "Resetting Orla configuration"
-        orla_settings_remove
 
-        orla_launcher_manage
-        ;;
-    agent|serve)
-        orla_launch "$sub_command" "$@"
-        ;;
     launch)
         orla_launcher_manage
 
@@ -78,6 +92,19 @@ case "$sub_command" in
         [ "$1" = "--" ] && shift
 
         orla_launch "$@"
+        ;;
+    set)
+        case "$3" in
+            "string")
+                orla_set_config "$1" "$2" "double"
+                ;;
+            *)
+                orla_set_config "$1" "$2"
+                ;;
+        esac
+        ;;
+    get)
+        orla_get_config "$1"
         ;;
     connect)
         case "$2" in
@@ -100,7 +127,9 @@ case "$sub_command" in
                 ;;
         esac
         ;;
-       
+    agent|serve)
+        orla_launch "$sub_command" "$@"
+        ;;
     *)
         echo "Error: Unknown command $sub_command for Orla"
         usage

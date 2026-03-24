@@ -20,7 +20,7 @@ cpa_path() {
 
 
 # Download and install cliproxyapi from GitHub releases.
-# @param {string} $1 - Optional version to install (e.g., "0.1.0").
+# @param {string} $1 - Optional version to install (e.g., "v0.1.0").
 #                      If not provided, the latest version will be fetched.
 #
 # This function relies on the following environment variables to be set:
@@ -30,14 +30,7 @@ cpa_install() {
     
     if [ -z "$version" ] || [ "$version" = "latest" ]; then
         echo "No version provided, fetching the latest version..."
-        local latest_tag
-        latest_tag=$(curl -s "https://api.github.com/repos/router-for-me/CLIProxyAPI/releases/latest" | yq -r .tag_name)
-        if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
-            echo "ERROR: Could not fetch the latest version from GitHub." >&2
-            return 1
-        fi
-        # remove v prefix
-        version="${latest_tag#v}"
+        version=$(github_get_latest_release "router-for-me/CLIProxyAPI")
         echo "latest version is ${version}"
     fi
 
@@ -52,8 +45,8 @@ cpa_install() {
             [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="darwin_arm64"
             ;;
     esac
-    local filename="CLIProxyAPI_${version}_${os_arch}.tar.gz"
-    local download_url="https://github.com/router-for-me/CLIProxyAPI/releases/download/v${version}/${filename}"
+    local filename="CLIProxyAPI_${version#v}_${os_arch}.tar.gz"
+    local download_url="https://github.com/router-for-me/CLIProxyAPI/releases/download/${version}/${filename}"
 
     echo "Downloading and installing CLIProxyAPI ${version} from ${download_url} to ${CPA_FEAT_INSTALL_ROOT}..."
     $STELLA_API get_resource "CLIProxyAPI" "${download_url}" "HTTP_ZIP" "$CPA_FEAT_INSTALL_ROOT" "DEST_ERASE"
@@ -67,15 +60,35 @@ cpa_uninstall() {
 }
 
 cpa_launcher_manage() {
-    if [ "${CPA_TEST_FEATURE}" = "1" ]; then
-        # launcher based on a symbolic link - test link does not exist OR is not valid
-        if [ ! -L "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api" ] || [ ! -e "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api" ]; then
-            echo "Create an CLIProxyAPI launcher"
-            ln -fsv "${CPA_FEAT_INSTALL_ROOT}/cli-proxy-api" "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
-        fi
-    else
-        rm -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
-    fi
+    local action="${1:-create}"
+
+    case $action in
+        create)
+            if [ -x "${CPA_FEAT_INSTALL_ROOT}/cli-proxy-api" ]; then
+                # echo "Create an CLIProxyAPI launcher"
+                # rm -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+                # # launcher based on a symbolic link
+                # ln -fsv "${CPA_FEAT_INSTALL_ROOT}/cli-proxy-api" "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+                {
+                    echo '#!/bin/sh'
+                    for v in $cpa_launch_export_variables; do
+                        printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                    done
+
+                    declare -f cpa_launch
+
+                    echo cpa_launch \"\$@\"
+                } > "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+
+                chmod +x "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+
+            fi
+            ;;
+
+        delete)
+            rm -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+            ;;
+    esac
 }
 
 
@@ -118,19 +131,14 @@ cpa_info() {
     fi
 }
 
+cpa_launch_export_variables="AISTACK_CLIPROXYAPI_CONFIG_FILE CPA_FEAT_INSTALL_ROOT"
 cpa_launch() {
-    local list_args=()
-
     if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
-        list_args+=("--config" "$AISTACK_CLIPROXYAPI_CONFIG_FILE")
+        set -- --config "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$@"
     fi
 
-    for arg in "$@"; do
-        list_args+=("$arg")
-    done
-
-    if [ ${#list_args[@]} -gt 0 ]; then
-        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api" "${list_args[@]}"
+    if [ "$#" -gt 0 ]; then
+        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api" "$@"
     else
         "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api"
     fi
@@ -243,7 +251,6 @@ cpa_settings_management_api_key_create() {
     echo "$key" > "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE"
 
     echo "New management API key created : $key"
-    echo "WARN : management API key is hashed in config file, so save it now"
 }
 
 # note : the management API key is hashed in the config file

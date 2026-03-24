@@ -4,7 +4,6 @@ shift
 case "$sub_command" in
     install)
 
-        echo "Installing CLIProxyAPI"
         cpa_install "latest"
         
         echo "Configuring CLIProxyAPI"
@@ -23,11 +22,17 @@ case "$sub_command" in
         echo "Uninstalling CLIProxyAPI (keeping all configuration unchanged. to remove configuration use reset command)"
         cpa_uninstall
 
-        cpa_launcher_manage
+        cpa_launcher_manage "delete"
         ;;
     configure)
         echo "Configuring CLIProxyAPI"
         cpa_settings_configure
+
+        cpa_launcher_manage
+        ;;
+    reset)
+        echo "Resetting CLIProxyAPI configuration"
+        cpa_settings_remove
 
         cpa_launcher_manage
         ;;
@@ -54,12 +59,6 @@ case "$sub_command" in
         ;;
     get)
         cpa_get_config "$1"
-        ;;
-    reset)
-        echo "Resetting CLIProxyAPI configuration"
-        cpa_settings_remove
-
-        cpa_launcher_manage
         ;;
     key)
         case "$1" in

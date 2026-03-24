@@ -29,24 +29,71 @@ opencode_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
 }
 
+opencode_install() {
+    local version="$1"
+    [ -z "${version}" ] && version="@latest"
+
+    echo "Installing Opencode CLI"
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
+
+}
+
+opencode_uninstall() {
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
+}
+
+opencode_launch_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
+opencode_launch() {
+    set -- "$@"
+
+    (
+        . "${AISTACK_RUNTIME_PATH_FILE}"
+
+        if [ "$#" -gt 0 ]; then
+            "$AISTACK_NODEJS_BIN_PATH/opencode" "$@"
+        else
+            "$AISTACK_NODEJS_BIN_PATH/opencode"
+        fi
+    )
+}
+
 opencode_launcher_manage() {
-    if [ -f "${AISTACK_NODEJS_BIN_PATH}opencode" ]; then
-        
-        runtime_path_files_generate
+    local action="${1:-create}"
 
-        echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-        echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-        echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-        chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+    case $action in
+        create)
+            if [ -f "${AISTACK_NODEJS_BIN_PATH}opencode" ]; then
+                
+                # runtime_path_file_generate
 
-        # launcher based on a symbolic link - test link does not exist OR is not valid
-        # if [ ! -L "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ] || [ ! -e "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ]; then
-        #     echo "Create an opencode launcher"
-        #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-        # fi
-    else
-        rm -f "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-    fi
+                # echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+                # echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+                # echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+                # chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+
+                # launcher based on a symbolic link - test link does not exist OR is not valid
+                # if [ ! -L "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ] || [ ! -e "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ]; then
+                #     echo "Create an opencode launcher"
+                #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+                # fi
+
+                {
+                    echo '#!/bin/sh'
+                    for v in $opencode_launch_variables; do
+                        printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                    done
+
+                    declare -f opencode_launch
+
+                    echo opencode_launch \"\$@\"
+                } > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            fi
+            ;;
+
+        delete)
+            rm -f "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            ;;
+    esac
 }
 
 opencode_settings_configure() {
@@ -68,16 +115,3 @@ opencode_remove_config() {
     json_del_key_from_file "$AISTACK_OPENCODE_CONFIG_FILE" "$key_path" 
 }
 
-opencode_launch() {
-    local list_args=()
-
-    for arg in "$@"; do
-        list_args+=("$arg")
-    done
-
-    if [ ${#list_args[@]} -gt 0 ]; then
-        opencode "${list_args[@]}"
-    else
-        opencode
-    fi
-}
