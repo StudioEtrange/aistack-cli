@@ -59,6 +59,19 @@ cpa_uninstall() {
     echo "CLIProxyAPI uninstalled successfully."
 }
 
+cpa_launch_export_variables="AISTACK_CLIPROXYAPI_CONFIG_FILE CPA_FEAT_INSTALL_ROOT"
+cpa_launch() {
+    if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+        set -- --config "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$@"
+    fi
+
+    if [ "$#" -gt 0 ]; then
+        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api" "$@"
+    else
+        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api"
+    fi
+}
+
 cpa_launcher_manage() {
     local action="${1:-create}"
 
@@ -131,18 +144,7 @@ cpa_info() {
     fi
 }
 
-cpa_launch_export_variables="AISTACK_CLIPROXYAPI_CONFIG_FILE CPA_FEAT_INSTALL_ROOT"
-cpa_launch() {
-    if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
-        set -- --config "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$@"
-    fi
 
-    if [ "$#" -gt 0 ]; then
-        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api" "$@"
-    else
-        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api"
-    fi
-}
 
 
 # login management -----------------
