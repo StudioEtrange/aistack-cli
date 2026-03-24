@@ -5,7 +5,7 @@ case "$sub_command" in
     install)
         if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
-        opencode_install  "latest"
+        opencode_install "$1"
 
         echo "Configuring Opencode CLI"
         opencode_settings_configure
