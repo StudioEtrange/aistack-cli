@@ -68,6 +68,7 @@ Options:
     ----
     vs set <key> <value>                Set a VS Code configuration in settings file.
     vs del <key>                        Delete a VS Code configuration in settings file.
+    vs info                             Print VSCode informations.
     vs show-config                      Show current VSCode configuration.
     ----
     orla : Orla - https://github.com/dorcha-inc/orla

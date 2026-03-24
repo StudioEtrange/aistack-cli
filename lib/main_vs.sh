@@ -8,6 +8,9 @@ case "$sub_command" in
     del)
         vscode_remove_config "$1"
         ;;
+    info)
+        vscode_info
+        ;;
     show-config)
          if [ -f "$AISTACK_VSCODE_CONFIG_FILE" ]; then
             echo "Current VSCode configuration file : $AISTACK_VSCODE_CONFIG_FILE"

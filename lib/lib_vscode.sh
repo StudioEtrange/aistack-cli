@@ -97,9 +97,6 @@ vscode_path() {
 
 
 
-    # aistack path for vs
-    #export AISTACK_VSCODE_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/vscode"
-    #mkdir -p "${AISTACK_VSCODE_LAUNCHER_HOME}"
 }
 
 # inject specific target settings for vscode
@@ -124,6 +121,21 @@ vscode_settings_remove() {
         "gemini");;
         "opencode" );;
     esac
+}
+
+vscode_info() {
+    if [ -f "$AISTACK_VSCODE_CONFIG_FILE" ]; then
+        echo "Current VSCode configuration file : $AISTACK_VSCODE_CONFIG_FILE"
+
+    else
+        echo "No VSCode configuration file found : $AISTACK_VSCODE_CONFIG_FILE"
+    fi
+
+    echo AISTACK_VSCODE_MODE : $AISTACK_VSCODE_MODE
+    echo AISTACK_VSCODE_HOME : $AISTACK_VSCODE_HOME
+    echo AISTACK_VSCODE_USER_HOME : $AISTACK_VSCODE_USER_HOME
+    echo AISTACK_VSCODE_CONFIG_FILE : $AISTACK_VSCODE_CONFIG_FILE
+    echo AISTACK_VSCODE_RECENTLY_SERVER_ROOT : $AISTACK_VSCODE_RECENTLY_SERVER_ROOT
 }
 
 # PATH management -----------------
