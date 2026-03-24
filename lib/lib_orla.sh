@@ -21,7 +21,7 @@ orla_path() {
 
 
 # Download and install cliproxyapi from GitHub releases.
-# @param {string} $1 - Optional version to install (e.g., "0.1.0").
+# @param {string} $1 - Optional version to install (e.g., "v0.1.0").
 #                      If not provided, the latest version will be fetched.
 # This function relies on the following environment variables to be set:
 # - ORLA_FEAT_INSTALL_ROOT: The directory where cliproxyapi will be installed.
@@ -30,14 +30,7 @@ orla_install() {
     
     if [ -z "$version" ] || [ "$version" = "latest" ]; then
         echo "No version provided, fetching the latest version..."
-        local latest_tag
-        latest_tag=$(curl -s "https://api.github.com/repos/dorcha-inc/orla/releases/latest" | yq -r .tag_name)
-        if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
-            echo "ERROR: Could not fetch the latest version from GitHub." >&2
-            return 1
-        fi
-        # remove v prefix
-        version="${latest_tag#v}"
+        version=$(github_get_latest_release "dorcha-inc/orla")
         echo "latest version is ${version}"
     fi
 
@@ -53,7 +46,7 @@ orla_install() {
             ;;
     esac
     local filename="orla-${os_arch}.tar.gz"
-    local download_url="https://github.com/dorcha-inc/orla/releases/download/v${version}/${filename}"
+    local download_url="https://github.com/dorcha-inc/orla/releases/download/${version}/${filename}"
 
     echo "Downloading and installing Orla ${version} from ${download_url} to ${ORLA_FEAT_INSTALL_ROOT}..."
     $STELLA_API get_resource "Orla" "${download_url}" "HTTP_ZIP" "$ORLA_FEAT_INSTALL_ROOT" "DEST_ERASE"
@@ -83,18 +76,60 @@ orla_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
 }
 
+
+
+orla_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
+orla_launch() {
+    set -- "$@"
+
+    if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
+        set -- "$@" --config "$AISTACK_ORLA_CONFIG_FILE"
+    fi
+
+    (
+        . "${AISTACK_RUNTIME_PATH_FILE}"
+
+        if [ "$#" -gt 0 ]; then
+            "${ORLA_FEAT_INSTALL_ROOT}/orla" "$@"
+        else
+            "${ORLA_FEAT_INSTALL_ROOT}/orla"
+        fi
+    )
+}
+
 orla_launcher_manage() {
     local action="${1:-create}"
 
     case $action in
 
         create)
-            if [ "${CPA_TEST_FEATURE}" = "1" ]; then
-                # launcher based on a symbolic link - test link does not exist OR is not valid
-                if [ ! -L "${AISTACK_ORLA_LAUNCHER_HOME}/orla" ] || [ ! -e "${AISTACK_ORLA_LAUNCHER_HOME}/orla" ]; then
-                    echo "Create an Orla launcher"
-                    ln -fsv "${ORLA_FEAT_INSTALL_ROOT}/orla" "${AISTACK_ORLA_LAUNCHER_HOME}orla"
-                fi
+            if [ -x "${ORLA_FEAT_INSTALL_ROOT}/orla" ]; then
+                # echo "Create an Orla launcher"
+                # rm -f "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+                # # launcher based on a symbolic link
+                # ln -fsv "${ORLA_FEAT_INSTALL_ROOT}/orla" "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+
+                # echo '#!/bin/sh' > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+                # if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
+                #     echo "${ORLA_FEAT_INSTALL_ROOT}/orla \$@ --config \"$AISTACK_ORLA_CONFIG_FILE\"" >> "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+                # else
+                #     echo "${ORLA_FEAT_INSTALL_ROOT}/orla \$@" >> "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+                # fi
+                # chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+
+                #runtime_path_file_generate
+                {
+                    echo '#!/bin/sh'
+                    for v in $orla_launch_export_variables; do
+                        printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                    done
+
+                    declare -f orla_launch
+
+                    echo orla_launch \"\$@\"
+                } > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+
+                chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
             fi
             ;;
 
@@ -137,24 +172,6 @@ orla_info() {
     fi
 }
 
-orla_launch() {
-    local list_args=()
-
-
-    for arg in "$@"; do
-        list_args+=("$arg")
-    done
-
-    if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
-        list_args+=("--config" "$AISTACK_ORLA_CONFIG_FILE")
-    fi
-
-    if [ ${#list_args[@]} -gt 0 ]; then
-        $ORLA_FEAT_INSTALL_ROOT/orla "${list_args[@]}"
-    else
-        $ORLA_FEAT_INSTALL_ROOT/orla
-    fi
-}
 
 
 # generic config management -----------------
@@ -255,7 +272,7 @@ orla_agent_register_default_model() {
 
     # Default model used for orla AGENT mode only ---
     orla_remove_config "model"
-    [ -n "$type" ] &&  [ -n "$default_model" ] && orla_set_config "model" "${type}:${default_model}"
+    [ -n "$type" ] && [ -n "$default_model" ] && orla_set_config "model" "${type}:${default_model}"
     
 }
 

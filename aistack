@@ -8,6 +8,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_json.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_yaml.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_node.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_cpa.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_vscode.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
@@ -106,9 +107,9 @@ Options:
     cpa key delete <key>                 Remove an API key from CLIProxyAPI configuration.
     cpa model list                       List all available LLM models from CLIProxyAPI endpoint.
     ----
-    npm-config set <key> <value>    Set a npm configuration for the internal nodejs.
+    npm-config set <key> <value>         Set a npm configuration for the internal nodejs.
     ----
-    app killport <port>                Kill process running on a specific port.
+    app killport <port>                  Kill process running on a specific port.
     ----
 EOF
 }

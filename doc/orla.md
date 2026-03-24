@@ -20,18 +20,20 @@ info
 
   connect orla agent mode to cpa
   ```
-  ./aistack orla connect agent cpa
+  ./aistack orla connect agent cpa # cpa should be launched first to determine the default model for agent mode
   ./aistack orla info
   ./aistack orla show-config
   ```
 
   launch orla standalone agent
   ```
+  # use a model of the default backend
+  ./aistack orla agent "tell me a short story in two sentences and 512 caracters max" -m "openai:gemini-2.5-flash"
+
   # use the default model of the default backend
   ./aistack orla agent "tell me a short story in two sentences and 512 caracters max"
 
-  # use another model of the default backend
-  ./aistack orla agent "tell me a short story in two sentences and 512 caracters max" -m "openai:gemini-2.5-pro"
+
   ```
 
 * Use orla in service mode

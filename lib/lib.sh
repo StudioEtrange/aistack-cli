@@ -1,6 +1,5 @@
 
 
-
 aistack_path() {
     export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
     
@@ -16,7 +15,7 @@ aistack_path() {
     export AISTACK_RUNTIME_PATH_FILE="${STELLA_APP_WORK_ROOT}/path/runtime_path.sh"
     mkdir -p "${STELLA_APP_WORK_ROOT}/path"
 
-
+    node_path
     gemini_path
     opencode_path
     vscode_path
@@ -26,37 +25,83 @@ aistack_path() {
 
 
 runtime_path() {
-    # add launchers to current path
-    export PATH="${AISTACK_GEMINI_LAUNCHER_HOME}:${AISTACK_OPENCODE_LAUNCHER_HOME}:${PATH}"
+    
+    runtime_analysis_all
 
-    # NOTE : we do not permanently add runtime paths (nodejs, python, ...)  to current system path to not override eventually existing runtime
-    # used by gemini, opencode and several MCP local server
-    if check_requirements "nodejs"; then
-        export AISTACK_NODEJS_BIN_PATH="${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/"
+    # TODO : do we set launcher in PATH ?
+    # add launchers to current path
+    # WARN : in AISTACK_RUNTIME_PATH_FILE launchers are after runtime path in resolution order
+    # export PATH="${AISTACK_GEMINI_LAUNCHER_HOME}:${PATH}"
+    # export PATH="${AISTACK_OPENCODE_LAUNCHER_HOME}:${PATH}"
+    # export PATH="${AISTACK_ORLA_LAUNCHER_HOME}:${PATH}"
+    # export PATH="${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}:${PATH}"
+
+    if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
+        # bin folder which contains node
+        export AISTACK_NODEJS_BIN_PATH="$(dirname $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH)/"
     else
         # we use an already installed nodejs, not aistack nodejs
         export AISTACK_NODEJS_BIN_PATH=""
     fi
     
     # used by MCP local server
-    if check_requirements "python"; then
-        export AISTACK_PYTHON_BIN_PATH="${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/"
+    if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
+        # bin folder which contains python
+        export AISTACK_PYTHON_BIN_PATH="$(dirname $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH)/"
     else
         # we use an already installed python, not aistack python
         export AISTACK_PYTHON_BIN_PATH=""
     fi
+
+    runtime_path_file_generate
+
 }
 
-runtime_path_files_generate() {
-    # create files to add runtime dependencies needed fpr any tool to run
+# create files to add runtime dependencies needed for any tool to run
+runtime_path_file_generate() {
     echo '#!/bin/sh' > "${AISTACK_RUNTIME_PATH_FILE}"
+    # kodejs bin tools
     [ -n "$AISTACK_NODEJS_BIN_PATH" ] && echo "export PATH=\"${AISTACK_NODEJS_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
+    # python bin tools
     [ -n "$AISTACK_PYTHON_BIN_PATH" ] && echo "export PATH=\"${AISTACK_PYTHON_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
+    
     chmod +x "${AISTACK_RUNTIME_PATH_FILE}"
 }
 
-runtime_path_files_remove() {
+runtime_path_file_remove() {
     rm -f "${AISTACK_RUNTIME_PATH_FILE}"
+}
+
+
+runtime_analysis() {
+    local dep="$1"
+
+    case "$dep" in
+        "miniforge3")
+            if [ -f "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/python" ]; then
+                export AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE="true"
+                export AISTACK_INTERNAL_PYTHON_RUNTIME_PATH="${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/python"
+            fi
+            if [ -f "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/mamba" ]; then
+                export AISTACK_INTERNAL_MAMBA_AVAILABLE="true"
+            fi
+            ;;
+        "nodejs")
+            if [ -s "${AISTACK_NVM_HOME}/nvm.sh" ]; then
+                export AISTACK_INTERNAL_NVM_AVAILABLE="true"
+                if nvm which default >/dev/null 2>&1; then
+                    export AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE="true"
+                    export AISTACK_INTERNAL_NODEJS_RUNTIME_PATH="$(nvm which default)"
+                fi
+            fi
+            ;;
+    esac
+}
+
+runtime_analysis_all() {
+    for f in $STELLA_APP_FEATURE_LIST; do
+        runtime_analysis "$f"
+    done
 }
 
 aistack_install_dependency() {
@@ -72,19 +117,23 @@ aistack_install_dependency() {
             $STELLA_API get_feature "jq"
             ;;
         bats*|patchelf*|cliproxyapi*);;
+
+        # install other dependencies in an isolated way. (None of those will never been added aistack PATH while running)
         nodejs)
-            # other dependencies (for mcp servers and other commands) in an isolated way. (None of those will never been added to any PATH)
-            if [ "$STELLA_CURRENT_PLATFORM" = "linux" ]; then
-                if [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ]; then
-                    _ldd_version="$(ldd --version 2>/dev/null | awk '/ldd/{print $NF}')"
-                    if [ "${_ldd_version}" = "2.17" ]; then
-                        dep="nodejs#23_7_0_glibc_217"
-                        echo "-- detected glibc 2.17 switch to nodejs special build for it"
-                    fi
-                fi
-            fi
+            node_install
+            # TODO : change install nvm for glibc 2.17
+            # if [ "$STELLA_CURRENT_PLATFORM" = "linux" ]; then
+            #     if [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ]; then
+            #         _ldd_version="$(ldd --version 2>/dev/null | awk '/ldd/{print $NF}')"
+            #         if [ "${_ldd_version}" = "2.17" ]; then
+            #             dep="nodejs#23_7_0_glibc_217"
+            #             echo "-- detected glibc 2.17 switch to nodejs special build for it"
+            #         fi
+            #     fi
+            # fi
         # this notation do not stop case statement workflow and continue to next pattern without testing any match
-        ;&
+        #;&
+            ;;
         *)
             # other dependencies (for mcp servers and other commands) in an isolated way. (None of those will never been added to any PATH)
             _feature=""
@@ -98,28 +147,29 @@ aistack_install_dependency() {
             else
                 echo "!! WARN : $dep is not a valid feature for stella framework"
             fi
-        # this notation do not stop case statement workflow and continue to next pattern by testing next pattern
-        ;;&
+            # this notation do not stop case statement workflow and continue to next pattern by testing next pattern
+            ;;&
         miniforge3)
+            # install pipx and uv after having installaing miniforge3 in previsous case match
             echo "-- install python pipx and uv package/project manager"
-            ${AISTACK_PYTHON_BIN_PATH}mamba install -y pipx uv
-        ;;
+            PATH="${AISTACK_PYTHON_BIN_PATH}:${PATH}" mamba install -y pipx uv
+            ;;
     esac
 }
 
 aistack_install_dependencies() {
 
-    echo "- Install internal dependencies for aistack (which will be added to aistack PATH while running)"
+    echo "- Install internal dependencies for aistack"
     aistack_install_dependency "jq"
     aistack_install_dependency "yq"
 
-    echo "- Install other dependencies (for mcp servers and other commands) in an isolated way. (None of those will never been added to any PATH)"
+    echo "- Install other dependencies (for mcp servers and other commands) in an isolated way. (None of those will never been added to system PATH)"
     for f in $STELLA_APP_FEATURE_LIST; do
         aistack_install_dependency "$f"
     done
 
     # generate runtime path files with dependencies path to use them in launchers and other tools
-    runtime_path_files_generate
+    runtime_path_file_generate
 }
 
 
@@ -129,7 +179,7 @@ aistack_remove_dependencies() {
     # remove dependencies
     rm -Rf "${STELLA_APP_FEATURE_ROOT}"
 
-    runtime_path_files_remove
+    runtime_path_file_remove
 }
 
 
@@ -139,99 +189,21 @@ aistack_init() {
 }
 
 aistack_uninstall() {
+    # TODO : check missing unregister functions
     gemini_path_unregister_for_shell "all"
     gemini_path_unregister_for_vs_terminal
     opencode_path_unregister_for_shell "all"
     opencode_path_unregister_for_vs_terminal
-    
+    orla_path_unregister_for_shell "all"
+    orla_path_unregister_for_vs_terminal
+
     aistack_remove_dependencies
-    runtime_path_files_remove
+    runtime_path_file_remove
 
     rm -Rf "${AISTACK_MCP_LAUNCHER_HOME}"
     rm -Rf "${AISTACK_LAUNCHER_HOME}"
 
     rm -Rf "${STELLA_APP_WORK_ROOT}"
-}
-
-# add a path at PATH env variable list when a shell launch
-path_register_for_shell() {
-    local name="$1"
-    local shell_name="$2"
-    local path_to_add="$3"
-    local set_path_now="${4:-false}"
-
-    local rc_file
-
-    local BEGIN_MARK="# >>> aistack-${name}-path >>>"
-    local END_MARK="# <<< aistack-${name}-path <<<"
-
-    [ "$shell_name" = "bash" ] && rc_file="$HOME/.bashrc"
-    [ "$shell_name" = "zsh" ] && rc_file="$HOME/.zshrc"
-    [ "$shell_name" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"
-
-    case "$shell_name" in
-        "bash"|"zsh")
-            [ -f "$rc_file" ] && path_unregister_for_shell "$name" "$shell_name" || touch "$rc_file"
-            if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
-                {
-                    echo "$BEGIN_MARK"
-                    echo "export PATH=\"${path_to_add}:\$PATH\""
-                    echo "$END_MARK"
-                } >> "$rc_file"
-            fi
-            ;;
-        "fish")
-            mkdir -p "$(dirname "$rc_file")"
-            [ -f "$rc_file" ] && path_unregister_for_shell "$name" "$shell_name" || touch "$rc_file"
-            if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
-                {
-                    echo "$BEGIN_MARK"
-                    echo "set -gx PATH \"${path_to_add}\" \$PATH"
-                    echo "$END_MARK"
-                } >> "$rc_file"
-            fi
-            ;;
-         *) 
-            echo "error : unsupported shell $shell_name"
-            ;;
-    esac
-
-}
-
-# remove path
-# use 'all' shell_name to unregister to all known shell
-path_unregister_for_shell() {
-    local name="$1"
-    local shell_name="$2"
-    local rc_file
-
-    local BEGIN_MARK="# >>> aistack-${name}-path >>>"
-    local END_MARK="# <<< aistack-${name}-path <<<"
-
-    local shell_list
-    [ "$shell_name" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name"
-
-    for s in $shell_list; do
-        [ "$s" = "bash" ] && rc_file="$HOME/.bashrc"
-        [ "$s" = "zsh" ] && rc_file="$HOME/.zshrc"
-        [ "$s" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"
-
-        case "$s" in
-            "bash"|"zsh"|"fish")
-                if [ -f "$rc_file" ]; then
-                    local tmp_file="$(mktemp)"
-                    awk -v begin="$BEGIN_MARK" -v end="$END_MARK" ' 
-                        $0 == begin { skip=1; next } 
-                        $0 == end { skip=0; next } !skip 
-                    ' "$rc_file" > "$tmp_file" && mv "$tmp_file" "$rc_file"
-                    rm -f "$tmp_file"
-                fi
-                ;;
-            *) 
-                echo "error : unsupported shell : $s"
-                ;;
-        esac
-    done
 }
 
 # check availability
@@ -257,8 +229,8 @@ check_requirements() {
             fi
             ;;
         "nodejs") 
-            if [ -f "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/node" ]; then
-                [ "$mode" = "VERBOSE" ] && echo "-- nodejs detected in ${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/nodejs/bin/node"
+            if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
+                [ "$mode" = "VERBOSE" ] && echo "-- nodejs detected in ${AISTACK_INTERNAL_NODEJS_RUNTIME_PATH}"
                 return 0
             else
                 if command -v node >/dev/null 2>&1; then
@@ -268,10 +240,9 @@ check_requirements() {
             fi
             return 1
             ;;
-        
         "python")
-            if [ -f "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/python" ]; then
-                [ "$mode" = "VERBOSE" ] && echo "-- python detected in ${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/miniforge3/bin/python"
+            if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
+                [ "$mode" = "VERBOSE" ] && echo "-- python detected in ${AISTACK_INTERNAL_PYTHON_RUNTIME_PATH}"
                 return 0
             else
                 if command -v python >/dev/null 2>&1; then
@@ -360,4 +331,112 @@ process_kill_by_port() {
         echo "Error: lsof nor netstat able to find process."
         return 1
     fi
+}
+
+shell_quote_posix() {
+    printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+}
+
+github_get_latest_release() {
+    local repo="$1" # i.e StudioEtrange/aistack-cli
+
+    local api_url="https://api.github.com/repos/${repo}/releases/latest"
+
+    local latest_tag
+    latest_tag=$(curl -sLk "$api_url" | yq -r .tag_name)
+
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to fetch release information from GitHub." >&2
+        return 1
+    fi
+
+    if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
+        echo "ERROR: Could not fetch the latest version from GitHub." >&2
+        return 1
+    fi
+
+    echo -n "$latest_tag"
+}
+
+
+
+# add a path at PATH env variable list when a shell launch
+path_register_for_shell() {
+    local name="$1"
+    local shell_name="$2"
+    local path_to_add="$3"
+    local set_path_now="${4:-false}"
+
+    local rc_file
+
+    local BEGIN_MARK="# >>> aistack-${name}-path >>>"
+    local END_MARK="# <<< aistack-${name}-path <<<"
+
+    [ "$shell_name" = "bash" ] && rc_file="$HOME/.bashrc"
+    [ "$shell_name" = "zsh" ] && rc_file="$HOME/.zshrc"
+    [ "$shell_name" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"
+
+    case "$shell_name" in
+        "bash"|"zsh")
+            [ -f "$rc_file" ] && path_unregister_for_shell "$name" "$shell_name" || touch "$rc_file"
+            if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
+                {
+                    echo "$BEGIN_MARK"
+                    echo "export PATH=\"${path_to_add}:\$PATH\""
+                    echo "$END_MARK"
+                } >> "$rc_file"
+            fi
+            ;;
+        "fish")
+            mkdir -p "$(dirname "$rc_file")"
+            [ -f "$rc_file" ] && path_unregister_for_shell "$name" "$shell_name" || touch "$rc_file"
+            if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
+                {
+                    echo "$BEGIN_MARK"
+                    echo "set -gx PATH \"${path_to_add}\" \$PATH"
+                    echo "$END_MARK"
+                } >> "$rc_file"
+            fi
+            ;;
+         *) 
+            echo "error : unsupported shell $shell_name"
+            ;;
+    esac
+
+}
+
+# remove path
+# use 'all' shell_name to unregister to all known shell
+path_unregister_for_shell() {
+    local name="$1"
+    local shell_name="$2"
+    local rc_file
+
+    local BEGIN_MARK="# >>> aistack-${name}-path >>>"
+    local END_MARK="# <<< aistack-${name}-path <<<"
+
+    local shell_list
+    [ "$shell_name" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name"
+
+    for s in $shell_list; do
+        [ "$s" = "bash" ] && rc_file="$HOME/.bashrc"
+        [ "$s" = "zsh" ] && rc_file="$HOME/.zshrc"
+        [ "$s" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"
+
+        case "$s" in
+            "bash"|"zsh"|"fish")
+                if [ -f "$rc_file" ]; then
+                    local tmp_file="$(mktemp)"
+                    awk -v begin="$BEGIN_MARK" -v end="$END_MARK" ' 
+                        $0 == begin { skip=1; next } 
+                        $0 == end { skip=0; next } !skip 
+                    ' "$rc_file" > "$tmp_file" && mv "$tmp_file" "$rc_file"
+                    rm -f "$tmp_file"
+                fi
+                ;;
+            *) 
+                echo "error : unsupported shell : $s"
+                ;;
+        esac
+    done
 }

@@ -5,32 +5,25 @@ case "$sub_command" in
     install)
         if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
-        local version="$1"
-        [ -z "${version}" ] && version="@latest"
+        gemini_install "$1"
 
-        echo "Installing Gemini CLI ${version}"
-        # available versions : https://www.npmjs.com/package/@google/gemini-cli-core
-        # latest is stable version
-        PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
-        
         echo "Configuring Gemini CLI"
         gemini_settings_configure
         vscode_settings_configure "gemini"
-        #gemini_path_register_for_vs_terminal
 
         gemini_launcher_manage
 
         echo "You could now register it's path in shell OR vscode terminal"
         echo "$0 gc register bash|zsh|fish"
         echo "   OR"
-        echo "$0 gc register vs"      
+        echo "$0 gc register vs"
         ;;
     uninstall)
         if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
         echo "Uninstalling Gemini CLI and unregister Gemini CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
+        gemini_uninstall
         
-        PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
         gemini_path_unregister_for_shell "all"
         gemini_path_unregister_for_vs_terminal
 
@@ -40,6 +33,13 @@ case "$sub_command" in
         echo "Configuring Gemini CLI"
         gemini_settings_configure
         vscode_settings_configure "gemini"
+
+        gemini_launcher_manage
+        ;;
+    reset)
+        echo "Resetting Gemini CLI configuration"
+        gemini_settings_remove
+        vscode_settings_remove "gemini"
 
         gemini_launcher_manage
         ;;
@@ -73,13 +73,7 @@ case "$sub_command" in
             echo "No Gemini CLI configuration file found."
         fi
         ;;
-    reset)
-        echo "Resetting Gemini CLI configuration"
-        gemini_settings_remove
-        vscode_settings_remove "gemini"
 
-        gemini_launcher_manage
-        ;;
     launch)
         gemini_launcher_manage
 
@@ -99,6 +93,15 @@ case "$sub_command" in
 
         gemini_launch "$@"
         ;;
+    mcp)
+        mcp_server_manage "$1" "$2" "$command" "$3"
+        ;;
+    set)
+        gemini_set_config "$1" "$2"
+        ;;
+    del)
+        gemini_remove_config "$1"
+        ;;
     cmd-plan)
         case "$1" in
             "install")
@@ -108,15 +111,6 @@ case "$sub_command" in
                 gemini_remove_command "plan.toml"
                 ;;
         esac
-        ;;
-    mcp)
-        mcp_server_manage "$1" "$2" "$command" "$3"
-        ;;
-    set)
-        gemini_set_config "$1" "$2"
-        ;;
-    del)
-        gemini_remove_config "$1"
         ;;
     *)
         echo "Error: Unknown command $sub_command for gc"
