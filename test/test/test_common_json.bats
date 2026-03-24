@@ -506,12 +506,185 @@ EOF
 
 
 
+@test "json_escape_string_containing_char" {
+
+  run json_escape_string_containing_char "A:A" ":" "GET_ESCAPED_VALUE"
+
+  # NOTE : $'\x1f' is not printable in a terminal
+  assert_output "A"$'\x1f'"A"
+  refute_output "AA"
+  
+}
+
+
+@test "json_escape_string_containing_char0" {
+
+  run json_escape_string_containing_char "" ":" "ESCAPE"
+
+  assert_output "{}"
+  
+}
+
+
+@test "json_escape_string_containing_char1" {
+
+  run json_escape_string_containing_char "AA" ":" "ESCAPE"
+
+  assert_output "{}"
+  
+}
+
+
+
+@test "json_escape_string_containing_char2" {
+
+  run json_escape_string_containing_char "A:A" ":" <<'EOF'
+{"PATH":"BB:CC:A:A"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB:CC:A\u001fA"
+}
+EOF
+  )
+
+	assert_output "$expected"
+}
+
+
+@test "json_escape_string_containing_char3" {
+
+  run json_escape_string_containing_char "A:A" ":" "ESCAPE" <<'EOF'
+{"PATH":"BB:CC:${A:A}"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB:CC:${A\u001fA}"
+}
+EOF
+  )
+
+	assert_output "$expected"
+}
+
+@test "json_escape_string_containing_char4" {
+
+  run json_escape_string_containing_char "A:A" ":" "RESTORE" <<'EOF'
+{"PATH":"BB:CC:A\u001fA"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB:CC:A:A"
+}
+EOF
+  )
+
+	assert_output "$expected"
+}
+
+
+@test "json_escape_string_containing_char5" {
+
+  run json_escape_string_containing_char "A:A" ":" "RESTORE" <<'EOF'
+{"PATH":"BB:CC:${A\u001fA}"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB:CC:${A:A}"
+}
+EOF
+  )
+
+	assert_output "$expected"
+}
 
 
 
 
+@test "json_escape_string_containing_char6" {
+
+  run json_escape_string_containing_char "A?A" "?" "ESCAPE" <<'EOF'
+{"PATH":"BB:*:${A?A}"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB:*:${A\u001fA}"
+}
+EOF
+  )
+
+
+  run json_escape_string_containing_char "A?A" "?" "RESTORE" <<'EOF'
+{"PATH":"BB:*:${A\u001fA}"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB:*:${A?A}"
+}
+EOF
+  )
+
+	assert_output "$expected"
+}
+
+
+@test "json_escape_string_containing_char7" {
+
+  run json_escape_string_containing_char "BB" ":" "ESCAPE" <<'EOF'
+{"PATH":"BB"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB"
+}
+EOF
+  )
+
+	assert_output "$expected"
+}
+
+
+@test "json_tweak_value_of_list" {
+
+  run json_tweak_value_of_list ".PATH" "" ":" "ALWAYS_PREPEND" <<'EOF'
+{"PATH":"BB:CC"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB:CC"
+}
+EOF
+  )
+
+	assert_output "$expected"
+}
+
+@test "json_tweak_value_of_list0" {
+
+  run json_tweak_value_of_list ".PATH" "" ":" "ALWAYS_PREPEND"
+  expected=$(cat <<'EOF'
+{}
+EOF
+  )
+
+	assert_output "$expected"
+}
 
 @test "json_tweak_value_of_list1" {
+
+  run json_tweak_value_of_list ".PATH" "AA" ":" "POSTPEND_IF_NOT_EXISTS"
+  expected=$(cat <<'EOF'
+{
+  "PATH": "AA"
+}
+EOF
+  )
+
+	assert_output "$expected"
+
+}
+
+@test "json_tweak_value_of_list2" {
 
   run json_tweak_value_of_list ".PATH" "AA" ":" "ALWAYS_PREPEND" <<'EOF'
 {"PATH":"BB:CC"}
@@ -524,8 +697,11 @@ EOF
   )
 
 	assert_output "$expected"
+}
 
 
+
+@test "json_tweak_value_of_list3" {
 
   run json_tweak_value_of_list ".PATH" "AA" ":" "ALWAYS_PREPEND" <<'EOF'
 {"PATH":"BB:CC:AA"}
@@ -538,7 +714,9 @@ EOF
   )
 
 	assert_output "$expected"
+}
 
+@test "json_tweak_value_of_list4" {
 
     run json_tweak_value_of_list ".PATH" "BB" ":" "POSTPEND_IF_NOT_EXISTS" <<'EOF'
 {"PATH":"BB:CC:AA"}
@@ -551,16 +729,68 @@ EOF
   )
 
 	assert_output "$expected"
+}
 
 
-  run json_tweak_value_of_list ".PATH" "BB" ":" "POSTPEND_IF_NOT_EXISTS"
+
+
+@test "json_tweak_value_of_list5" {
+
+  run json_tweak_value_of_list ".PATH" "AA" ":" "POSTPEND_IF_NOT_EXISTS" <<'EOF'
+{"PATH":"BB:CC"}
+EOF
   expected=$(cat <<'EOF'
 {
-  "PATH": "BB"
+  "PATH": "BB:CC:AA"
 }
 EOF
   )
 
 	assert_output "$expected"
-
 }
+
+# @test "json_tweak_value_of_list6" {
+
+#     run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "POSTPEND_IF_NOT_EXISTS" <<'EOF'
+# {"PATH":"BB:CC"}
+# EOF
+#   expected=$(cat <<'EOF'
+# {
+#   "PATH": "BB:CC:${env:PATH}"
+# }
+# EOF
+#   )
+
+# 	assert_output "$expected"
+# }
+
+# @test "json_tweak_value_of_list7" {
+
+#       run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "PREPEND_IF_NOT_EXISTS" <<'EOF'
+# {"PATH":"BB:CC"}
+# EOF
+#   expected=$(cat <<'EOF'
+# {
+#   "PATH": "${env:PATH}:BB:CC"
+# }
+# EOF
+#   )
+
+# 	assert_output "$expected"
+
+# }
+
+
+# @test "json_tweak_value_of_list8" {
+
+#       run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "PREPEND_IF_NOT_EXISTS"
+#   expected=$(cat <<'EOF'
+# {
+#   "PATH": "${env:PATH}"
+# }
+# EOF
+#   )
+
+# 	assert_output "$expected"
+
+# }
