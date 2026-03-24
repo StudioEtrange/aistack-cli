@@ -12,6 +12,7 @@ node_path() {
 node_install() {
     nvm_install
     nvm_load
+
     nvm install --lts
     nvm alias default lts/*
 }
@@ -22,12 +23,16 @@ node_uninstall() {
 }
 
 node_activate() {
-    nvm use default >/dev/null
+    if check_requirements "nvm"; then
+        nvm use default >/dev/null
+    fi
 }
 
 node_deactivate() {
-    # will remove node from path
-    nvm deactivate
+    if check_requirements "nvm"; then
+        # will remove node from path
+        nvm deactivate
+    fi
 }
 
 
