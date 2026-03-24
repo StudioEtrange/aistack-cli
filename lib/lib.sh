@@ -240,6 +240,12 @@ check_requirements() {
             fi
             return 1
             ;;
+        "nvm")
+            if type nvm >/dev/null 2>&1; then
+                return 0
+            fi
+            return 1
+            ;;
         "python")
             if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
                 [ "$mode" = "VERBOSE" ] && echo "-- python detected in ${AISTACK_INTERNAL_PYTHON_RUNTIME_PATH}"
