@@ -104,3 +104,6 @@
   * https://geminicli.com/docs/ide-integration/ide-companion-spec/
 
 
+* Shell integration
+  * environment variable in current shell VSCODE_SHELL_INTEGRATION value "1" means shell integration is enabled in current shell. Maybe by the command "code --locate-shell-integration-path bash"
+  * some documentation about VS Code shell integration https://kilo.ai/docs/automate/extending/shell-integration

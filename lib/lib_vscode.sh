@@ -3,12 +3,7 @@
 vscode_path() {
     local target="${1:-guess}"
 
-    # this test works on linux AND wsl AND on coder web AND on every other system
-    #[ "$TERM_PROGRAM" = "vscode" ] && echo "We are running inside a VS Code terminal"
-
-    # this test works remote ssh on linux AND on local wsl AND on coder web
-    #[ -n "$VSCODE_IPC_HOOK_CLI" ] && echo "We are using VS Code remote extension (SSH, WSL, ...)"
-
+   
     for t in target; do
         case "$t" in
             "remote")
@@ -131,11 +126,23 @@ vscode_info() {
         echo "No VSCode configuration file found : $AISTACK_VSCODE_CONFIG_FILE"
     fi
 
+    echo "Some environment variables"
     echo AISTACK_VSCODE_MODE : $AISTACK_VSCODE_MODE
     echo AISTACK_VSCODE_HOME : $AISTACK_VSCODE_HOME
     echo AISTACK_VSCODE_USER_HOME : $AISTACK_VSCODE_USER_HOME
     echo AISTACK_VSCODE_CONFIG_FILE : $AISTACK_VSCODE_CONFIG_FILE
     echo AISTACK_VSCODE_RECENTLY_SERVER_ROOT : $AISTACK_VSCODE_RECENTLY_SERVER_ROOT
+
+    echo TERM_PROGRAM : $TERM_PROGRAM
+    [ "$TERM_PROGRAM" = "vscode" ] && echo "TERM_PROGRAM : vscode means we are actually in a shell inside VS Code"
+    # this test works on linux AND wsl AND on coder web AND on every other system
+    #[ "$TERM_PROGRAM" = "vscode" ] && echo "We are running inside a VS Code terminal"
+
+    echo VSCODE_IPC_HOOK_CLI : $VSCODE_IPC_HOOK_CLI
+    [ -n "$VSCODE_IPC_HOOK_CLI" ] && echo "VSCODE_IPC_HOOK_CLI : you are using VS Code "remote" feature - coder web is also based on the remote feature"
+    # this test works remote ssh on linux AND on vscode windows using remote WSL AND on coder web
+    #[ -n "$VSCODE_IPC_HOOK_CLI" ] && echo "We are using VS Code remote extension (SSH, WSL, ...)"
+
 }
 
 # PATH management -----------------
@@ -205,8 +212,8 @@ vscode_path_register_cli_for_vs_terminal() {
             # local "code" cli
             case "$STELLA_CURRENT_PLATFORM" in
                 "linux")
-                    # TODO
-                    echo "- TODO NOT IMPLEMENTED configure VS Code : linux code found in ------"
+                    # TODO for linux (aswell for WSL when launching "code ." from within WSL)
+                    echo "- TODO NOT IMPLEMENTED ------"
                     ;;
                 "darwin") 
                     vscode_cli_path="/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
