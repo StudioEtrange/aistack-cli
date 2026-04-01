@@ -77,25 +77,23 @@ cpa_launcher_manage() {
 
     case $action in
         create)
-            if [ -x "${CPA_FEAT_INSTALL_ROOT}/cli-proxy-api" ]; then
-                # echo "Create an CLIProxyAPI launcher"
-                # rm -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
-                # # launcher based on a symbolic link
-                # ln -fsv "${CPA_FEAT_INSTALL_ROOT}/cli-proxy-api" "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
-                {
-                    echo '#!/bin/sh'
-                    for v in $cpa_launch_export_variables; do
-                        printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-                    done
+            # echo "Create an CLIProxyAPI launcher"
+            # rm -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+            # # launcher based on a symbolic link
+            # ln -fsv "${CPA_FEAT_INSTALL_ROOT}/cli-proxy-api" "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+            {
+                echo '#!/bin/sh'
+                for v in $cpa_launch_export_variables; do
+                    printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                done
 
-                    declare -f cpa_launch
+                declare -f cpa_launch
 
-                    echo cpa_launch \"\$@\"
-                } > "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+                echo cpa_launch \"\$@\"
+            } > "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
 
-                chmod +x "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+            chmod +x "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
 
-            fi
             ;;
 
         delete)

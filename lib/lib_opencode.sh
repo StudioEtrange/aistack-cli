@@ -62,32 +62,29 @@ opencode_launcher_manage() {
 
     case $action in
         create)
-            if [ -f "${AISTACK_NODEJS_BIN_PATH}opencode" ]; then
-                
-                # runtime_path_file_generate
+            # runtime_path_file_generate
 
-                # echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-                # echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-                # echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-                # chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            # echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            # echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            # echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            # chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
 
-                # launcher based on a symbolic link - test link does not exist OR is not valid
-                # if [ ! -L "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ] || [ ! -e "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ]; then
-                #     echo "Create an opencode launcher"
-                #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-                # fi
+            # launcher based on a symbolic link - test link does not exist OR is not valid
+            # if [ ! -L "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ] || [ ! -e "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ]; then
+            #     echo "Create an opencode launcher"
+            #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            # fi
 
-                {
-                    echo '#!/bin/sh'
-                    for v in $opencode_launch_variables; do
-                        printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-                    done
+            {
+                echo '#!/bin/sh'
+                for v in $opencode_launch_variables; do
+                    printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                done
 
-                    declare -f opencode_launch
+                declare -f opencode_launch
 
-                    echo opencode_launch \"\$@\"
-                } > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-            fi
+                echo opencode_launch \"\$@\"
+            } > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             ;;
 
         delete)

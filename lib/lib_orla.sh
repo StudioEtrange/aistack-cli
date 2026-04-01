@@ -103,34 +103,32 @@ orla_launcher_manage() {
     case $action in
 
         create)
-            if [ -x "${ORLA_FEAT_INSTALL_ROOT}/orla" ]; then
-                # echo "Create an Orla launcher"
-                # rm -f "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
-                # # launcher based on a symbolic link
-                # ln -fsv "${ORLA_FEAT_INSTALL_ROOT}/orla" "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+            # echo "Create an Orla launcher"
+            # rm -f "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+            # # launcher based on a symbolic link
+            # ln -fsv "${ORLA_FEAT_INSTALL_ROOT}/orla" "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
 
-                # echo '#!/bin/sh' > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
-                # if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
-                #     echo "${ORLA_FEAT_INSTALL_ROOT}/orla \$@ --config \"$AISTACK_ORLA_CONFIG_FILE\"" >> "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
-                # else
-                #     echo "${ORLA_FEAT_INSTALL_ROOT}/orla \$@" >> "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
-                # fi
-                # chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+            # echo '#!/bin/sh' > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+            # if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
+            #     echo "${ORLA_FEAT_INSTALL_ROOT}/orla \$@ --config \"$AISTACK_ORLA_CONFIG_FILE\"" >> "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+            # else
+            #     echo "${ORLA_FEAT_INSTALL_ROOT}/orla \$@" >> "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+            # fi
+            # chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
 
-                #runtime_path_file_generate
-                {
-                    echo '#!/bin/sh'
-                    for v in $orla_launch_export_variables; do
-                        printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-                    done
+            #runtime_path_file_generate
+            {
+                echo '#!/bin/sh'
+                for v in $orla_launch_export_variables; do
+                    printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                done
 
-                    declare -f orla_launch
+                declare -f orla_launch
 
-                    echo orla_launch \"\$@\"
-                } > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+                echo orla_launch \"\$@\"
+            } > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
 
-                chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
-            fi
+            chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
             ;;
 
         delete)
