@@ -1,6 +1,6 @@
 # AIStack CLI
 
-AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode` and various MCP servers. The main goal is to provide a convenient way to install and configure AI tools, ensuring minimal system, to test or use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode`, `codex` and various MCP servers. The main goal is to provide a convenient way to install and configure AI tools, ensuring minimal system, to test or use them.
 
 ## Key Features of AIStack
 
@@ -67,6 +67,10 @@ See [Gemini CLI](doc/geminicli.md)
 ### Opencode
 
 See [Opencode](doc/opencode.md) 
+
+### Codex
+
+See [Codex](doc/codex.md) 
 
 ### VS Code
 

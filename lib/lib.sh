@@ -18,6 +18,7 @@ aistack_path() {
     node_path
     gemini_path
     opencode_path
+    codex_path
     vscode_path
     cpa_path
     orla_path
@@ -194,6 +195,8 @@ aistack_uninstall() {
     gemini_path_unregister_for_vs_terminal
     opencode_path_unregister_for_shell "all"
     opencode_path_unregister_for_vs_terminal
+    codex_path_unregister_for_shell "all"
+    codex_path_unregister_for_vs_terminal
     orla_path_unregister_for_shell "all"
     orla_path_unregister_for_vs_terminal
 
