@@ -91,7 +91,7 @@ gemini_launcher_manage() {
                 echo gemini_launch \"\$@\"
             } > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
 
-            chmod +x "${AISTACK_KCLI_LAUNCHER_HOME}/gemini"
+            chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
             ;;
         delete)
             rm -f "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
