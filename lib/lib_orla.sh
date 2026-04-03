@@ -235,9 +235,9 @@ orla_agent_register_default_backend() {
     local type="$2" # ollama or openai or sglang
     local endpoint="$3"
     local api_key_env_var="$4"
-    local default_model="$5"
-    local max_concurrency="$6"
-    local queue_capacity="$7"
+    local max_concurrency="$5"
+    local queue_capacity="$6"
+    #local default_model="$7"
 
 
     # Default llm backend used for AGENT mode only ---
@@ -257,9 +257,7 @@ orla_agent_register_default_backend() {
     [ -n "$queue_capacity" ] && orla_set_config "llm_backend.queue_capacity" "$queue_capacity"
 
     # Default model used for orla AGENT mode only ---
-    orla_remove_config "model"
-    [ -n "$default_model" ] && orla_set_config "model" "${type}:${default_model}"
-    
+    #orla_agent_register_default_model "${type}" "${default_model}"
 }
 
 
