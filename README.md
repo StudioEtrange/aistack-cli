@@ -149,9 +149,7 @@ AIStack leverages the **Stella** framework for its core functionality. Stella pr
 
 ## TODO and VARIOUS NOTES
 
-* kilocode vsextension config home : $HOME/.vscode-server/data/User/globalStorage/kilocode.kilo-code/settings/mcp_settings.json
-  * https://kilo.ai/docs/automate/mcp/using-in-cli
-* process manager goreman https://github.com/mattn/goreman
+* process manager : goreman https://github.com/mattn/goreman
 * MCP-cli
   * https://github.com/IBM/mcp-cli
   * CLI to connect and interact with MCP (Model Context Protocol) servers.
@@ -161,7 +159,13 @@ AIStack leverages the **Stella** framework for its core functionality. Stella pr
 * Serving LLM - Ollama vs vLLM : https://developers.redhat.com/articles/2025/08/08/ollama-vs-vllm-deep-dive-performance-benchmarking#comparison_2__tuned_ollama_versus_vllm
   * Ollama excels in its intended role: a simple, accessible tool for local development, prototyping, and single-user applications. Its strength lies in its ease of use, not its ability to handle high-concurrency production traffic, where it struggles even when tuned.
   * vLLM is unequivocally the superior choice for production deployment. It is built for performance, delivering significantly higher throughput and lower latency under heavy load. Its dynamic batching and efficient resource management make it the ideal engine for scalable, enterprise-grade AI applications.
-
+* orla cli https://github.com/dorcha-inc/orla https://korben.info/orla-agent-ia-local-cli.html
+* security tool : https://github.com/TheAuditorTool/Auditor
+* Chrome DevTools MCP https://korben.info/chrome-devtools-mcp.html
+* vscode copilot
+  * add variety of models : extension OAI Compatible Provider for Copilot 
+  * https://marketplace.visualstudio.com/items?itemName=johnny-zhao.oai-compatible-copilot https://github.com/JohnnyZ93/oai-compatible-copilot
+  * Unique Identifier	johnny-zhao.oai-compatible-copilot
 
 ## Contributors
 

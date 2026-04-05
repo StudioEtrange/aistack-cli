@@ -59,7 +59,6 @@ gemini_launch() {
 gemini_launcher_manage() {
     local action="${1:-create}"
 
-
     case $action in
         create)
 

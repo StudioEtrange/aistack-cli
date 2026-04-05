@@ -78,7 +78,7 @@ orla_path_unregister_for_vs_terminal() {
 
 
 
-orla_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
+orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_RUNTIME_PATH_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
 orla_launch() {
     set -- "$@"
 
@@ -166,7 +166,7 @@ orla_info() {
 
         [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ] && echo "Connected to CLIProxyAPI using API key : $AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
     else
-        echo "No Orla configuration file found. $AISTACK_ORLA_CONFIG_FILE"
+        echo "No Orla configuration file found. ($AISTACK_ORLA_CONFIG_FILE)"
     fi
 }
 
@@ -235,9 +235,9 @@ orla_agent_register_default_backend() {
     local type="$2" # ollama or openai or sglang
     local endpoint="$3"
     local api_key_env_var="$4"
-    local default_model="$5"
-    local max_concurrency="$6"
-    local queue_capacity="$7"
+    local max_concurrency="$5"
+    local queue_capacity="$6"
+    #local default_model="$7"
 
 
     # Default llm backend used for AGENT mode only ---
@@ -257,9 +257,7 @@ orla_agent_register_default_backend() {
     [ -n "$queue_capacity" ] && orla_set_config "llm_backend.queue_capacity" "$queue_capacity"
 
     # Default model used for orla AGENT mode only ---
-    orla_remove_config "model"
-    [ -n "$default_model" ] && orla_set_config "model" "${type}:${default_model}"
-    
+    #orla_agent_register_default_model "${type}" "${default_model}"
 }
 
 
@@ -288,7 +286,7 @@ orla_generate_cpa_key() {
 orla_unregister_cpa_key() {
     if [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ]; then
         # Remove existing CPA API key for Orla
-        cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
+        cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
     fi
 }
 
