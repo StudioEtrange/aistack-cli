@@ -78,7 +78,7 @@ orla_path_unregister_for_vs_terminal() {
 
 
 
-orla_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
+orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_RUNTIME_PATH_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
 orla_launch() {
     set -- "$@"
 
@@ -166,7 +166,7 @@ orla_info() {
 
         [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ] && echo "Connected to CLIProxyAPI using API key : $AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
     else
-        echo "No Orla configuration file found. $AISTACK_ORLA_CONFIG_FILE"
+        echo "No Orla configuration file found. ($AISTACK_ORLA_CONFIG_FILE)"
     fi
 }
 
@@ -286,7 +286,7 @@ orla_generate_cpa_key() {
 orla_unregister_cpa_key() {
     if [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ]; then
         # Remove existing CPA API key for Orla
-        cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
+        cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
     fi
 }
 

@@ -60,6 +60,7 @@ case "$sub_command" in
     get)
         cpa_get_config "$1"
         ;;
+    # this is for API key management :
     key)
         case "$1" in
             generate)

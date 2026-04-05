@@ -21,7 +21,7 @@ case "$sub_command" in
     uninstall)
         if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
-        echo "Uninstalling Opencode CLI and Opencode Gemini CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
+        echo "Uninstalling Opencode CLI and unregister Opencode CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
         opencode_uninstall
         
         opencode_path_unregister_for_shell "all"
@@ -66,12 +66,7 @@ case "$sub_command" in
         esac
         ;;
     show-config)
-        if [ -f "$AISTACK_OPENCODE_CONFIG_FILE" ]; then
-            echo "Current Opencode configuration file : $AISTACK_OPENCODE_CONFIG_FILE"
-            cat "$AISTACK_OPENCODE_CONFIG_FILE"
-        else
-            echo "No Opencode configuration file found."
-        fi
+        opencode_show_config
         ;;
 
     launch)
