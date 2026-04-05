@@ -13,6 +13,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_vscode.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_opencode.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_orla.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
 
@@ -63,8 +64,19 @@ Options:
     oc mcp github install|uninstall             Add mcp-github remote server configuration.
     oc mcp context7 install|uninstall           Add mcp-context7 local server configuration.
     ----
-    kc : kilocode VS Code extension - https://kilo.ai/
-    kc connect cpa                      Connect KiloCode VS Code extension to CLIProxyAPI. (require 'aistack cpa install' before)
+    kc : Kilo Code CLI and VS Code extension - https://kilo.ai/
+    kc install                          Install and configure Kilo Code.
+    kc uninstall                        Uninstall Kilo Code and unregister Kilo Code PATH (keep all configuration unchanged, to remove configuration use 'aistack kc reset' command)
+    kc configure                        Configure Kilo Code. ('aistack kc install' include configuration)
+    kc info                             Print Kilo Code informations.
+    kc show-config                      Show current Kilo Code configuration.
+    kc reset                            Reset all Kilo Code configuration.
+    kc register <shell>|vs              Register Kilo Code PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
+    kc unregister <shell>|vs            Unregister Kilo Code PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs")
+    kc launch [context folder] -- <other kilo code options>
+                                        Launch Kilo Code. Instead use 'kilo' command if ${AISTACK_KILO_LAUNCHER_HOME} is in your PATH,
+                                        you could use 'aistack kc register <shell>'
+    kc connect cpa                      Connect Kilo Code CLI and VS Code extension to CLIProxyAPI. (require 'aistack cpa install' before)
     ----
     vs set <key> <value>                Set a VS Code configuration in settings file.
     vs del <key>                        Delete a VS Code configuration in settings file.
@@ -75,6 +87,7 @@ Options:
     orla install                      Install and configure Orla.
     orla uninstall                    Uninstalling Orla and unregister Orla PATH (keep all configuration unchanged, to remove configuration use 'aistack gc reset' command)
     orla configure                    Configure Orla. ('aistack orla install' include configuration)
+    orla info                         Print Orla informations.
     orla show-config                  Show current Orla configuration.
     orla reset                        Reset all Orla configuration.
     orla register <shell>|vs          Register Orla PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
@@ -204,6 +217,9 @@ main() {
             ;;
         orla)
             . "${_CURRENT_FILE_DIR}/lib/main_orla.sh"
+            ;;
+        kc)
+            . "${_CURRENT_FILE_DIR}/lib/main_kilo.sh"
             ;;
         *)
             echo "Error: Unknown command $command"
