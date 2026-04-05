@@ -214,6 +214,26 @@ EOF
 }
 
 
+@test "json_set_key6" {
+
+	run json_set_key "a.b.special\.key" '"foo"' <<'EOF'
+{ }
+EOF
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "b": {
+      "special.key": "foo"
+    }
+  }
+}
+EOF
+	)
+  assert_success
+	assert_output "$expected"
+}
+
+
 
 @test "json_del_key1" {
 

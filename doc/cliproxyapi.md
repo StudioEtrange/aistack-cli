@@ -12,48 +12,47 @@ CLIProxyAPI is a tool that bridges the gap between command-line interfaces and A
 
 ## Quickstart
 
-install
+* install
 ```
 ./aistack cpa install
 ```
 
-launch
+* launch
 ```
 ./aistack cpa launch
 ```
 
-authenticate to gemini cli
-requirements : gemini-cli configured `./aistack gc install`
-note : The local OAuth callback for Gemini via OAuth uses port 8085.
-```
-./aistack cpa login gemini-oauth [--project_id <your_project_id>]
-```
-choose Google One to use free tier with google personnal account
-alternative : go to http://localhost:8317/management.html go to OAuth login / Gemini CLI OAuth
+* authenticate to gemini cli
+    * note : The local OAuth callback for Gemini via OAuth uses port 8085.
+    ```
+    ./aistack cpa login gemini-oauth [--project_id <your_project_id>]
+    ```
+  * if you are on a Google One plan, select it. It is the free tier with google personnal account
+  * alternative : go to http://localhost:8317/management.html go to OAuth login / Gemini CLI OAuth
 
-info
+* info
 ```
 ./aistack cpa info
 ```
 
-list endpoints sample test
+*  sample test of launched cpa : list of existing endpoints
 ```
 curl -s http://localhost:8317
 ```
 
-list available models
+* list available models
 ```
 YOUR_TOKEN="xxxx"
 curl -X GET "http://localhost:8317/v1/models" \
     -H "Authorization: Bearer $YOUR_TOKEN" \
     -H "Content-Type: application/json"
 ```
-OR
+  * OR
 ```
 ./aistack cpa model list
 ```
 
-test chat completion
+* test a chat completion
 ```
 curl -X POST http://localhost:8317/v1/chat/completions \
     -H "Authorization: Bearer $YOUR_TOKEN" \
@@ -61,10 +60,22 @@ curl -X POST http://localhost:8317/v1/chat/completions \
     -d '{
         "model": "gemini-2.5-pro",
         "messages": [
-        {"role": "user", "content": "Hello from test"}
+            {"role": "user", "content": "Hello from test"}
         ]
     }'
 ```
+
+* enable/disable usage statistics tracking - see it in management console
+```
+./aistack cpa set "usage
+-statistics-enabled" "true"
+./aistack cpa set "usage
+-statistics-enabled" "false"
+```
+
+## Configuration file
+
+* sample : https://help.router-for.me/configuration/basic.html
 
 ## Gemini OAuth and special case when using remote SSH in vscode 
 

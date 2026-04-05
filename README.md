@@ -166,6 +166,7 @@ AIStack leverages the **Stella** framework for its core functionality. Stella pr
   * add variety of models : extension OAI Compatible Provider for Copilot 
   * https://marketplace.visualstudio.com/items?itemName=johnny-zhao.oai-compatible-copilot https://github.com/JohnnyZ93/oai-compatible-copilot
   * Unique Identifier	johnny-zhao.oai-compatible-copilot
+* openclaw and cliproxyapi https://developer.tenten.co/openclaw-multi-agent-cliproxyapiplus-complete-deployment-guide
 
 ## Contributors
 

@@ -1,4 +1,3 @@
-
 opencode_path() {
     # oc specific paths
     export AISTACK_OPENCODE_LOCAL_SHARE_HOME="$HOME/.local/share/opencode"
@@ -100,6 +99,15 @@ opencode_settings_configure() {
 opencode_settings_remove() {
     rm -Rf "$AISTACK_OPENCODE_LOCAL_SHARE_HOME"
     rm -Rf "$AISTACK_OPENCODE_CONFIG_HOME"
+}
+
+opencode_show_config() {
+    if [ -f "$AISTACK_OPENCODE_CONFIG_FILE" ]; then
+        echo "Current configuration file : $AISTACK_OPENCODE_CONFIG_FILE"
+        cat "$AISTACK_OPENCODE_CONFIG_FILE"
+    else
+        echo "No configuration file found. ($AISTACK_OPENCODE_CONFIG_FILE)"
+    fi
 }
 
 opencode_merge_config() {
