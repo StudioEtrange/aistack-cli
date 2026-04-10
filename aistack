@@ -2,7 +2,7 @@
 _CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 _CURRENT_RUNNING_DIR="$( cd "$( dirname "." )" && pwd )"
 
-STELLA_LOG_STATE="OFF"
+STELLA_LOG_STATE="ON"
 . "${_CURRENT_FILE_DIR}/stella-link.sh" include
 
 . "${_CURRENT_FILE_DIR}/lib/lib.sh"
@@ -140,6 +140,7 @@ main() {
             ;;
         init)
             aistack_init
+            echo "AIStack initialization completed."
             ;;
         uninstall)
             aistack_uninstall
