@@ -11,6 +11,8 @@
     * default network allow list ~/.docker/sandboxes/vm/<vm-name>/proxy-config.json
     * microvm vs container : https://www.ajeetraina.com/docker-sandboxes-containers-vs-microvms-when-to-use-what/?utm_source=chatgpt.com
   * Kata Containers : microvm + container engine : https://katacontainers.io/
+  * https://github.com/trycua/cua
+    * Open-source infrastructure for Computer-Use Agents. Sandboxes, SDKs, and benchmarks to train and evaluate AI agents that can control full desktops (macOS, Linux, Windows).
   
 * os based
   * firejail - https://github.com/netblue30/firejail  https://firejail.wordpress.com/ - use linux kernel functionality
