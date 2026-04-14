@@ -41,16 +41,16 @@ runtime_path() {
 
     if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
         # bin folder which contains node
-        export AISTACK_NODEJS_BIN_PATH="$(dirname $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH)/"
+        export AISTACK_NODEJS_BIN_PATH="$(dirname $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH)"
     else
         # we use an already installed nodejs, not aistack nodejs
         export AISTACK_NODEJS_BIN_PATH=""
     fi
     
     # used by MCP local server
-    if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
+    if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
         # bin folder which contains python
-        export AISTACK_PYTHON_BIN_PATH="$(dirname $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH)/"
+        export AISTACK_PYTHON_BIN_PATH="$(dirname $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH)"
     else
         # we use an already installed python, not aistack python
         export AISTACK_PYTHON_BIN_PATH=""
@@ -71,6 +71,8 @@ aistack_info() {
     echo
     echo "--nodejs--"
     echo "AISTACK_INTERNAL_NVM_AVAILABLE : $AISTACK_INTERNAL_NVM_AVAILABLE"
+    echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
+    echo "NVM_DIR : $NVM_DIR"
 
     echo "AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE"
     if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
@@ -78,6 +80,7 @@ aistack_info() {
         echo "AISTACK_INTERNAL_NODEJS_RUNTIME_PATH : $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH"
     fi
 
+    echo
     echo "--python--"
     echo "AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE"
     if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
