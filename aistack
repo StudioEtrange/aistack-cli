@@ -14,6 +14,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_opencode.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_orla.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
 
 # --- USAGE ---
@@ -27,6 +28,7 @@ Options:
     init                    Install/Reinstall dependencies.
     uninstall               Uninstall aistack, all tools, mcp servers and unregister everything from PATH.
     help                    Display this help message.
+    info                    Display various aistack information and configuration.
     shell                   Enter aistack context and path.
     ----
     gc : gemini-cli - https://google-gemini.github.io/gemini-cli
@@ -113,6 +115,10 @@ Options:
     ----
     app killport <port>                  Kill process running on a specific port.
     ----
+    bmad <install|uninstall>            Install/Uninstall bmad cli.
+    bmad register <shell>|vs          Register bmad PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
+    bmad unregister <shell>|vs        Unregister bmad PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs")
+    ----
 EOF
 }
 
@@ -138,6 +144,9 @@ main() {
             ;;
         shell)
             $STELLA_API boot_app_shell "local"
+            ;;
+        info)
+            aistack_info
             ;;
         init)
             aistack_init
@@ -205,6 +214,9 @@ main() {
             ;;
         orla)
             . "${_CURRENT_FILE_DIR}/lib/main_orla.sh"
+            ;;
+        bmad)
+            . "${_CURRENT_FILE_DIR}/lib/main_bmad.sh"
             ;;
         *)
             echo "Error: Unknown command $command"
