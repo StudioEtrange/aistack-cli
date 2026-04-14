@@ -18,7 +18,9 @@ aistack_path() {
     node_path
     gemini_path
     opencode_path
-    vscode_path
+    # FORCE_VSCODE_MODE could be "remote" : means using vscode remote extension
+    # FORCE_VSCODE_MODE could be empty "" : try to guess
+    vscode_path "$FORCE_VSCODE_MODE"
     cpa_path
     orla_path
     bmad_path

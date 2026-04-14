@@ -106,7 +106,7 @@ vscode_path() {
                 case "$STELLA_CURRENT_PLATFORM" in
                     "linux") 
                         # TODO for linux (AND for WSL when launching "code ." from within WSL)
-                        echo "- TODO NOT IMPLEMENTED ------"
+                        #echo "- TODO NOT IMPLEMENTED ------"
                         export AISTACK_VSCODE_LOCAL_ROOT=""
                         export AISTACK_VSCODE_LOCAL_CLI=""
                         ;;
