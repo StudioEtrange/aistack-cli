@@ -83,17 +83,3 @@ bmad_launcher_manage() {
     
 }
 
-
-bmad_settings_configure() {
-    :
-}
-
-bmad_settings_remove() {
-    :
-}
-
-
-bmad_info() {
-   : 
-}
-

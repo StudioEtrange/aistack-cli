@@ -22,25 +22,11 @@ case "$sub_command" in
 
         echo "Uninstalling bmad and unregister bmad PATH (keep all configuration unchanged, to remove configuration use reset command)"
         bmad_uninstall
-        
+
         bmad_path_unregister_for_shell "all"
         bmad_path_unregister_for_vs_terminal
 
         bmad_launcher_manage "delete"
-        ;;
-    configure)
-        echo "Configuring bmad"
-        bmad_settings_configure
-        #vscode_settings_configure "bmad"
-
-        bmad_launcher_manage
-        ;;
-    reset)
-        echo "Resetting bmad configuration"
-        bmad_settings_remove
-        #vscode_settings_remove "bmad"
-
-        bmad_launcher_manage
         ;;
     register)
         echo "Registering bmad launcher in PATH for $1"
@@ -64,11 +50,10 @@ case "$sub_command" in
                 ;;
         esac
         ;;
-    show-config)
-        ;;
-
     launch)
         bmad_launcher_manage
+
+        [ "$1" = "--" ] && shift
 
         bmad_launch "$@"
         ;;
