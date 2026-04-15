@@ -1,11 +1,10 @@
 # VS Code
 
-
 ## VS Code Remote SSH to older linux system
   
 * vs code server needs linux minimal requirements : kernel >= 4.18, glibc >=2.28, libstdc++ >= 3.4.25, binutils >= 2.29. If you do not meet these requirements you have two solutions
 
-* Solution A : Use old vs code version
+* Solution A : Use old vs code version (downgrade actual version)
   * vs code version 1.96.4 supports glibc 2.17, you could downgrade vs code if you wish to connect to older linux system with glibc 2.17
 
 * Solution B : 
@@ -89,7 +88,9 @@
   * https://github.com/ziwenhahaha/scripts/blob/master/setup_vscode_patch.sh
 
 
+## Custom LLM
 
+* [Extension : OAI Compatible Provider for Copilot](oaicopilotprovider)
 
 ## VS Code Various Notes
 

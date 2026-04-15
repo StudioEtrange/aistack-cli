@@ -6,6 +6,13 @@ _STELLA_COMMON_INCLUDED_=1
 #turns off bash's hash function
 #set +h
 
+# init stella environment
+__init_stella_env() {
+	__feature_init_installed
+	# PROXY
+	__init_proxy
+}
+
 
 # VARIOUS-----------------------------
 
@@ -414,6 +421,7 @@ __get_last_version() {
 }
 
 # pick a version from a list according to constraint
+# options LIMIT n, ENDING_CHAR_REVERSE, SEP c : see __sort_version
 # selector could be
 #				a specific version number
 #				or a version number with a constraint symbol >, >=, <, <=, ^
@@ -428,41 +436,17 @@ __get_last_version() {
 #				^version : pin version and select most recent version with same version part (not exactly like npm)
 #					^1.0 select the latest 1.0.* version (like 1.0.0 or 1.0.4)
 #					^1 select the latest 1.* version (like 1.0.0 or 1.2.4)
-
-# 	options LIMIT n, ENDING_CHAR_REVERSE, SEP c : see __sort_version
-
+# samples: see samples in test_common.bats
 #		__select_version_from_list ">1.1.1a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
-# select_version result is : 1.1.1b
+# 				desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
+# 				selected_version result is : 1.1.1b
 #		__select_version_from_list ">1.1.1b" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
-# select_version result is : <none>
+# 				desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
+# 				selected_version result is : <none>
 #		__select_version_from_list ">=1.1.1a" "1.1.1 1.1.0 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
-# select_version result is : 1.1.1a
-#		__select_version_from_list "<=1.1.1c" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
-# select_version result is : 1.1.1b
-#		__select_version_from_list "<1.1" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
-# select_version result is : 1.1.0
-#		__select_version_from_list "<1.1.0a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
-# select_version result is : 1.1.0
-#		__select_version_from_list "<=1.1.1a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
-# select_version result is : 1.1.0
-#		__select_version_from_list "^1.1.1a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
-# select_version result is : 1.1.1a
-#		__select_version_from_list "^1.0" "1.0.0 1.0.1 1.1.1 1.1.1a 1.1.1b" "SEP ."
-# desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0 1.0.1 1.0.8
-# select_version result is : 1.0.1
-#			__select_version_from_list "^1.1" "1.1 1.0.0" "SEP ."
-# select_version result is : 1.1
-#			__select_version_from_list "^1.1" "1.1 1.1.0" "SEP ."
-# select_version result is : 1.1.0
-__select_version_from_list() {
+# 				desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
+# 				selected_version result is : 1.1.1a
+__select_version_from_list_old() {
 	local selector="$1"
 	local list="$2"
 	local opt="$3"
@@ -607,31 +591,9 @@ __select_version_from_list() {
 # 	same as __select_version_from_list but return a matching list of versions instead of one picked version
 # 	options LIMIT n, ENDING_CHAR_REVERSE, SEP c : see __sort_version
 #					ASC (default), DESC : will return result filtered list in this order
+# samples : see samples in test_common.bats
 # __filter_version_list ">=1.1.0" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
 #		1.1.0 1.1.1 1.1.1a 1.1.1b
-# __filter_version_list ">=1.1.1" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-#		1.1.1 1.1.1a 1.1.1b
-# __filter_version_list ">=1.1.1" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP . ENDING_CHAR_REVERSE"
-#		1.1.1
-# __filter_version_list "<1.1.0" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-#
-# __filter_version_list "<1.1.1a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-#		1.1.0 1.1.1
-# __filter_version_list "<=1.1.1a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
-#		1.1.0 1.1.1 1.1.1a
-# __filter_version_list "<=1.1.1a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP . ENDING_CHAR_REVERSE"
-#		1.1.0 1.1.1a
-# __filter_version_list "^1.1.1a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP . ENDING_CHAR_REVERSE"
-#		1.1.1a
-# __filter_version_list "^1.1" "1.1.0 1.1.1 1.1.1a 1.1.1b 1.1" "SEP ."
-#		1.1 1.1.0 1.1.1 1.1.1a 1.1.1b
-# __filter_version_list "^1.1" "1.1.0 1.1.1 1.1.1a 1.1.1b 1.1" "DESC SEP ." 
-#		1.1.1b 1.1.1a 1.1.1 1.1.0 1.1
-# __filter_version_list "1.1" "1.1.0 1.1.1 1.1.1a 1.1.1b 1.1" "SEP ." 
-#		1.1
-# __filter_version_list "" "1.1.0 1.1.1 1.1.1a 1.1.1b 1.1" "SEP ." 
-#		1.1.0 1.1.1 1.1.1a 1.1.1b 1.1
-
 __filter_version_list() {
 	local selector="$1"
 	local list="$2"
@@ -645,11 +607,11 @@ __filter_version_list() {
 	for o in $opt; do
 		[ "$o" = "ASC" ] && __result_order="$o"
 		[ "$o" = "DESC" ] && __result_order="$o"
+		[ "$flag_limit" = "ON" ] && limit="$o" && flag_limit="OFF"
+		[ "$o" = "LIMIT" ] && flag_limit="ON"
 		[ "$o" = "ENDING_CHAR_REVERSE" ] && __sort_opt="${__sort_opt} ENDING_CHAR_REVERSE"
 		[ "$flag_sep" = "ON" ] && __sort_opt="${__sort_opt} $o" && flag_sep="OFF"
 		[ "$o" = "SEP" ] && flag_sep="ON" && __sort_opt="${__sort_opt} SEP"
-		[ "$flag_limit" = "ON" ] && limit="$o" && flag_limit="OFF"
-		[ "$o" = "LIMIT" ] && flag_limit="ON"
 	done
 
 
@@ -788,31 +750,79 @@ __filter_version_list() {
 
 }
 
+# pick a version from a list according to constraint
+# options LIMIT n, ENDING_CHAR_REVERSE, SEP c : see __sort_version
+# selector could be
+#				a specific version number
+#				or a version number with a constraint symbol >, >=, <, <=, ^
+#				>version : most recent after version
+#					>1.0 select the latest version after 1.0, which is not 1.0 (like 2.3.4)
+#				>=version : most recent including version
+#					>=1.0 select the latest version after 1.0, which may be 1.0
+#				<version : most recent just before version
+#					<1.0 select the latest just before 1.0, which is not 1.0 (like 0.3.4)
+#				<=version : most recent just before version including version itself
+#					<=1.0 select the latest version just before 1.0, which may be 1.0
+#				^version : pin version and select most recent version with same version part (not exactly like npm)
+#					^1.0 select the latest 1.0.* version (like 1.0.0 or 1.0.4)
+#					^1 select the latest 1.* version (like 1.0.0 or 1.2.4)
+# samples: see samples in test_common.bats
+#		__select_version_from_list ">1.1.1a" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
+# 				desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
+# 				selected_version result is : 1.1.1b
+#		__select_version_from_list ">1.1.1b" "1.1.0 1.1.1 1.1.1a 1.1.1b" "SEP ."
+# 				desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
+# 				selected_version result is : <none>
+#		__select_version_from_list ">=1.1.1a" "1.1.1 1.1.0 1.1.1a 1.1.1b" "SEP ."
+# 				desc list is 1.1.1b 1.1.1a 1.1.1 1.1.0
+# 				selected_version result is : 1.1.1a
+__select_version_from_list() {
+	local selector="$1"
+	local list="$2"
+	local opt="$3"
+	local result=""
+	local filtered
+	local v
+
+	case ${selector} in
+		\>=* | \>* )
+			# take first element of the filtered list
+			filtered="$(__filter_version_list "${selector}" "${list}" "${opt}")"
+			for v in ${filtered}; do
+				result="${v}"
+				break
+			done
+			;;
+
+		\<=* | \<* | ^* )
+			# take last element of the filtered list
+			filtered="$(__filter_version_list "${selector}" "${list}" "${opt}")"
+			if [ -n "${filtered}" ]; then
+				for v in ${filtered}; do
+					result="${v}"
+				done
+			fi
+			;;
+
+		"" )
+			result=""
+			;;
+
+		* )
+			filtered="$(__filter_version_list "${selector}" "${list}" "${opt}")"
+			for v in ${filtered}; do
+				result="${v}"
+				break
+			done
+			;;
+	esac
+
+	echo "${result}"
+}
+
 
 
 # sort a list of versions
-
-#__sort_version "build507 build510 build403 build4000 build" "ASC"
-#  build build403 build507 build510 build4000
-#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "ASC"
-#  1.1.0 1.1.1 1.1.1a 1.1.1b
-#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "ASC SEP ."
-#  1.1.0 1.1.1 1.1.1a 1.1.1b
-#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "ASC SEP . ENDING_CHAR_REVERSE"
-#  1.1.0 1.1.1a 1.1.1b 1.1.1
-#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "DESC"
-#  1.1.1b 1.1.1a 1.1.1 1.1.0
-#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "DESC SEP ."
-#  1.1.1b 1.1.1a 1.1.1 1.1.0
-#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "DESC SEP . ENDING_CHAR_REVERSE"
-#  1.1.1 1.1.1b 1.1.1a 1.1.0
-#__sort_version "1.1.0 1.1.1 1.1.1alpha 1.1.1beta1 1.1.1beta2" "ASC ENDING_CHAR_REVERSE SEP ."
-#  1.1.0 1.1.1alpha 1.1.1beta1 1.1.1beta2 1.1.1
-#__sort_version "1.1.0 1.1.1 1.1.1alpha 1.1.1beta1 1.1.1beta2" "DESC ENDING_CHAR_REVERSE SEP ."
-#  1.1.1 1.1.1beta2 1.1.1beta1 1.1.1alpha 1.1.0
-#__sort_version "1.9.0 1.10.0 1.10.1.1 1.10.1 1.10.1alpha1 1.10.1beta1 1.10.1beta2 1.10.2 1.10.2.1 1.10.2.2 1.10.0RC1 1.10.0RC2" "DESC ENDING_CHAR_REVERSE SEP ."
-#  1.10.2.2 1.10.2.1 1.10.2 1.10.1.1 1.10.1 1.10.1beta2 1.10.1beta1 1.10.1alpha1 1.10.0 1.10.0RC2 1.10.0RC1 1.9.0
-
 # options :
 #		ASC : ascending order
 #		DESC : decresacing order
@@ -822,8 +832,15 @@ __filter_version_list() {
 # 			we must indicate separator with SEP if we use ENDING_CHAR_REVERSE and if there is any separator (obviously)
 #		LIMIT n : limit to a number of result
 # NOTE : characters "}", "!" and "{" may cause problem if they are used in versions strings
-
-
+# samples : see samples ih test_common.bats
+#__sort_version "build507 build510 build403 build4000 build" "ASC"
+#  build build403 build507 build510 build4000
+#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "ASC"
+#  1.1.0 1.1.1 1.1.1a 1.1.1b
+#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "ASC SEP ."
+#  1.1.0 1.1.1 1.1.1a 1.1.1b
+#__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "ASC SEP . ENDING_CHAR_REVERSE"
+#  1.1.0 1.1.1a 1.1.1b 1.1.1
 __sort_version() {
 	local list=$1
 	local opt="$2"
@@ -1937,12 +1954,9 @@ __is_dir_empty() {
 	return $([ -z "$(ls -A "$1" 2>/dev/null)" ])
 }
 
+# NOTES:
 # To get: /tmp/my.dir (like dirname)
 # path = ${foo%/*}
-# To get: filename.tar.gz (like basename)
-# file = ${foo##*/}
-# To get: filename
-# base = ${file%%.*}
 __get_path_from_string() {
 	if [ "$1" = "${1%/*}" ]; then
 		echo "."
@@ -1951,6 +1965,11 @@ __get_path_from_string() {
 	fi
 }
 
+# NOTES:
+# To get: filename.tar.gz (like basename)
+# file = ${foo##*/}
+# To get: filename
+# base = ${file%%.*}
 __get_filename_from_string() {
 	echo ${1##*/}
 }
@@ -2284,14 +2303,149 @@ __symlink_abs_to_rel_path() {
 
 
 
+# append a path at the end of a colon-separated list if not yet in list
+# DOES NOT force absolute, DOES NOT check existence
+# $1 = current list
+# $2 = candidate path
+__path_append_to_list() {
+  local list="$1"
+  local p="$2"
 
+  [ -z "$p" ] && { printf '%s' "$list"; return; }
 
-# init stella environment
-__init_stella_env() {
-	__feature_init_installed
-	# PROXY
-	__init_proxy
+  case ":$list:" in
+    *:"$p":*)
+      printf '%s' "$list"
+      ;;
+    *)
+      if [ -n "$list" ]; then
+        printf '%s:%s' "$list" "$p"
+      else
+        printf '%s' "$p"
+      fi
+      ;;
+  esac
 }
+
+# append a path only if directory exists
+# append a path at the end of a colon-separated list if not yet in list
+__path_append_to_list_if_exists() {
+  local list="$1"
+  local p="$2"
+
+  [ -z "$p" ] && { printf '%s' "$list"; return; }
+  [ -d "$p" ] || { printf '%s' "$list"; return; }
+
+  case ":$list:" in
+    *:"$p":*)
+      printf '%s' "$list"
+      ;;
+    *)
+      if [ -n "$list" ]; then
+        printf '%s:%s' "$list" "$p"
+      else
+        printf '%s' "$p"
+      fi
+      ;;
+  esac
+}
+
+# add all lines from STDIN (one per line) into colon list $1
+# append path at the end of a colon-separated list if not yet in list
+__path_append_to_list_from_stdin() {
+  local list="$1" line
+  while IFS= read -r line; do
+    [ -n "$line" ] || continue
+    list="$(__path_append_to_list "$list" "$line")"
+  done
+  printf '%s' "$list"
+}
+
+
+
+# Usage :
+#   __find_file_in_path_list "<regex_file>_pattern" "<paths_list_with_separator_:>" "STOP_FIRST SUB_DIRS subdir1 subdir2"
+#	samples :
+#   	__find_file_in_path_list 'libGL.*' "/usr:/usr/local:/opt:/usr/lib"
+#			/usr/lib/libGL.so.1
+#		__find_file_in_path_list "libz.so" "/lib" "SUB_DIRS x86_64-linux-gnu STOP_FIRST"
+#			/lib/x86_64-linux-gnu/libz.so.1
+#		__find_file_in_path_list "^libz" "/usr/lib:/usr/local:/opt
+#			/usr/lib/libz.1.2.12.dylib
+#		PATTERN : regex pattern applid to each file contained in path
+#		PATH_LIST : list of path separated by ':'
+#	NOTE :
+# 		for an exact file match use : '^libfoo\.so$''
+# 		it is a non recursive search file
+# 	OPTIONS:
+#		STOP_FIRST : STOP search at first match
+#		SUB_DIRS : subdirs search list (separated by space)
+__find_file_in_path_list() {
+
+	[ $# -lt 2 ] && return 1
+
+	local PATTERN="$1"   # file to find with regex
+	local PATH_LIST="$2"
+	local OPT="$3"
+	local SUB_DIRS=
+	local FOUND=0
+
+	local _opt_first=
+	local _first_matching=
+	local _flag_subdir
+	for o in $OPT; do
+		[ "$o" = "STOP_FIRST" ] && _opt_first="ON" && _flag_subdir= # STOP search at first match
+		[ "$_flag_subdir" = "ON" ] && SUB_DIRS="${SUB_DIRS} ${o}"
+		[ "$o" = "SUB_DIRS" ] && _flag_subdir="ON"
+	done
+
+	__search_dir() {
+		local DIR="$1"
+		local entry
+		local name
+		[ -d "$DIR" ] || return 1
+		# browse DIR
+		for entry in "$DIR"/*; do
+			name=${entry##*/}
+			# PATTERN is a regex used by grep -E
+			if echo "$name" | grep -E -e "$PATTERN" -q; then
+				echo "$entry"
+				FOUND=1
+				[ "$_opt_first" = "ON" ] && return 0
+			fi
+		done
+	}
+
+	local BASE
+	local OLD_IFS="$IFS"
+	IFS=':'
+	for BASE in $PATH_LIST; do
+		[ -z "$BASE" ] && BASE="."
+
+		__search_dir "$BASE"
+		if [ "$_opt_first" = "ON" ] && [ "$FOUND" -eq 1 ]; then
+            break
+        fi
+		if [ -n "$SUB_DIRS" ]; then
+			IFS=' '
+			for SUB in $SUB_DIRS; do
+				[ -z "$SUB" ] && continue
+				__search_dir "$BASE/$SUB"
+				if [ "$_opt_first" = "ON" ] && [ "$FOUND" -eq 1 ]; then
+					break
+				fi
+			done
+			IFS=':'
+			if [ "$_opt_first" = "ON" ] && [ "$FOUND" -eq 1 ]; then
+				break
+			fi
+		fi
+	done
+	IFS="$OLD_IFS"
+
+	[ "$FOUND" -eq 1 ] && return 0 || return 1
+}
+
 
 #MEASURE TOOL----------------------------------------------
 # __timecount_start "count_id"
@@ -2402,34 +2556,34 @@ __resource() {
 	#		"DEST_ERASE" when GET, will erase FINAL_DESTINATION first
 	# TODO : remove illegal characters in NAME. NAME is used in flag file name when merging
 
-	local _opt_merge=OFF
-	local _opt_strip=OFF
-	local _opt_get=ON
-	local _opt_delete=OFF
-	local _opt_update=OFF
-	local _opt_revert=OFF
-	local _opt_force_name=OFF
-	local _opt_version=OFF
-	local _opt_dest_erase=OFF
+	local _opt_merge="OFF"
+	local _opt_strip="OFF"
+	local _opt_get="ON"
+	local _opt_delete="OFF"
+	local _opt_update="OFF"
+	local _opt_revert="OFF"
+	local _opt_force_name="OFF"
+	local _opt_version="OFF"
+	local _opt_dest_erase="OFF"
 	local _checkout_version=
-	local _download_filename=_AUTO_
+	local _download_filename="_AUTO_"
 	for o in $OPT; do
 		if [ "$_opt_force_name" = "ON" ]; then
-			_download_filename=$o
-			_opt_force_name=OFF
+			_download_filename="$o"
+			_opt_force_name="OFF"
 		else
 			if [ "$_opt_version" = "ON" ]; then
-				_checkout_version=$o
-				_opt_version=OFF
+				_checkout_version="$o"
+				_opt_version="OFF"
 			else
-				[ "$o" = "VERSION" ] && _opt_version=ON
-				[ "$o" = "MERGE" ] && _opt_merge=ON
-				[ "$o" = "DEST_ERASE" ] && _opt_dest_erase=ON
-				[ "$o" = "STRIP" ] && _opt_strip=ON
-				[ "$o" = "FORCE_NAME" ] && _opt_force_name=ON
-				if [ "$o" = "DELETE" ]; then _opt_delete=ON;  _opt_revert=OFF;  _opt_get=OFF; _opt_update=OFF; fi
-				if [ "$o" = "UPDATE" ]; then _opt_update=ON;  _opt_revert=OFF;  _opt_get=OFF; _opt_delete=OFF; fi
-				if [ "$o" = "REVERT" ]; then _opt_revert=ON;  _opt_update=OFF;  _opt_get=OFF; _opt_delete=OFF; fi
+				[ "$o" = "VERSION" ] && _opt_version="ON"
+				[ "$o" = "MERGE" ] && _opt_merge="ON"
+				[ "$o" = "DEST_ERASE" ] && _opt_dest_erase="ON"
+				[ "$o" = "STRIP" ] && _opt_strip="ON"
+				[ "$o" = "FORCE_NAME" ] && _opt_force_name="ON"
+				if [ "$o" = "DELETE" ]; then _opt_delete="ON";  _opt_revert="OFF";  _opt_get="OFF"; _opt_update="OFF"; fi
+				if [ "$o" = "UPDATE" ]; then _opt_update="ON";  _opt_revert="OFF";  _opt_get="OFF"; _opt_delete="OFF"; fi
+				if [ "$o" = "REVERT" ]; then _opt_revert="ON";  _opt_update="OFF";  _opt_get="OFF"; _opt_delete="OFF"; fi
 			fi
 		fi
 	done
@@ -2528,9 +2682,14 @@ __resource() {
 	fi
 
 	if [ "$_FLAG" = "1" ]; then
-		[ ! -d "$FINAL_DESTINATION" ] && mkdir -p "$FINAL_DESTINATION"
+		[ ! -d $FINAL_DESTINATION ] && mkdir -p $FINAL_DESTINATION
 
 		case ${PROTOCOL} in
+			HOMEBREW_BOTTLE)
+				# TODO
+				if [ "$_opt_get" = "ON" ]; then __download_uncompress_homebrew_bottle "$URI" "$_download_filename" "$FINAL_DESTINATION"; fi
+				if [ "$_opt_merge" = "ON" ]; then echo 1 > "$FINAL_DESTINATION/._MERGED_$NAME"; fi
+				;;
 			HTTP_ZIP )
 				if [ "$_opt_get" = "ON" ]; then __download_uncompress "$URI" "$_download_filename" "$FINAL_DESTINATION" "$_STRIP"; fi
 				if [ "$_opt_merge" = "ON" ]; then echo 1 > "$FINAL_DESTINATION/._MERGED_$NAME"; fi
@@ -2542,18 +2701,16 @@ __resource() {
 				if [ "$_opt_merge" = "ON" ]; then echo 1 > "$FINAL_DESTINATION/._MERGED_$NAME"; fi
 				;;
 			HG )
-				if [ "$_opt_revert" = "ON" ]; then ( cd "$FINAL_DESTINATION"; hg revert --all -C; ); fi
-				if [ "$_opt_update" = "ON" ]; then ( cd "$FINAL_DESTINATION"; hg pull; hg update "$_checkout_version"; ); fi
-				if [ "$_opt_get" = "ON" ]; then hg clone "$URI" "$FINAL_DESTINATION"; if [ ! "$_checkout_version" = "" ]; then ( cd "$FINAL_DESTINATION"; hg update "$_checkout_version"; ); fi; fi
+				if [ "$_opt_revert" = "ON" ]; then cd "$FINAL_DESTINATION"; hg revert --all -C; fi
+				if [ "$_opt_update" = "ON" ]; then cd "$FINAL_DESTINATION"; hg pull; hg update $_checkout_version; fi
+				if [ "$_opt_get" = "ON" ]; then hg clone $URI "$FINAL_DESTINATION"; if [ ! "$_checkout_version" = "" ]; then cd "$FINAL_DESTINATION"; hg update $_checkout_version; fi; fi
 				# [ "$_opt_merge" = "ON" ] && echo 1 > "$FINAL_DESTINATION/._MERGED_$NAME"
 				;;
 			GIT )
 				__require "git" "git" "SYSTEM"
-				if [ "$_opt_revert" = "ON" ]; then ( cd "$FINAL_DESTINATION"; git reset --hard; ); fi
-				if [ "$_opt_update" = "ON" ]; then 
-					( cd "$FINAL_DESTINATION"; git pull;if [ ! "$_checkout_version" = "" ]; then git checkout "$_checkout_version"; fi; )
-				fi
-				if [ "$_opt_get" = "ON" ]; then git clone --recursive "$URI" "$FINAL_DESTINATION"; if [ ! "$_checkout_version" = "" ]; then ( cd "$FINAL_DESTINATION"; git checkout "$_checkout_version"; ); fi; fi
+				if [ "$_opt_revert" = "ON" ]; then cd "$FINAL_DESTINATION"; git reset --hard; fi
+				if [ "$_opt_update" = "ON" ]; then cd "$FINAL_DESTINATION"; git pull;if [ ! "$_checkout_version" = "" ]; then git checkout $_checkout_version; fi; fi
+				if [ "$_opt_get" = "ON" ]; then git clone --recursive $URI "$FINAL_DESTINATION"; if [ ! "$_checkout_version" = "" ]; then cd "$FINAL_DESTINATION"; git checkout $_checkout_version; fi; fi
 				# [ "$_opt_merge" = "ON" ] && echo 1 > "$FINAL_DESTINATION/._MERGED_$NAME"
 				;;
 			FILE )
@@ -2572,6 +2729,93 @@ __resource() {
 }
 
 # DOWNLOAD AND ZIP FUNCTIONS---------------------------------------------------
+
+__download_uncompress_homebrew_bottle() {
+	local FORMULA
+	local FILE_NAME
+	local UNZIP_DIR
+	local OPT
+	# DEST_ERASE delete destination folder
+	# STRIP delete first folder in archive
+
+	FORMULA="$1"
+	FILE_NAME="$2"
+	UNZIP_DIR="$3"
+	OPT="STRIP $4"
+
+	if [ "$STELLA_CPU_ARCH" = "32" ]; then
+		__log "ERROR" "Homebrew bottle do not support 32 bits archive"
+		exit 1
+	fi
+
+	local arch
+	case ${STELLA_CURRENT_CPU_FAMILY} in
+		intel)
+			arch="amd64"
+			;;
+		arm)
+			arch="arm64"
+			;;
+		*)
+			__log "ERROR" "Unsupported architecture for Homebrew bottle (${STELLA_CURRENT_CPU_FAMILY})"
+			exit 1
+			;;
+	esac
+
+	[ "${FILE_NAME}" = "" ] && FILE_NAME="_AUTO_"
+
+	if [ "${FILE_NAME}" = "_AUTO_" ]; then
+		"$STELLA_ARTEFACT/homebrew-get-bottle.sh" -n "$FORMULA" -o "${STELLA_CURRENT_PLATFORM}" -a "${arch}" -d "${STELLA_APP_CACHE_DIR}" || { echo "ERROR" ; exit 1; }
+		FILE_NAME=$(find "$STELLA_APP_CACHE_DIR" -maxdepth 1 -type f -name "${FORMULA}-*.bottle.tar.gz" | head -n 1)
+		FILE_NAME=${FILE_NAME##*/}
+	else
+		"$STELLA_ARTEFACT/homebrew-get-bottle.sh" -n "$FORMULA" -o "${STELLA_CURRENT_PLATFORM}" -a "${arch}" -d "${STELLA_APP_CACHE_DIR}" -f "${FILE_NAME}" || { echo "ERROR" ; exit 1; }
+	fi
+	if [ -f "$STELLA_APP_CACHE_DIR/$FILE_NAME" ]; then
+		__uncompress "$STELLA_APP_CACHE_DIR/$FILE_NAME" "$UNZIP_DIR" "$OPT"
+	else
+		if [ -f "$STELLA_INTERNAL_CACHE_DIR/$FILE_NAME" ]; then
+			__uncompress "$STELLA_INTERNAL_CACHE_DIR/$FILE_NAME" "$UNZIP_DIR" "$OPT"
+		fi
+	fi
+
+	if [ "$STELLA_CURRENT_PLATFORM" = "linux" ]; then
+		# NOTE : linux bottles have place holder (@@HOMEBREW_PREFIX@@) replaced by brew tool for interpreter path and rpath values
+		# we need to set interpreter and we ignore other values for rpath
+		__require "patchelf" "patchelf#0_18_0" "STELLA_FEATURE INTERNAL"
+		
+		__system_interpreter="$(patchelf --print-interpreter /bin/ls)"
+
+		find "$UNZIP_DIR" -type f -perm -111 | while IFS= read -r f; do
+			interp="$(patchelf --print-interpreter "$f" 2>/dev/null || true)"
+			if [ -n "$interp" ] && echo "$interp" | grep -q '@@HOMEBREW_PREFIX@@'; then
+				echo "→ Patching interpreter for: $f"
+				chmod u+w "$f"
+				patchelf --set-interpreter "$__system_interpreter" "$f"
+			fi
+		done
+
+		# NOTE we leave in place all rpath values - because they may have no impact
+		# patchelf --remove-rpath "$f"
+	fi
+
+	local content_folder=""
+	(
+		# remove folder named with "version" from "latest/feature/version/*"
+		shopt -s dotglob
+		for x in "$UNZIP_DIR/"*; do
+			[ -d "$x" ] || continue
+			content_folder="$x"
+		done
+		echo "→ Move bottle files from $content_folder to $UNZIP_DIR"
+		for f in "$content_folder/"*; do 
+			mv "$f" "${UNZIP_DIR}"/; 
+		done
+		rm -rf "${content_folder}"
+	)
+}
+
+
 __download_uncompress() {
 	local URL
 	local FILE_NAME
@@ -2585,7 +2829,8 @@ __download_uncompress() {
 	UNZIP_DIR="$3"
 	OPT="$4"
 
-
+	[ "${FILE_NAME}" = "" ] && FILE_NAME="_AUTO_"
+	
 	if [ "${FILE_NAME}" = "_AUTO_" ]; then
 		#_AFTER_SLASH=${URL##*/}
 		FILE_NAME=$(__get_filename_from_url "$URL")
@@ -2625,29 +2870,50 @@ __compress() {
 			;;
 	esac
 
-	(
-		case $_mode in
-			7Z)
-				if [ -d "$_target" ]; then
-					cd "$_target/.."
-					7z a -t7z "$_output_archive" "$(basename "${_target}")"
-					mv "$_output_archive" "$_output_archive"
-				fi
-				if [ -f "$_target" ]; then
-					cd "$(dirname "${_target}")"
-					7z a -t7z "$_output_archive" "$(basename "${_target}")"
-					mv "$_output_archive" "$_output_archive"
-				fi
-				;;
-			ZIP)
-				__log "ERROR" "TODO: *********** ZIP NOT IMPLEMENTED"
-				;;
-			TAR*)
-					[ -d "$_target" ] && tar -c -v $_tar_flag -f "$_output_archive" -C "$_target/.." "$(basename "${_target}")"
-					[ -f "$_target" ] && tar -c -v $_tar_flag -f "$_output_archive" -C "$(dirname "${_target}")" "$(basename "${_target}")"
-				;;
-		esac
-	)
+	case $_mode in
+		7Z)
+			if [ -d "$_target" ]; then
+				cd "$_target/.."
+				7z a -t7z "$_output_archive" "$(basename "${_target}")"
+				mv "$_output_archive" "$_output_archive"
+			fi
+			if [ -f "$_target" ]; then
+				cd "$(dirname "${_target}")"
+				7z a -t7z "$_output_archive" "$(basename "${_target}")"
+				mv "$_output_archive" "$_output_archive"
+			fi
+			;;
+		ZIP)
+			__log "ERROR" "TODO: *********** ZIP NOT IMPLEMENTED"
+			;;
+		TAR*)
+				[ -d "$_target" ] && tar -c -v $_tar_flag -f "$_output_archive" -C "$_target/.." "$(basename "${_target}")"
+				[ -f "$_target" ] && tar -c -v $_tar_flag -f "$_output_archive" -C "$(dirname "${_target}")" "$(basename "${_target}")"
+			;;
+	esac
+
+
+}
+
+__uncompress_dmg() {
+	local FILE_PATH="$1"
+	local UNZIP_DIR="$2"
+	local OPT="$3"
+
+	local _opt_dest_erase=OFF # delete destination folder (default : FALSE)
+	for o in $OPT; do
+		[ "$o" = "DEST_ERASE" ] && _opt_dest_erase=ON
+	done
+
+	if [ "$STELLA_CURRENT_PLATFORM" = "darwin" ]; then
+		if [ "$_opt_dest_erase" = "ON" ]; then
+			rm -Rf "$UNZIP_DIR"
+		fi
+		mkdir -p "$UNZIP_DIR"
+		__extract_dmg "$FILE_PATH" "$UNZIP_DIR"
+	else
+		__log_stella "WARN" "dmg files are supported only on darwin system"
+	fi
 
 }
 
@@ -2675,80 +2941,96 @@ __uncompress() {
 
 	__log "INFO" "Uncompress $FILE_PATH in $UNZIP_DIR"
 
-	(
-		cd "$UNZIP_DIR"
+	cd "$UNZIP_DIR"
 
-		case "$FILE_PATH" in
-			*.zip)
-				__require "unzip" "unzip" "SYSTEM"
-				if [ "$_opt_strip" = "ON" ]; then
-					__unzip-strip "$FILE_PATH" "$UNZIP_DIR"
-				else
-					unzip -a -o "$FILE_PATH"
-				fi
-				;;
-			*.tar )
-				if [ "$_opt_strip" = "ON" ]; then
-					tar xf "$FILE_PATH" --strip-components=1 2>/dev/null || __untar-strip "$FILE_PATH" "$UNZIP_DIR"
-				else
-					tar xf "$FILE_PATH"
-				fi
-				;;
-			*.tar.gz | *.tgz)
-				__log "DEBUG" "TAR.GZ file detected - option strip is $_opt_strip"	
-				if [ "$_opt_strip" = "ON" ]; then
-					tar xzf "$FILE_PATH" --strip-components=1 2>/dev/null || __untar-strip "$FILE_PATH" "$UNZIP_DIR"
-				else
-					tar xzf "$FILE_PATH"
-				fi
-				;;
-			*.gz)
-				__require "gzip" "gzip" "SYSTEM"
-				local unzip_dir_equal_original_dir=
-				local gz_file="$UNZIP_DIR/$(basename $FILE_PATH)"
-				
-				[ -f "$gz_file" ] && unzip_dir_equal_original_dir="1"
-				[ ! "$unzip_dir_equal_original_dir" = "1" ] && cp -f "$FILE_PATH" "$gz_file"
-				
-				# gzip do not support any arborescence, so there is no strip option to support
-				# gzip unncompress only where the gz file is located
-				gzip -f -d "$gz_file"
-				
-				[ ! "$unzip_dir_equal_original_dir" = "1" ] && rm -f "$gz_file"
-				unzip_dir_equal_original_dir=
-				;;
-			*.xz | *.tar.bz2 | *.tbz2 | *.tbz)
-				if [ "$_opt_strip" = "ON" ]; then
-					tar xf "$FILE_PATH" --strip-components=1 2>/dev/null || __untar-strip "$FILE_PATH" "$UNZIP_DIR"
-				else
-					tar xf "$FILE_PATH"
-				fi
-				;;
-			*.bz2|*.bz)
-				if [ "$_opt_strip" = "OFF" ]; then
-					cp -f "$FILE_PATH" .
-					bzip2 -d *
-				else
-					# NOTE : maybe not needed because a bz2 file contains always only one files and not a directory ?
-					__bzip2-strip "$FILE_PATH" "$UNZIP_DIR"
-				fi
-				;;
-			*.7z)
-				__require "7z" "7z" "SYSTEM"
-				[ "$_opt_strip" = "OFF" ] && 7z x "$FILE_PATH" -y -o"$UNZIP_DIR"
-				[ "$_opt_strip" = "ON" ] && __sevenzip-strip "$FILE_PATH" "$UNZIP_DIR"
-				;;
-			*.deb)
-				# STRIP not supported. Often in debian packages, there is a lot of folder at first level
-				# https://www.g-loaded.eu/2008/01/28/how-to-extract-rpm-or-deb-packages/
-				ar p "$FILE_PATH" data.tar.xz | tar x 2>/dev/null || \
-					ar p "$FILE_PATH" data.tar.gz | tar xz
-				;;
-			*)
-				__log "ERROR" "Unknown archive format"
-				;;
-		esac
-	)
+	case "$FILE_PATH" in
+		*.zip)
+			__require "unzip" "unzip" "SYSTEM"
+			if [ "$_opt_strip" = "ON" ]; then
+				__unzip-strip "$FILE_PATH" "$UNZIP_DIR"
+			else
+				unzip -a -o "$FILE_PATH"
+			fi
+			;;
+		*.tar )
+			if [ "$_opt_strip" = "ON" ]; then
+				tar xf "$FILE_PATH" --strip-components=1 2>/dev/null || __untar-strip "$FILE_PATH" "$UNZIP_DIR"
+			else
+				tar xf "$FILE_PATH"
+			fi
+			;;
+		*.tar.gz | *.tgz)
+			__log "DEBUG" "TAR.GZ file detected - option strip is $_opt_strip"
+			__require "gzip" "gzip" "SYSTEM"
+			if [ "$_opt_strip" = "ON" ]; then
+				tar xzf "$FILE_PATH" --strip-components=1 2>/dev/null || __untar-strip "$FILE_PATH" "$UNZIP_DIR"
+			else
+				tar xzf "$FILE_PATH"
+			fi
+			;;
+		*.tar.bz2 | *.tbz2 | *.tbz )
+			__log "DEBUG" "TAR.BZ2 file detected - option strip is $_opt_strip"
+			__require "bzip2" "bzip2" "SYSTEM"
+			if [ "$_opt_strip" = "ON" ]; then
+				tar xjf "$FILE_PATH" --strip-components=1 2>/dev/null || __untar-bz2-strip "$FILE_PATH" "$UNZIP_DIR"
+			else
+				tar xjf "$FILE_PATH"
+			fi
+			;;
+		*.tar.xz | *.txz )
+			__log "DEBUG" "TAR.XZ file detected - option strip is $_opt_strip"
+			__require "xz" "xz" "SYSTEM"
+			if [ "$_opt_strip" = "ON" ]; then
+				tar xJf "$FILE_PATH" --strip-components=1 2>/dev/null || __untar-xz-strip "$FILE_PATH" "$UNZIP_DIR"
+			else
+				tar xJf "$FILE_PATH"
+			fi
+			;;
+		*.xz )
+			# NOTE : xz do not support any arborescence, but only a file, so there is no strip option 
+			__require "xz" "xz" "SYSTEM"
+			local temp=$(mktmpdir)
+			cp -f "$FILE_PATH" "$temp/"
+			cd "$temp"
+			xz -d "$temp/$(basename $FILE_PATH)"
+			# NOTE : without -k option original archive will be deleted
+			mv "$temp"/* "$UNZIP_DIR"
+			;;
+		*.bz2|*.bz)
+			# NOTE : bz2 do not support any arborescence, but only a file, so there is no strip option 
+			__require "bzip2" "bzip2" "SYSTEM"
+			local temp=$(mktmpdir)
+			cp -f "$FILE_PATH" "$temp/"
+			cd "$temp"
+			bzip2 -d "$temp/$(basename $FILE_PATH)"
+			# NOTE : without -k option original archive will be deleted
+			mv "$temp"/* "$UNZIP_DIR"
+			;;
+		*.gz)
+			# NOTE : gz do not support any arborescence, but only a file, so there is no strip option 
+			__require "gzip" "gzip" "SYSTEM"
+			local temp=$(mktmpdir)
+			cp -f "$FILE_PATH" "$temp/"
+			cd "$temp"
+			gzip -f -d "$temp/$(basename $FILE_PATH)"
+			# NOTE : without -k option original archive will be deleted
+			mv "$temp"/* "$UNZIP_DIR"
+			;;
+		*.7z)
+			__require "7z" "7z" "SYSTEM"
+			[ "$_opt_strip" = "OFF" ] && 7z x "$FILE_PATH" -y -o"$UNZIP_DIR"
+			[ "$_opt_strip" = "ON" ] && __sevenzip-strip "$FILE_PATH" "$UNZIP_DIR"
+			;;
+		*.deb)
+			# STRIP not supported. Often in debian packages, there is a lot of folder at first level
+			# https://www.g-loaded.eu/2008/01/28/how-to-extract-rpm-or-deb-packages/
+			ar p "$FILE_PATH" data.tar.xz | tar x 2>/dev/null || \
+				ar p "$FILE_PATH" data.tar.gz | tar xz
+			;;
+		*)
+			__log "ERROR" "Unknown archive format"
+			;;
+	esac
 }
 
 __download() {
@@ -2833,10 +3115,9 @@ __untar-strip() {
 	local dest=${2:-.}
 	local temp=$(mktmpdir)
 
+	cd "$temp"
+	tar xzf "$zip"
 	(
-		cd "$temp"
-		tar xzf "$FILE_PATH"
-
 		shopt -s dotglob
 		local f=("$temp"/*)
 
@@ -2845,8 +3126,50 @@ __untar-strip() {
 		else
 				mv "$temp"/* "$dest"
 		fi
-		rm -Rf "$temp"
 	)
+	rm -Rf "$temp"
+}
+
+
+__untar-xz-strip() {
+	local zip=$1
+	local dest=${2:-.}
+	local temp=$(mktmpdir)
+
+	cd "$temp"
+	tar xJf "$zip"
+	(
+		shopt -s dotglob
+		local f=("$temp"/*)
+
+		if (( ${#f[@]} == 1 )) && [[ -d "${f[0]}" ]] ; then
+				mv "$temp"/*/* "$dest"
+		else
+				mv "$temp"/* "$dest"
+		fi
+	)
+	rm -Rf "$temp"
+}
+
+
+__untar-bz2-strip() {
+	local zip=$1
+	local dest=${2:-.}
+	local temp=$(mktmpdir)
+
+	cd "$temp"
+	tar xjf "$zip"
+	(
+		shopt -s dotglob
+		local f=("$temp"/*)
+
+		if (( ${#f[@]} == 1 )) && [[ -d "${f[0]}" ]] ; then
+				mv "$temp"/*/* "$dest"
+		else
+				mv "$temp"/* "$dest"
+		fi
+	)
+	rm -Rf "$temp"
 }
 
 __unzip-strip() {
@@ -2855,46 +3178,7 @@ __unzip-strip() {
     local temp=$(mktmpdir)
 
     unzip -a -o -d "$temp" "$zip"
-    shopt -s dotglob
-    local f=("$temp"/*)
-
-    if (( ${#f[@]} == 1 )) && [[ -d "${f[0]}" ]] ; then
-        mv "$temp"/*/* "$dest"
-    else
-        mv "$temp"/* "$dest"
-    fi
-    rm -Rf "$temp"
-}
-
-__sevenzip-strip() {
-    local zip=$1
-    local dest=${2:-.}
-    local temp=$(mktmpdir)
-    7z x "$zip" -y -o"$temp"
-    shopt -s dotglob
-    local f=("$temp"/*)
-
-    if (( ${#f[@]} == 1 )) && [[ -d "${f[0]}" ]] ; then
-        mv "$temp"/*/* "$dest"
-    else
-        mv "$temp"/* "$dest"
-    fi
-    rm -Rf "$temp"
-}
-
-
-
-__bzip2-strip() {
-    local zip=$1
-    local dest=${2:-.}
-    local temp=$(mktmpdir)
-
-	cp -f $zip $temp/
-
-	(
-		cd $temp
-		bzip2 -d *
-
+    (
 		shopt -s dotglob
 		local f=("$temp"/*)
 
@@ -2903,9 +3187,31 @@ __bzip2-strip() {
 		else
 			mv "$temp"/* "$dest"
 		fi
-		rm -Rf "$temp"
 	)
+	rm -Rf "$temp"
 }
+
+__sevenzip-strip() {
+    local zip=$1
+    local dest=${2:-.}
+    local temp=$(mktmpdir)
+    7z x "$zip" -y -o"$temp"
+    (
+		shopt -s dotglob
+		local f=("$temp"/*)
+
+		if (( ${#f[@]} == 1 )) && [[ -d "${f[0]}" ]] ; then
+			mv "$temp"/*/* "$dest"
+		else
+			mv "$temp"/* "$dest"
+		fi
+	)
+    rm -Rf "$temp"
+}
+
+
+
+
 
 # SCM ---------------------------------------------
 # https://vcversioner.readthedocs.org/en/latest/

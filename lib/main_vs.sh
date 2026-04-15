@@ -13,11 +13,14 @@ case "$sub_command" in
         ;;
     show-config)
          if [ -f "$AISTACK_VSCODE_CONFIG_FILE" ]; then
-            echo "Current VSCode configuration file : $AISTACK_VSCODE_CONFIG_FILE"
+            echo "Current VS Code configuration file : $AISTACK_VSCODE_CONFIG_FILE"
             cat "$AISTACK_VSCODE_CONFIG_FILE"
         else
-            echo "No VSCode configuration file found."
+            echo "No VS Code configuration file found."
         fi
+        ;;
+    install|uninstall)
+        vscode_extension_manage "$1" "$sub_command"
         ;;
     *)
         echo "Error: Unknown command $sub_command for gc"

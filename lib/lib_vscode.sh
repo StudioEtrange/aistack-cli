@@ -43,6 +43,7 @@ vscode_path() {
 
     AISTACK_VSCODE_MODE="$target"
     if [ "$target" = "guess" ]; then
+        # where we are actually executing aistack
         if [ -d "$AISTACK_VSCODE_ALL_SERVERS_ROOT" ]; then
             export AISTACK_VSCODE_MODE="remote"
         else
@@ -50,12 +51,28 @@ vscode_path() {
         fi
     fi
 
+
+    
+    export AISTACK_VSCODE_REMOTE_CLI=""
+    export AISTACK_VSCODE_REMOTE_CLI_SERVER=""
+
+    # depend on we are execting aistack into remote or local vscode
     case "$AISTACK_VSCODE_MODE" in
         "remote")
                 # "VS Code Remote - Remote SSH or WSL config file"
                 export AISTACK_VSCODE_HOME="$AISTACK_VSCODE_SERVER_HOME"
                 export AISTACK_VSCODE_USER_HOME="$AISTACK_VSCODE_HOME/data/User"
                 export AISTACK_VSCODE_CONFIG_FILE="$AISTACK_VSCODE_SERVER_HOME/data/Machine/settings.json"
+
+                if [ -n "$AISTACK_VSCODE_RECENTLY_SERVER_ROOT" ]; then
+                    if [ -x "$AISTACK_VSCODE_RECENTLY_SERVER_ROOT/bin/remote-cli/code" ]; then
+                        export AISTACK_VSCODE_REMOTE_CLI="$AISTACK_VSCODE_RECENTLY_SERVER_ROOT/bin/remote-cli/code"
+                    fi
+
+                    if [ -x "$AISTACK_VSCODE_RECENTLY_SERVER_ROOT/bin/code-server" ]; then
+                        export AISTACK_VSCODE_REMOTE_CLI_SERVER="$AISTACK_VSCODE_RECENTLY_SERVER_ROOT/bin/code-server"
+                    fi
+                fi
                 ;;
 
         "local")
@@ -81,6 +98,22 @@ vscode_path() {
                             export AISTACK_VSCODE_HOME="$HOME/Library/Application Support/Code"
                             export AISTACK_VSCODE_USER_HOME="$AISTACK_VSCODE_HOME/User"
                             export AISTACK_VSCODE_CONFIG_FILE="$AISTACK_VSCODE_USER_HOME/settings.json"
+                        fi
+                        ;;
+                esac
+
+                # These local values cannot be calculated when we execute aistack on remote
+                case "$STELLA_CURRENT_PLATFORM" in
+                    "linux") 
+                        # TODO for linux (AND for WSL when launching "code ." from within WSL)
+                        #echo "- TODO NOT IMPLEMENTED ------"
+                        export AISTACK_VSCODE_LOCAL_ROOT=""
+                        export AISTACK_VSCODE_LOCAL_CLI=""
+                        ;;
+                    "darwin")
+                        export AISTACK_VSCODE_LOCAL_ROOT="/Applications/Visual Studio Code.app/Contents/Resources/app"
+                        if [ -x "$AISTACK_VSCODE_LOCAL_ROOT/bin/code" ]; then
+                            export AISTACK_VSCODE_LOCAL_CLI="$AISTACK_VSCODE_LOCAL_ROOT/bin/code"
                         fi
                         ;;
                 esac
@@ -126,20 +159,31 @@ vscode_info() {
         echo "No VSCode configuration file found : $AISTACK_VSCODE_CONFIG_FILE"
     fi
 
-    echo "Some environment variables"
     echo AISTACK_VSCODE_MODE : $AISTACK_VSCODE_MODE
+    echo "AISTACK_VSCODE_MODE => where aistack run now"
+    echo
+    echo "Variables:"
     echo AISTACK_VSCODE_HOME : $AISTACK_VSCODE_HOME
     echo AISTACK_VSCODE_USER_HOME : $AISTACK_VSCODE_USER_HOME
     echo AISTACK_VSCODE_CONFIG_FILE : $AISTACK_VSCODE_CONFIG_FILE
     echo AISTACK_VSCODE_RECENTLY_SERVER_ROOT : $AISTACK_VSCODE_RECENTLY_SERVER_ROOT
+    echo
+    echo "Variables only when aistack run on local:"
+    echo AISTACK_VSCODE_LOCAL_ROOT : $AISTACK_VSCODE_LOCAL_ROOT
+    echo AISTACK_VSCODE_LOCAL_CLI : $AISTACK_VSCODE
+    echo
+    echo "Variables only when aistack run on remote:"
+    echo AISTACK_VSCODE_REMOTE_CLI : $AISTACK_VSCODE_REMOTE_CLI
+    echo AISTACK_VSCODE_REMOTE_CLI_SERVER : $AISTACK_VSCODE_REMOTE_CLI_SERVER
+    echo
 
     echo TERM_PROGRAM : $TERM_PROGRAM
-    [ "$TERM_PROGRAM" = "vscode" ] && echo "TERM_PROGRAM : vscode means we are actually in a shell inside VS Code"
+    [ "$TERM_PROGRAM" = "vscode" ] && echo "TERM_PROGRAM => vscode means aistack is in a shell inside VS Code"
     # this test works on linux AND wsl AND on coder web AND on every other system
     #[ "$TERM_PROGRAM" = "vscode" ] && echo "We are running inside a VS Code terminal"
 
     echo VSCODE_IPC_HOOK_CLI : $VSCODE_IPC_HOOK_CLI
-    [ -n "$VSCODE_IPC_HOOK_CLI" ] && echo "VSCODE_IPC_HOOK_CLI : you are using VS Code "remote" feature - coder web is also based on the remote feature"
+    [ -n "$VSCODE_IPC_HOOK_CLI" ] && echo "VSCODE_IPC_HOOK_CLI => not empty means aistack is using VS Code "remote" feature - coder web is also based on the remote feature"
     # this test works remote ssh on linux AND on vscode windows using remote WSL AND on coder web
     #[ -n "$VSCODE_IPC_HOOK_CLI" ] && echo "We are using VS Code remote extension (SSH, WSL, ...)"
 
@@ -182,45 +226,34 @@ vscode_path_unregister_for_vs_terminal() {
 
 # ADD vscode cli PATH to local binary 'code' CLI OR path to remote-cli binary 'code'
 #       for vscode integrated terminal
-# on linux vscode server :
-#   remote-cli code is in $HOME/.vscode-server/bin/<commit>/bin/remote-cli/code
 vscode_path_register_cli_for_vs_terminal() {
     local code_found=0
     local vscode_remote_cli_path
 
     case "$AISTACK_VSCODE_MODE" in
         "remote")
-            if [ -d "$AISTACK_VSCODE_SERVER_HOME" ]; then
-                if [ -n "$AISTACK_VSCODE_RECENTLY_SERVER_ROOT" ]; then
-                    # TODO : check path is current
-                    vscode_remote_cli_path="$AISTACK_VSCODE_RECENTLY_SERVER_ROOT/bin/remote-cli"
-
-                    if [ -x "${vscode_remote_cli_path}/code" ]; then
-                        code_found=1
-                        vscode_settings_remove_path_for_vs_terminal "^${AISTACK_VSCODE_ALL_SERVERS_ROOT}/.*" "REMOVE_REGEXP"
-                        vscode_settings_add_path_for_vs_terminal "$vscode_remote_cli_path" "ALWAYS_PREPEND"
-                        echo "- configure VS Code : remote-cli code found in $vscode_remote_cli_path"
-                    fi
-
-                    echo "- configure VS Code : add PATH of code cli binary to terminal.integrated.env.linux PATH environment variable"
-                    
+                if [ -n "$AISTACK_VSCODE_REMOTE_CLI" ]; then
+                    code_found=1
+                    vscode_settings_remove_path_for_vs_terminal "^${AISTACK_VSCODE_ALL_SERVERS_ROOT}/.*" "REMOVE_REGEXP"
+                    vscode_settings_add_path_for_vs_terminal "$(dirname "$AISTACK_VSCODE_REMOTE_CLI")" "ALWAYS_PREPEND"
+                    echo "- configure VS Code : remote-cli code found in $AISTACK_VSCODE_REMOTE_CLI"
+                    echo "- configure VS Code : add PATH of remote code cli binary to terminal.integrated.env.linux PATH environment variable"
                 fi
-            fi
             ;;
 
         "local")
-            # local "code" cli
             case "$STELLA_CURRENT_PLATFORM" in
                 "linux")
-                    # TODO for linux (aswell for WSL when launching "code ." from within WSL)
-                    echo "- TODO NOT IMPLEMENTED ------"
+                    #echo "- TODO NOT IMPLEMENTED ------"
                     ;;
                 "darwin") 
-                    vscode_cli_path="/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
-                    if [ -f "${vscode_remote_cli_path}/code" ]; then
+                    if [ -n "${AISTACK_VSCODE_LOCAL_CLI}" ]; then
                         code_found=1
-                        vscode_settings_add_path_for_vs_terminal "$vscode_cli_path" "ALWAYS_PREPEND"
-                        echo "- configure VS Code : darwin code found in $vscode_cli_path"
+                        vscode_settings_remove_path_for_vs_terminal "^${AISTACK_VSCODE_LOCAL_ROOT}/.*" "REMOVE_REGEXP"
+                        vscode_settings_add_path_for_vs_terminal "$(dirname "${AISTACK_VSCODE_LOCAL_CLI}")" "ALWAYS_PREPEND"
+                        echo "- configure VS Code : darwin code found in $AISTACK_VSCODE_LOCAL_CLI"
+                        echo "- configure VS Code : add PATH of local code cli binary to terminal.integrated.env.linux PATH environment variable"
+
                     fi
                     ;;
             esac
@@ -296,3 +329,33 @@ vscode_settings_tweak_path_for_vs_terminal() {
 
 }
 
+# extension management ------------------------
+vscode_extension_manage() {
+    local extension_id="$1"
+    local action="$2"
+    local target="${3:-$AISTACK_VSCODE_MODE}"
+
+    local cli
+    case "$target" in
+        "remote")
+            cli="${AISTACK_VSCODE_REMOTE_CLI_SERVER}"
+            ;;
+        "local")
+            cli="${AISTACK_VSCODE_LOCAL_CLI}"
+            ;;
+    esac
+
+    case "$action" in
+        "install")
+            ${cli} --install-extension "$extension_id" --force
+            ;;
+        "uninstall")
+            ${cli} --uninstall-extension "$extension_id"
+            ;;
+        *)
+            echo "Error: Unknown action $action for vscode_extension_manage"
+            exit 1
+            ;;
+    esac
+
+}

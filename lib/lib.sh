@@ -18,10 +18,13 @@ aistack_path() {
     node_path
     gemini_path
     opencode_path
-    vscode_path
+    # FORCE_VSCODE_MODE could be "remote" : means using vscode remote extension
+    # FORCE_VSCODE_MODE could be empty "" : try to guess
+    vscode_path "$FORCE_VSCODE_MODE"
     cpa_path
     orla_path
     kilo_path
+    bmad_path
 }
 
 
@@ -39,16 +42,16 @@ runtime_path() {
 
     if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
         # bin folder which contains node
-        export AISTACK_NODEJS_BIN_PATH="$(dirname $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH)/"
+        export AISTACK_NODEJS_BIN_PATH="$(dirname $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH)"
     else
         # we use an already installed nodejs, not aistack nodejs
         export AISTACK_NODEJS_BIN_PATH=""
     fi
     
     # used by MCP local server
-    if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
+    if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
         # bin folder which contains python
-        export AISTACK_PYTHON_BIN_PATH="$(dirname $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH)/"
+        export AISTACK_PYTHON_BIN_PATH="$(dirname $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH)"
     else
         # we use an already installed python, not aistack python
         export AISTACK_PYTHON_BIN_PATH=""
@@ -56,6 +59,43 @@ runtime_path() {
 
     runtime_path_file_generate
 
+}
+
+
+aistack_info() {
+
+    echo "AISTACK_POOL: $AISTACK_POOL"
+    echo "AISTACK_LAUNCHER_HOME: $AISTACK_LAUNCHER_HOME"
+    echo "AISTACK_MCP_LAUNCHER_HOME: $AISTACK_MCP_LAUNCHER_HOME"
+    echo "AISTACK_ISOLATED_DEPENDENCIES_ROOT: $AISTACK_ISOLATED_DEPENDENCIES_ROOT"
+    echo "AISTACK_RUNTIME_PATH_FILE: $AISTACK_RUNTIME_PATH_FILE"
+    echo
+    echo "--nodejs--"
+    echo "AISTACK_INTERNAL_NVM_AVAILABLE : $AISTACK_INTERNAL_NVM_AVAILABLE"
+    echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
+    echo "NVM_DIR : $NVM_DIR"
+
+    echo "AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE"
+    if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
+        echo "AISTACK_NODEJS_BIN_PATH : $AISTACK_NODEJS_BIN_PATH"
+        echo "AISTACK_INTERNAL_NODEJS_RUNTIME_PATH : $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH"
+    fi
+
+    echo
+    echo "--python--"
+    echo "AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE"
+    if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
+        echo "AISTACK_PYTHON_BIN_PATH : $AISTACK_PYTHON_BIN_PATH"
+        echo "AISTACK_INTERNAL_PYTHON_RUNTIME_PATH : $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH"
+    fi
+    echo "AISTACK_INTERNAL_MAMBA_AVAILABLE : $AISTACK_INTERNAL_MAMBA_AVAILABLE"
+    echo
+    echo "--dependencies--"
+    for f in $STELLA_APP_FEATURE_LIST; do
+        echo "  - $f"
+    done
+    echo
+    echo "PATH : $PATH"
 }
 
 # create files to add runtime dependencies needed for any tool to run
@@ -184,19 +224,22 @@ aistack_remove_dependencies() {
 }
 
 
+
 aistack_init() {
     aistack_remove_dependencies
     aistack_install_dependencies
 }
 
 aistack_uninstall() {
-    # TODO : check missing unregister functions
+    # TODO : check missing unregister functions in this list of call
     gemini_path_unregister_for_shell "all"
     gemini_path_unregister_for_vs_terminal
     opencode_path_unregister_for_shell "all"
     opencode_path_unregister_for_vs_terminal
     orla_path_unregister_for_shell "all"
     orla_path_unregister_for_vs_terminal
+    bmad_path_unregister_for_shell "all"
+    bmad_path_unregister_for_vs_terminal
 
     aistack_remove_dependencies
     runtime_path_file_remove

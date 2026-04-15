@@ -162,10 +162,6 @@ AIStack leverages the **Stella** framework for its core functionality. Stella pr
 * orla cli https://github.com/dorcha-inc/orla https://korben.info/orla-agent-ia-local-cli.html
 * security tool : https://github.com/TheAuditorTool/Auditor
 * Chrome DevTools MCP https://korben.info/chrome-devtools-mcp.html
-* vscode copilot
-  * add variety of models : extension OAI Compatible Provider for Copilot 
-  * https://marketplace.visualstudio.com/items?itemName=johnny-zhao.oai-compatible-copilot https://github.com/JohnnyZ93/oai-compatible-copilot
-  * Unique Identifier	johnny-zhao.oai-compatible-copilot
 * openclaw and cliproxyapi https://developer.tenten.co/openclaw-multi-agent-cliproxyapiplus-complete-deployment-guide
 
 ## Contributors

@@ -9,6 +9,9 @@ set -h
 #set -x
 #set -xv
 
+# pwd -L (and pwd) return logical path
+# pwd -P return physical path by resolving all symlink
+# NOTE : in windows, WSL use mount, it will return real path (/mnt/c/Users instead of /home/user)
 _STELLA_CONF_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 if [ "$STELLA_CURRENT_RUNNING_DIR" = "" ]; then
 	#STELLA_CURRENT_RUNNING_DIR="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
@@ -55,6 +58,8 @@ STELLA_ORIGINAL_SYSTEM_PATH="$PATH"
 . $STELLA_COMMON/common-platform.sh
 #shellcheck source=nix/common/common.sh
 . $STELLA_COMMON/common.sh
+#shellcheck source=nix/common/common-search-path.sh
+. $STELLA_COMMON/common-search-path.sh
 #shellcheck source=nix/common/common-feature.sh
 . $STELLA_COMMON/common-feature.sh
 #shellcheck source=nix/common/common-app.sh
@@ -103,6 +108,9 @@ fi
 
 # GATHER PLATFORM INFO ---------------------------------------------
 __set_current_platform_info
+
+#shellcheck source=nix/common/lib-dmg.sh
+. $STELLA_COMMON/lib-dmg.sh
 
 # GATHER CURRENT APP INFO ---------------------------------------------
 # Before include stella-link.sh, you can override file properties file
@@ -273,6 +281,11 @@ __reset_build_env
 # linked libs we do not want to tweak (change link to)
 STELLA_BINARY_DEFAULT_LIB_IGNORED='^/System/Library|^/usr/lib|^/lib'
 
+# where to check if a system dynamic lib is in cache :
+#		cache-list : in known list of dyld-cache  (default mode and faster mode)
+#		dyld-cache : scan dyld cache (needs ipsw tool)
+#	see : __darwin_dynamic_library_exists_in_cache
+STELLA_LINKED_LIB_CACHE_MODE_DARWIN="cache-list"
 
 # API ---------------------------------------------
 STELLA_API_ALGORITHM_PUBLIC="stack_init stack_push stack_pop"
