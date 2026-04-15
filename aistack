@@ -66,16 +66,16 @@ Options:
     ----
     kc : Kilo Code CLI and VS Code extension - https://kilo.ai/
     kc install                          Install and configure Kilo Code.
-    kc uninstall                        Uninstall Kilo Code and unregister Kilo Code PATH (keep all configuration unchanged, to remove configuration use 'aistack kc reset' command)
+    kc uninstall                        Uninstall Kilo Code and unregister Kilo Code PATH. (keep all configuration unchanged, to remove configuration use 'aistack kc reset' command)
     kc configure                        Configure Kilo Code. ('aistack kc install' include configuration)
     kc info                             Print Kilo Code informations.
     kc show-config                      Show current Kilo Code configuration.
     kc reset                            Reset all Kilo Code configuration.
-    kc register <shell>|vs              Register Kilo Code PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
-    kc unregister <shell>|vs            Unregister Kilo Code PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs")
+    kc register <shell>|vs              Register Kilo Code PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    kc unregister <shell>|vs            Unregister Kilo Code PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs").
     kc launch [context folder] -- <other kilo code options>
-                                        Launch Kilo Code. Instead use 'kilo' command if ${AISTACK_KILO_LAUNCHER_HOME} is in your PATH,
-                                        you could use 'aistack kc register <shell>'
+                                        Launch Kilo Code. Instead use 'kilo' command if ${AISTACK_KILO_LAUNCHER_HOME} is in your PATH.
+                                        Use 'aistack kc register <shell>' to set it in your PATH.
     kc connect cpa                      Connect Kilo Code CLI and VS Code extension to CLIProxyAPI. (require 'aistack cpa install' before)
     ----
     vs set <key> <value>                Set a VS Code configuration in settings file.
