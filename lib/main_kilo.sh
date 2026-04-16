@@ -43,7 +43,7 @@ case "$sub_command" in
         # TODO
         #vscode_settings_remove "kilo"
 
-        opencode_launcher_manage
+        kilo_launcher_manage
         ;;
     register)
         echo "Registering Kilo Code CLI launcher in PATH for $1"
@@ -93,13 +93,10 @@ case "$sub_command" in
 
         kilo_launch "$@"
         ;;
-    # mcp)
-    #     mcp_server_manage "$1" "$2" "$command" "$3"
-    #     ;;
     connect)
         case "$1" in
             cpa)
-                echo "Connecting Kilo Code to CLIProxyAPI"
+                echo "Connecting Kilo Code to CLIProxyAPI - For VS Code extension, restart VS Code after this command"
                 kilo_connect_cpa
                 ;;      
         esac

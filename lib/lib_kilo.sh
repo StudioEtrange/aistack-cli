@@ -18,16 +18,38 @@ kilo_path() {
 }
 
 kilo_install() {
-    local version="$1"
+    local type="${1:-cli}"
+    local version="$2"
     [ -z "${version}" ] && version="@latest"
 
-    echo "Installing Kilo Code CLI ${version}"
-    # available versions : https://www.npmjs.com/package/@kilocode/cli
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
+    case "$type" in
+        "cli")
+            echo "Installing Kilo Code CLI ${version}"
+            # available versions : https://www.npmjs.com/package/@kilocode/cli
+            PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
+            ;;
+        "extension")
+            vscode_extension_manage "kilocode.Kilo-Code" "install"
+            ;;
+        *) echo "Invalid type '$type'. Supported types are 'cli' and 'extension'." ; return 1 ;;
+    esac
 }
 
 kilo_uninstall() {
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
+    local type="${1:-cli}"
+
+    case "$type" in
+        "cli")
+            echo "Uninstalling Kilo Code CLI"
+            PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
+            kilo_path_unregister_for_shell "all"
+            kilo_path_unregister_for_vs_terminal
+            ;;
+        "extension")
+            vscode_extension_manage "kilocode.Kilo-Code" "uninstall"
+            ;;
+        *) echo "Invalid type '$type'. Supported types are 'cli' and 'extension'." ; return 1 ;;
+    esac
 }
 
 
@@ -73,7 +95,7 @@ kilo_launcher_manage() {
             {
                 echo '#!/bin/sh'
                 for v in $kilo_launch_export_variables; do
-                    printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                    printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
                 done
 
                 declare -f kilo_launch
@@ -195,7 +217,8 @@ kilo_register_provider() {
     local provider_display_name="$2"
     local provider_type="$3"
     local endpoint="$4"
-    local api_key_env_var="$5"
+    local api_key="$5"
+    local api_key_env_var="$6"
 
     [ -z "${provider_display_name}" ] && provider_display_name="$provider_id"
 
@@ -207,6 +230,7 @@ kilo_register_provider() {
     kilo_set_config "provider.${provider_id}.npm" "\"$provider_type\""
     kilo_set_config "provider.${provider_id}.name" "\"$provider_display_name\""
     kilo_set_config "provider.${provider_id}.options.baseURL" "\"$endpoint\""
+    [ -n "$api_key" ] && kilo_set_config "provider.${provider_id}.options.apiKey" "\"$api_key\""
     [ -n "$api_key_env_var" ] && kilo_set_config "provider.${provider_id}.options.apiKey" "\"{env:$api_key_env_var}\""
 }
 
@@ -274,7 +298,8 @@ kilo_connect_cpa() {
     # empty means all available models
     local model="${1}"
 
-    kilo_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@ai-sdk/openai-compatible" "$(cpa_settings_get_api_endpoint)"  "AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
+    #kilo_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@ai-sdk/openai-compatible" "$(cpa_settings_get_api_endpoint)"  "AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
+    kilo_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@ai-sdk/openai-compatible" "$(cpa_settings_get_api_endpoint)" "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ""
 
     local default_model
     if [ -n "${model}" ]; then

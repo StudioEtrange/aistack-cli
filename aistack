@@ -67,8 +67,8 @@ Options:
     oc mcp context7 install|uninstall           Add mcp-context7 local server configuration.
     ----
     kc : Kilo Code CLI and VS Code extension - https://kilo.ai/
-    kc install                          Install and configure Kilo Code.
-    kc uninstall                        Uninstall Kilo Code and unregister Kilo Code PATH. (keep all configuration unchanged, to remove configuration use 'aistack kc reset' command)
+    kc install [cli|extension]          Install and configure Kilo Code. By default, installs the CLI.
+    kc uninstall [cli|extension]        Uninstall Kilo Code and unregister Kilo Code PATH. (keep all configuration unchanged, to remove configuration use 'aistack kc reset' command)
     kc configure                        Configure Kilo Code. ('aistack kc install' include configuration)
     kc info                             Print Kilo Code informations.
     kc show-config                      Show current Kilo Code configuration.
@@ -78,7 +78,7 @@ Options:
     kc launch [context folder] -- <other kilo code options>
                                         Launch Kilo Code. Instead use 'kilo' command if ${AISTACK_KILO_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack kc register <shell>' to set it in your PATH.
-    kc connect cpa                      Connect Kilo Code CLI and VS Code extension to CLIProxyAPI. (require 'aistack cpa install' before)
+    kc connect cpa                      Connect Kilo Code CLI and VS Code extension to CLIProxyAPI. Create a CLIProxyAPI provider and register all models into Kilo Code. (require 'aistack cpa install' before connecting)
     ----
     vs info                             Print VS Code informations.
     vs show-config                      Show current VS Code configuration.

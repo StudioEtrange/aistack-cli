@@ -8,7 +8,7 @@ Kilo is the all-in-one agentic engineering platform.
 ## NOTES
   * VS Code extension
     * marketplace link : https://marketplace.visualstudio.com/items?itemName=kilocode.kilo-code
-    * id : kilocode.Kilo-Code	
+    * id : kilocode.Kilo-Code
   * Kilo CLI is a fork of OpenCode, they share the same json config syntax file
   * First steps : TODO
   * yolo mode :
@@ -28,5 +28,5 @@ Kilo is the all-in-one agentic engineering platform.
     ```
     ./aistack kc connect cpa
     ./aistack kc launch -- run "hello"
-    ./aistack kc launch -- run "hello" --model "aistack-cpa/cpa-gemini-2.5-flash-lite"
+    ./aistack kc launch -- run "hello" --model "aistack-cpa/gemini-2.5-flash-lite"
     ```
