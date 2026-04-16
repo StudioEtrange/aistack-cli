@@ -54,20 +54,21 @@ update_bash_ini_parser() {
   rm -Rf "${_CURRENT_FILE_DIR}/bash_ini_parser/.git"
 }
 
-# https://github.com/KittyKatt/screenFetch
-update_screenFetch() {
-  rm -Rf "${_CURRENT_FILE_DIR}/screenFetch"
-  echo "Using https://github.com/KittyKatt/screenFetch"
-  git clone https://github.com/KittyKatt/screenFetch "${_CURRENT_FILE_DIR}/screenFetch"
-  rm -Rf "${_CURRENT_FILE_DIR}/screenFetch/.git"
-}
-
 # https://github.com/dylanaraps/neofetch
 update_neofetch() {
   rm -Rf "${_CURRENT_FILE_DIR}/neofetch"
   echo "Using https://github.com/dylanaraps/neofetch"
   git clone https://github.com/dylanaraps/neofetch "${_CURRENT_FILE_DIR}/neofetch"
   rm -Rf "${_CURRENT_FILE_DIR}/neofetch/.git"
+}
+
+# Fork of neofetech
+# https://github.com/nmimusic/unifetch
+update_unifetch() {
+  rm -Rf "${_CURRENT_FILE_DIR}/unifetch"
+  echo "Using https://github.com/nmimusic/unifetch"
+  git clone https://github.com/nmimusic/unifetch "${_CURRENT_FILE_DIR}/unifetch"
+  rm -Rf "${_CURRENT_FILE_DIR}/unifetch/.git"
 }
 
 # https://github.com/StudioEtrange/lddtree
@@ -94,11 +95,11 @@ case $1 in
   pure-getopt )
     update_pure-getopt
     ;;
-  screenFetch )
-    update_screenFetch
-    ;;
   neofetch )
     update_neofetch
+    ;;
+  unifetch )
+    update_unifetch
     ;;
   lddtree )
     update_lddtree
@@ -116,6 +117,6 @@ case $1 in
 	update_macos-dyld-cache-list
 	;;
   * )
-    echo "Usage : ${_CURRENT_FILE_DIR}/update.sh <bash-colors|bash_ini_parser|pure-getopt|screenFetch|neofetch|lddtree|homebrew-get-bottle|macos-link-analyse|macos-dyld-cache-analyse|macos-dyld-cache-list>"
+    echo "Usage : ${_CURRENT_FILE_DIR}/update.sh <bash-colors|bash_ini_parser|pure-getopt|neofetch|unifetch|lddtree|homebrew-get-bottle|macos-link-analyse|macos-dyld-cache-analyse|macos-dyld-cache-list>"
     ;;
 esac
