@@ -23,6 +23,7 @@ aistack_path() {
     vscode_path "$FORCE_VSCODE_MODE"
     cpa_path
     orla_path
+    kilo_path
     bmad_path
 }
 
@@ -239,6 +240,8 @@ aistack_uninstall() {
     orla_path_unregister_for_vs_terminal
     bmad_path_unregister_for_shell "all"
     bmad_path_unregister_for_vs_terminal
+    kilo_path_unregister_for_shell "all"
+    kilo_path_unregister_for_vs_terminal
 
     aistack_remove_dependencies
     runtime_path_file_remove
