@@ -174,18 +174,24 @@ main() {
             if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
             if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
                 PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" "$command" "$@"
+            else
+                exit 1
             fi
             ;;
         nvm)
             if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
             if [ "$AISTACK_INTERNAL_NVM_AVAILABLE" = "true" ]; then
                 "$command" "$@"
+            else
+                exit 1
             fi
             ;;
         pip|pipx|uv)
             if ! check_requirements "python"; then echo " -- ERROR : python missing, launch aistack init"; exit 1; fi;     
             if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
                 PATH="${AISTACK_PYTHON_BIN_PATH}:${PATH}" "$command" "$@"
+            else
+                exit 1
             fi
             ;;
         npm-config)
