@@ -76,9 +76,9 @@ Notes:
 - Add new functions in the closest domain module (`lib/lib_<domain>.sh`).
 - Keep orchestration logic in `aistack` lightweight.
 - If you add a subcommand:
-  1. implement behavior in the proper module,
-  2. wire the command in `aistack`,
-  3. document it in `README.md`.
+  1. implement behavior in the proper domain module,
+  2. wire the subcommand in a submain script (`lib/main_<domain>.sh`).,
+  3. document it in `README.md` and in a domain dedicated md in folder `doc/<domain>.md`
 
 ## 8) Testing policy
 

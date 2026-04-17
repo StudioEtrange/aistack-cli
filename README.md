@@ -1,10 +1,10 @@
 # AIStack CLI
 
-AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode` and various MCP servers. The main goal is to provide a convenient way to install and configure AI tools, ensuring minimal system, to test or use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode`, 'kilo code', 'orla' and various MCP servers, plugin, extensions or skills. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
 
 ## Key Features of AIStack
 
-*   **AI Tool Management**: Streamlines the installation and configuration of AI agents like `gemini-cli` and `opencode`. Provides some minimal convenient default settings.
+*   **AI Tool Management**: Streamlines the installation and configuration of AI agents like `gemini-cli`, `opencode`, `Kilo Code` and so on. Provides some minimal convenient default settings.
 *   **MCP Server Integration**: Easily configure and manage connections to various MCP (Model Context Protocol) servers.
 *   **Isolated Environments**: All tools are installed into a local `workspace/` directory, preventing system-wide conflicts. Installing any agent or MCP server will not pollute in anyway your system nor your development environment path with its own dependencies (nodejs, python, ...). Everything is contained in an easy deletable internal folder.
 *   **Portability**: Bash application, works on Linux & MacOS.
@@ -20,11 +20,16 @@ AIStack CLI is an experimental swiss-knife command-line application designed to 
 
 `aistack` provides a simple command-line interface to manage your tools and environments.
 
+To see complete commands use `aistack help`.
+
 | Command | Description |
 | - | - |
 | **init** | Install/Reinstall dependencies |
+| **uninstall** | Remove any tools and dependencies managed by AIStack |
 | **help** | Display help message |
+| **info** | Display various AIStack information and configuration |
 | **shell** | Enter a sub-shell with the `aistack` environment and paths configured |
+
 
 ### How-To
 
@@ -53,12 +58,16 @@ cd aistack
 
 ## Directory Structure
 
-*   `aistack/`: Contains the main application logic for the `aistack` wrapper script.
-*   `lib/`: ITools internal libraries and code.
+*   `aistack` : Main script.
+*   `README.md` : Documentation main entrypoint.
+*   `doc/`: Various doc topic.
+*   `lib/`: internal libraries and code.
 *   `pool/`: Contains configuration files templates and framework.
-*   `workspace/`: The directory where all isolated environments and installed software ("features") are stored.
+*   `workspace/`: The directory where all isolated environments, dependencies and tools are located.
 
 ## Integrations
+
+* AIStack CLI offers functionality for these tools
 
 ### Gemini CLI
 
@@ -68,13 +77,25 @@ See [Gemini CLI](doc/geminicli.md)
 
 See [Opencode](doc/opencode.md) 
 
-### VS Code
-
-See [VS Code](doc/vscode.md) 
-
 ### CLIProxyAPI
 
 See [CLIProxyAPI](doc/cliproxyapi.md) 
+
+### Kilo Code
+
+See [Kilo Code](doc/kilocode.md)
+
+### Orla
+
+See [Orla](doc/orla.md)
+
+### BMAD
+
+See [BMAD](doc/bmad.md)
+
+### VS Code
+
+See [VS Code](doc/vscode.md) 
 
 ### MCP Servers
 
@@ -88,81 +109,17 @@ AIStack simplifies connecting to MCP (Model Context Protocol) servers, allowing 
 * **GitHub**: Official server for interacting with GitHub issues, PRs, and repositories. ([Source](https://github.com/github/github-mcp-server))
 * **Data Commons**: Tools and agents for interacting with the Data Commons Knowledge Graph using the Model Context Protocol (MCP). ([Source](https://github.com/datacommonsorg/agent-toolkit))
 
-### Agent Skills
-
-* spec : https://github.com/agentskills/agentskills
-* home : https://agentskills.io/
-
-## Design Notes 
-
-### Notes on underlying Framework: Stella
-
-AIStack leverages the **Stella** framework for its core functionality. Stella provides the infrastructure for application structure, environment isolation, and package management. **Package Management**: Stella uses a concept of "Features" (software packages) which are defined by "Recipes" (Bash scripts). `aistack` uses this system to provide all the tools it manages. The recipes are located in `pool/stella/nix/pool/feature-recipe/`.
-
-### Notes on using nodejs, npx, npm
-
-* `npx` command needs at least `node` binary in PATH and `sh` binary in PATH
-
-* any mcp server based on node have 2 ways to be registered :
-  
-  A standard way using json in settings.json, injecting needed PATH env var value to reach node and other binaries (using STELLA_ORIGINAL_SYSTEM_PATH which contains original system PATH value)
-
-  * registered mcp server desktop-commander :
-  ```
-  {
-    "mcpServers": {
-      "desktop-commander": {
-        "command": "npx",
-        "args": [
-          "-y",
-          "@wonderwhy-er/desktop-commander"
-        ],
-        "env": {
-            "PATH": "${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}"
-        }
-      }
-    }
-  }
-  ```
-
-  Or an indirect way using a script as launcher
-  * registered mcp server context7 :
-  ```
-  {
-    "mcpServers": {
-      "context7": {
-        "command": "${AISTACK_MCP_LAUNCHER_HOME}/context7"
-      }
-    }
-  }
-  ```
-  * script launcher for context7 :
-  ```
-  #!/bin/sh
-  export PATH="/home/nomorgan/workspace/aistack/workspace/isolated_dependencies/nodejs/bin/:${PATH}"
-  exec "npx" -y @upstash/context7-mcp --api-key "${CONTEXT7_API_KEY}"
-  ```
 
 
 
+## Design Notes
 
+### Notes on underlying framework: Stella
 
-## TODO and VARIOUS NOTES
+AIStack leverages the **[Stella](https://github.com/StudioEtrange/stella)** framework for its core functionality.
+Stella provides the infrastructure for application structure, environment isolation, and package management. 
 
-* process manager : goreman https://github.com/mattn/goreman
-* MCP-cli
-  * https://github.com/IBM/mcp-cli
-  * CLI to connect and interact with MCP (Model Context Protocol) servers.
-  * Manages conversation, tool invocation, session handling.
-  * Supports chat, interactive shell, and automation via MCP.
-  * Integrates with LLMs for reasoning and tool-based workflows.
-* Serving LLM - Ollama vs vLLM : https://developers.redhat.com/articles/2025/08/08/ollama-vs-vllm-deep-dive-performance-benchmarking#comparison_2__tuned_ollama_versus_vllm
-  * Ollama excels in its intended role: a simple, accessible tool for local development, prototyping, and single-user applications. Its strength lies in its ease of use, not its ability to handle high-concurrency production traffic, where it struggles even when tuned.
-  * vLLM is unequivocally the superior choice for production deployment. It is built for performance, delivering significantly higher throughput and lower latency under heavy load. Its dynamic batching and efficient resource management make it the ideal engine for scalable, enterprise-grade AI applications.
-* orla cli https://github.com/dorcha-inc/orla https://korben.info/orla-agent-ia-local-cli.html
-* security tool : https://github.com/TheAuditorTool/Auditor
-* Chrome DevTools MCP https://korben.info/chrome-devtools-mcp.html
-* openclaw and cliproxyapi https://developer.tenten.co/openclaw-multi-agent-cliproxyapiplus-complete-deployment-guide
+About *Package Management*: Stella uses a concept of "Features" (software packages) which are defined by "Recipes" (Bash scripts). `aistack` uses this system to provide all the tools it manages or use. Stella features recipes are located in `pool/stella/nix/pool/feature-recipe/`.
 
 ## Contributors
 
