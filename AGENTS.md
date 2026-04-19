@@ -1,105 +1,206 @@
-# AIStack CLI
+# AIStack CLI — AGENTS.md
 
-## 1) Project goal
+## 1. Project Overview
 
-AIStack CLI is a Bash-based orchestrator that installs and configures AI tools (Gemini CLI, Opencode, Orla, CLIProxyAPI, MCP servers and others) in an isolated environment, without polluting the host system.
+### Goal
+AIStack CLI is a **Bash-based tool** that installs and configures AI tools (Gemini CLI, Opencode, Orla, CLIProxyAPI, MCP servers, etc.) in an **isolated environment**, without polluting the host system.
 
-## 2) Stack & repository structure
-
-- **Primary language**: Bash
-- **CLI entrypoint**: `./aistack`
-- **Domain libraries**: `lib/*.sh`
-- **Underlying bash framework**: Stella (`pool/stella/...`, `stella-link.sh`) https://github.com/StudioEtrange/stella
+### Tech Stack
+- **Language**: Bash (MUST be compatible with bash 3.2)
+- **Entrypoint**: `./aistack`
+- **Framework**: Stella  
+  https://github.com/StudioEtrange/stella
+- **Internal Libraries**: `lib/*.sh`
 - **Tests**: Bats (`test/launch_test.sh`, `test/test/*.bats`)
-- **Docs**: `README.md` and `doc/*.md`
+- **Docs**: `README.md`, `doc/*.md`
 
-## 3) Contribution rules
+---
 
-1. **Preserve Bash portability** (Linux/macOS): avoid non-portable shell features.
-2. **Minimize global side effects**:
-   - prefer `local` inside functions,
-   - keep `PATH` mutations scoped and intentional.
-3. **Use consistent error handling**:
-   - prefer `return <code>` inside functions,
-   - reserve `exit <code>` for CLI entrypoints.
-4. **Keep logs actionable**:
-   - recommended prefixes: `ERROR: ...`, `WARN: ...`, `INFO: ...`.
-5. **Do not regress CLI UX**:
-   - keep help/usage output updated when commands change.
+## 2. Getting Started
 
-## 4) Recommended workflow
+### Initialization (MANDATORY)
+Before using any command:
 
-While coding:
-- keep changes small and focused;
-- avoid broad refactors unless explicitly requested.
-
-After coding:
-- run relevant checks (see section 6);
-- update user documentation when behavior changes.
-
-
-## 5) AIStack CLI usage
-
-Before using any AIStack CLI commands:
-- the current execution environment must be initialized before using any aistack commands at least once to install needed dependencies, using command 
 ```bash
 ./aistack init
 ```
 
-Available commands:
-- Available commands are listed in `aistack` file.
+This installs dependencies and prepares the environment. This MUST be launch only once before using any AIStack CLI commands.
 
-## 6) Test commands
+### Available Commands
+All commands are defined in:
+```
+./aistack
+```
 
-Before testing:
-- the current execution environment must be initialized at least once to install needed dependencies, using command 
+---
+
+## 3. Architecture & Design Principles
+
+### Core Principles
+- Keep `aistack` **thin** (menu only)
+- Delegate logic to **domain modules**:
+  ```
+  lib/lib_<domain>.sh
+  ```
+- Use **submain scripts** for command wiring:
+  ```
+  lib/main_<domain>.sh
+  ```
+
+### Feature Addition Workflow
+When adding a new feature:
+
+1. Implement logic in:
+   ```
+   lib/lib_<domain>.sh
+   ```
+2. Expose command in:
+   ```
+   lib/main_<domain>.sh
+   ```
+3. Keep `aistack` minimal
+4. Add documentation in:
+   - `README.md`
+   - `doc/<domain>.md`
+
+---
+
+## 4. Coding Standards
+
+### Shell Compatibility
+- MUST support **bash 3.2** (Linux + macOS)
+- Avoid modern bash features (`mapfile`, associative arrays, etc.)
+
+### Style Rules
+- Always quote variables:
+  ```bash
+  "$VAR"
+  ```
+- Use **tabs** for indentation
+- Prefer:
+  ```bash
+  local var="value"
+  ```
+
+### Error Handling
+- Inside functions:
+  ```bash
+  return <code>
+  ```
+- Only CLI entrypoints may use:
+  ```bash
+  exit <code>
+  ```
+
+### Logging Convention
+Use explicit prefixes:
+```
+ERROR: ...
+WARN: ...
+INFO: ...
+```
+
+### Environment Safety
+- Minimize global side effects
+- Keep `PATH` modifications controlled and scoped
+
+---
+
+## 5. Development Workflow
+
+### While Coding
+- Keep changes **small and focused**
+- Avoid large refactors unless explicitly requested
+
+### After Coding
+- Run tests
+- Validate CLI behavior
+- Update documentation if needed
+
+---
+
+## 6. Testing
+
+### Setup
 ```bash
 ./aistack init
 ```
 
-### Minimum checks
-
+### Minimum Checks
 ```bash
-./aistack init
 ./test/launch_test.sh json
 ./test/launch_test.sh yaml
 ```
 
-### Useful optional checks (if available)
+### Testing Policy
+- Add/update Bats tests for functional changes
+- Cover:
+  - missing arguments
+  - missing dependencies
+  - invalid inputs
+- Avoid reliance on network when possible
 
-Notes:
-- Tests may depend on network/proxy/certificate setup during dependency bootstrap.
-- If environment constraints block a check, document that clearly in your summary.
+### Notes
+Tests may depend on:
+- network
+- proxy
+- certificates
 
-## 7) Guidelines for new features
+If tests cannot run → document clearly.
 
-- Add new functions in the closest domain module (`lib/lib_<domain>.sh`).
-- Keep orchestration logic in `aistack` lightweight.
-- If you add a subcommand:
-  1. implement behavior in the proper domain module,
-  2. wire the subcommand in a submain script (`lib/main_<domain>.sh`).,
-  3. document it in `README.md` and in a domain dedicated md in folder `doc/<domain>.md`
+---
 
-## 8) Testing policy
+## 7. Agent Behavior Rules
 
-For functional changes:
-- add or update at least one Bats test when reasonable;
-- cover error cases (missing arguments, missing files, missing dependencies);
-- avoid coupling unit tests to live network downloads.
+### General Behavior
+- **Proactivity**: HIGH
+- **Tone**: Professional, concise, technical
 
-## 9) PR checklist (required)
+### Critical Rule
+MUST ask for confirmation before:
+- creating files (`write_file`)
+- modifying files (`replace`)
 
-- [ ] Changes are targeted and readable.
-- [ ] Help/README updated when needed.
-- [ ] Relevant tests executed (or environment limitation explained).
-- [ ] No sensitive data added (tokens, API keys, private paths).
+### Commit Messages
+Use **Conventional Commits**:
+```
+feat: add htop v3.2.2
+fix: handle missing dependency
+```
 
-## 10) What to avoid
+---
 
-- Adding non-isolated global system dependencies without clear justification.
-- Adding ad hoc scripts without documentation.
-- Mixing large style-only edits with functional changes in the same commit.
+## 8. CLI UX Rules
 
+- Never degrade CLI usability
+- Always update:
+  - help output
+  - README
+- Keep commands predictable and consistent
 
-When in doubt :
-- prefer small, testable, and easily reversible changes (`git revert`).
+---
+
+## 9. What to Avoid
+
+- Adding global system dependencies without justification
+- Mixing in the same commit:
+  - style changes
+  - functional changes
+- Adding undocumented scripts
+
+---
+
+## 10. PR Checklist (REQUIRED)
+
+- [ ] Changes are targeted and readable
+- [ ] Documentation updated (README / doc/*)
+- [ ] Tests executed (or limitation explained)
+- [ ] No sensitive data added
+
+---
+
+## 11. Guiding Principle
+
+When in doubt:
+- Prefer small, testable, and reversible changes (`git revert` friendly)

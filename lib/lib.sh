@@ -16,6 +16,7 @@ aistack_path() {
     mkdir -p "${STELLA_APP_WORK_ROOT}/path"
 
     node_path
+    bun_path
     gemini_path
     opencode_path
     # FORCE_VSCODE_MODE could be "remote" : means using vscode remote extension
@@ -25,6 +26,7 @@ aistack_path() {
     orla_path
     kilo_path
     bmad_path
+    asm_path
 }
 
 
@@ -39,6 +41,13 @@ runtime_path() {
     # export PATH="${AISTACK_OPENCODE_LAUNCHER_HOME}:${PATH}"
     # export PATH="${AISTACK_ORLA_LAUNCHER_HOME}:${PATH}"
     # export PATH="${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}:${PATH}"
+    if [ "$AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE" = "true" ]; then
+        # bin folder which contains bun
+        export AISTACK_BUN_BIN_PATH="$(dirname $AISTACK_INTERNAL_BUN_RUNTIME_PATH)"
+    else
+        # we use an already installed bun, not aistack bun
+        export AISTACK_BUN_BIN_PATH=""
+    fi
 
     if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
         # bin folder which contains node
@@ -70,7 +79,7 @@ aistack_info() {
     echo "AISTACK_ISOLATED_DEPENDENCIES_ROOT: $AISTACK_ISOLATED_DEPENDENCIES_ROOT"
     echo "AISTACK_RUNTIME_PATH_FILE: $AISTACK_RUNTIME_PATH_FILE"
     echo
-    echo "--nodejs--"
+    echo "--JavaScript ecosystem--"
     echo "AISTACK_INTERNAL_NVM_AVAILABLE : $AISTACK_INTERNAL_NVM_AVAILABLE"
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
     echo "NVM_DIR : $NVM_DIR"
@@ -79,14 +88,35 @@ aistack_info() {
     if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
         echo "AISTACK_NODEJS_BIN_PATH : $AISTACK_NODEJS_BIN_PATH"
         echo "AISTACK_INTERNAL_NODEJS_RUNTIME_PATH : $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH"
+        echo "NodeJS version : $($AISTACK_INTERNAL_NODEJS_RUNTIME_PATH --version)"
+        echo "NPM version : $(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --version)"
+        echo "NPM cache dir : $(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get cache)"
+        local npm_userconfig="$(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get userconfig)"
+        case "$npm_userconfig" in
+            "undefined"|"")
+                echo "NPM userconfig file : not defined"
+                ;;
+            *)
+                echo "NPM userconfig file : $npm_userconfig"
+                [ -f "$npm_userconfig" ] && echo "NPM userconfig file exists" || echo "NPM userconfig file does not exist"
+                ;;
+        esac
+    fi
+    echo
+    echo "AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE"
+    if [ "$AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE" = "true" ]; then
+        echo "AISTACK_BUN_BIN_PATH : $AISTACK_BUN_BIN_PATH"
+        echo "AISTACK_INTERNAL_BUN_RUNTIME_PATH : $AISTACK_INTERNAL_BUN_RUNTIME_PATH"
+        echo "Bun version : $($AISTACK_INTERNAL_BUN_RUNTIME_PATH --version)"
     fi
 
     echo
-    echo "--python--"
+    echo "--python ecosystem--"
     echo "AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE"
     if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
         echo "AISTACK_PYTHON_BIN_PATH : $AISTACK_PYTHON_BIN_PATH"
         echo "AISTACK_INTERNAL_PYTHON_RUNTIME_PATH : $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH"
+        echo "Python version : $($AISTACK_INTERNAL_PYTHON_RUNTIME_PATH --version)"
     fi
     echo "AISTACK_INTERNAL_MAMBA_AVAILABLE : $AISTACK_INTERNAL_MAMBA_AVAILABLE"
     echo
@@ -103,6 +133,8 @@ runtime_path_file_generate() {
     echo '#!/bin/sh' > "${AISTACK_RUNTIME_PATH_FILE}"
     # kodejs bin tools
     [ -n "$AISTACK_NODEJS_BIN_PATH" ] && echo "export PATH=\"${AISTACK_NODEJS_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
+    # bun bin tools
+    [ -n "$AISTACK_BUN_BIN_PATH" ] && echo "export PATH=\"${AISTACK_BUN_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
     # python bin tools
     [ -n "$AISTACK_PYTHON_BIN_PATH" ] && echo "export PATH=\"${AISTACK_PYTHON_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
     
@@ -136,6 +168,12 @@ runtime_analysis() {
                 fi
             fi
             ;;
+        "bun")
+            if [ -f "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/bun/bun" ]; then
+                export AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE="true"
+                export AISTACK_INTERNAL_BUN_RUNTIME_PATH="${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/bun/bun"
+            fi
+            ;;
     esac
 }
 
@@ -158,6 +196,9 @@ aistack_install_dependency() {
             $STELLA_API get_feature "jq"
             ;;
         bats*|patchelf*|cliproxyapi*);;
+        bun)
+            bun_install
+            ;;
 
         # install other dependencies in an isolated way. (None of those will never been added aistack PATH while running)
         nodejs)
@@ -240,6 +281,8 @@ aistack_uninstall() {
     orla_path_unregister_for_vs_terminal
     bmad_path_unregister_for_shell "all"
     bmad_path_unregister_for_vs_terminal
+    asm_path_unregister_for_shell "all"
+    asm_path_unregister_for_vs_terminal
     kilo_path_unregister_for_shell "all"
     kilo_path_unregister_for_vs_terminal
 
@@ -276,11 +319,23 @@ check_requirements() {
             ;;
         "nodejs") 
             if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
-                [ "$mode" = "VERBOSE" ] && echo "-- nodejs detected in ${AISTACK_INTERNAL_NODEJS_RUNTIME_PATH}"
+                [ "$mode" = "VERBOSE" ] && echo "-- internal nodejs detected in ${AISTACK_INTERNAL_NODEJS_RUNTIME_PATH}"
                 return 0
             else
                 if command -v node >/dev/null 2>&1; then
                     [ "$mode" = "VERBOSE" ] && echo "-- nodejs detected in $(command -v node)"
+                    return 0
+                fi
+            fi
+            return 1
+            ;;
+        "bun")
+            if [ "$AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE" = "true" ]; then
+                [ "$mode" = "VERBOSE" ] && echo "-- internalbun detected in ${AISTACK_INTERNAL_BUN_RUNTIME_PATH}"
+                return 0
+            else
+                if command -v bun >/dev/null 2>&1; then
+                    [ "$mode" = "VERBOSE" ] && echo "-- bun detected in $(command -v bun)"
                     return 0
                 fi
             fi

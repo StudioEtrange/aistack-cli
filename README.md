@@ -1,10 +1,10 @@
 # AIStack CLI
 
-AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode`, 'kilo code', 'orla' and various MCP servers, plugin, extensions or skills. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode`, `asm`, 'kilo code', 'orla' and various MCP servers, plugin, extensions or skills. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
 
 ## Key Features of AIStack
 
-*   **AI Tool Management**: Streamlines the installation and configuration of AI agents like `gemini-cli`, `opencode`, `Kilo Code` and so on. Provides some minimal convenient default settings.
+*   **AI Tool Management**: Streamlines the installation and configuration of AI agents like `gemini-cli`, `opencode`, `asm`, `Kilo Code` and so on. Provides some minimal convenient default settings.
 *   **MCP Server Integration**: Easily configure and manage connections to various MCP (Model Context Protocol) servers.
 *   **Isolated Environments**: All tools are installed into a local `workspace/` directory, preventing system-wide conflicts. Installing any agent or MCP server will not pollute in anyway your system nor your development environment path with its own dependencies (nodejs, python, ...). Everything is contained in an easy deletable internal folder.
 *   **Portability**: Bash application, works on Linux & MacOS.
@@ -80,6 +80,10 @@ See [Opencode](doc/opencode.md)
 ### CLIProxyAPI
 
 See [CLIProxyAPI](doc/cliproxyapi.md) 
+
+### asm - agent skill manager
+
+See [asm](doc/asm.md)
 
 ### Kilo Code
 

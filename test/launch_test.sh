@@ -17,12 +17,15 @@ function init_aistack_test_env() {
 	. "$STELLA_APP_ROOT/../lib/lib_json.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_yaml.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_node.sh"
+	. "$STELLA_APP_ROOT/../lib/lib_bun.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_cpa.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_vscode.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_gemini.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_opencode.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_kilo.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_orla.sh"
+	. "$STELLA_APP_ROOT/../lib/lib_bmad.sh"
+	. "$STELLA_APP_ROOT/../lib/lib_asm.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_mcp.sh"
 
 	# initialize aistack paths (see in file aistack)
