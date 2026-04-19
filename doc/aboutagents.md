@@ -1,5 +1,7 @@
 # Agent Topics
 
+* file specification : https://agents.md/
+
 ## Ressources
 
 * multica
