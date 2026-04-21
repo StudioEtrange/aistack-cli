@@ -134,6 +134,7 @@ vscode_settings_configure() {
     case "$target" in
         "gemini" )
             merge_json_file "${AISTACK_POOL}/settings/gemini-cli/settings-for-vscode.json" "$AISTACK_VSCODE_CONFIG_FILE"
+            merge_json_file "${AISTACK_POOL}/settings/gemini-code-assist/settings-for-vscode.json" "$AISTACK_VSCODE_CONFIG_FILE"
         ;;
         "opencode" )
             merge_json_file "${AISTACK_POOL}/settings/opencode/settings-for-vscode.json" "$AISTACK_VSCODE_CONFIG_FILE"
