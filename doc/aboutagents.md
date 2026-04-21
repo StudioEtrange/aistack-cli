@@ -44,6 +44,9 @@
     * https://clawskills.sh/
   * MCPMarket
     * https://mcpmarket.com/tools/skills
+  * Will McGinnis's python development
+    * https://github.com/wdm0006/python-skills
+    * https://mcginniscommawill.com/guides/python-library-development/
 
 * skills registry hostable :
   * skillhub

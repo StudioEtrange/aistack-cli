@@ -53,7 +53,7 @@ cd aistack
 **Configure the underlying nodejs to add a local npm registry**
 ```
 cd aistack
-./aistack npm-config set registry https://registry.local.org/
+./aistack npm config set registry https://registry.local.org/ -g
 ```
 
 ## Directory Structure

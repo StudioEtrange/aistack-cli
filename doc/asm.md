@@ -32,6 +32,15 @@ Agent Skill Manager (`asm`) is a CLI/TUI to manage AI agent skills across multip
 ./aistack asm uninstall
 ```
 
+## Skills commands
+
+* add a skill for every coding agent tool, at global scope
+  * it will create a symbolic link with the skill folder fr om ./agents/skill-name to a configuration folder for each coding agent tool, even for tool not installed
+```
+asm install github:anthropics/skills --path skills/algorithmic-art --tool all --scope global -y
+asm install https://github.com/anthropics/skills/tree/main/skills/algorithmic-art --tool all --scope global -y
+```
+
 ## Notes
 
 * `aistack asm launch` executes the `asm` binary with AIStack runtime context.

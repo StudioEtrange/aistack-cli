@@ -18,3 +18,5 @@
 * voltagent
 * litellm
 * superpowers
+* support bun configuration file and for bunx
+* cam
