@@ -385,7 +385,10 @@ merge_json_file() {
         exit 1
     fi
 
-    test_and_fix_json_file "$file_to_merge"
+    # do not modify file to merge
+    local tmp_file_to_merge="$(mktemp)"
+    cat "$file_to_merge" > "$tmp_file_to_merge"
+    test_and_fix_json_file "$tmp_file_to_merge"
 
     if [ ! -s "$file_to_merge_into" ]; then
         echo "Valid target file not found at $file_to_merge_into. Creating it."
@@ -409,8 +412,8 @@ merge_json_file() {
                     end
                     );
             expand_env
-    ' "$file_to_merge" > "$tmp_merge"; then
-        echo "ERROR : expanding environment variables in $file_to_merge" >&2
+    ' "$tmp_file_to_merge" > "$tmp_merge"; then
+        echo "ERROR : expanding environment variables in $tmp_file_to_merge" >&2
         exit 1
     fi
 
