@@ -2,5 +2,7 @@
   "privacy": {
     "usageStatisticsEnabled": false
   },
-  "contextFileName": "AGENTS.md"
+  "context": {
+    "fileName": ["AGENTS.md", "GEMINI.md"]
+  }
 }

@@ -8,7 +8,7 @@ An open-source AI agent that brings the power of Gemini directly into your termi
   * Manual installation : use `/ide install` - if you install vscode extension with /ide install and have problem, just close and relaunch vscode
   * Other Manual Installation : https://marketplace.visualstudio.com/items?itemName=Google.gemini-cli-vscode-ide-companion
   * NOTE : gemini-cli can install vs code extensuib Gemini Cli Companion if binary code cli is in the PATH
-
+* settings.json doc : https://google-gemini.github.io/gemini-cli/docs/get-started/configuration.html#settings-files
 
 ## NOTES
 
