@@ -97,7 +97,7 @@ See [Orla](doc/orla.md)
 
 See [BMAD](doc/bmad.md)
 
-### Agent Development Kit (ADL)
+### Agent Development Kit (ADK)
 
 See [VS Code](doc/adk.md) 
 
