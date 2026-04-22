@@ -17,6 +17,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_orla.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_adk.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_asm.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
 
@@ -149,6 +150,14 @@ Options:
                                         Instead use 'bmad' or 'bmad-method' command if ${AISTACK_BMAD_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack bmad register <shell>' to set it in your PATH.
     ----
+    Agent Development Kit (ADK) - (https://adk.dev/)
+    adk <install|uninstall>             Install/Uninstall the adk for python.
+    adk register <shell>|vs             Register adk PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    adk unregister <shell>|vs           Unregister adk PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs").
+    adk launch -- <adk command>         Launch adk. (i.e: aistack adk launch -- --help)
+                                        Instead use 'adk' command if ${AISTACK_ADK_LAUNCHER_HOME} is in your PATH.
+                                        Use 'aistack adk register <shell>' to set it in your PATH.
+    ----
 EOF
 }
 
@@ -280,6 +289,9 @@ main() {
             ;;
         bmad)
             . "${_CURRENT_FILE_DIR}/lib/main_bmad.sh"
+            ;;
+        adk)
+            . "${_CURRENT_FILE_DIR}/lib/main_adk.sh"
             ;;
         kc)
             . "${_CURRENT_FILE_DIR}/lib/main_kilo.sh"

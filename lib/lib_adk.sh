@@ -1,0 +1,89 @@
+adk_path() {
+
+    export AISTACK_BMAD_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/adk"
+    mkdir -p "${AISTACK_BMAD_LAUNCHER_HOME}"
+    
+}
+
+
+adk_install() {
+
+    echo "Installing adk for python"
+    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --verbose google-adk
+}
+
+adk_uninstall() {
+    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose google-adk
+}
+ 
+
+adk_path_register_for_shell() {
+    local shell_name="$1"
+    path_register_for_shell "adk" "$shell_name" "${AISTACK_BMAD_LAUNCHER_HOME}"
+}
+adk_path_unregister_for_shell() {
+    local shell_name="$1"
+    path_unregister_for_shell "adk" "$shell_name"
+}
+adk_path_register_for_vs_terminal() {
+    vscode_path_register_for_vs_terminal "adk" "${AISTACK_BMAD_LAUNCHER_HOME}"
+}
+adk_path_unregister_for_vs_terminal() {
+    vscode_path_unregister_for_vs_terminal "adk" "${AISTACK_BMAD_LAUNCHER_HOME}"
+}
+
+
+
+adk_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_PYTHON_BIN_PATH"
+adk_launch() {
+
+    (
+        . "${AISTACK_RUNTIME_PATH_FILE}"
+
+        if [ "$#" -gt 0 ]; then
+            "${AISTACK_PYTHON_BIN_PATH}/adk" "$@"
+        else
+            "${AISTACK_PYTHON_BIN_PATH}/adk"
+        fi
+    )
+}
+
+
+
+adk_launcher_manage() {
+    local action="${1:-create}"
+
+    case $action in
+
+        create)
+            {
+                echo '#!/bin/sh'
+                for v in $adk_launch_export_variables; do
+                    printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                done
+
+                declare -f adk_launch
+
+                echo adk_launch \"\$@\"
+            } | tee "${AISTACK_BMAD_LAUNCHER_HOME}/adk" "${AISTACK_BMAD_LAUNCHER_HOME}/adk-method" > /dev/null
+
+            chmod +x "${AISTACK_BMAD_LAUNCHER_HOME}/adk"
+            chmod +x "${AISTACK_BMAD_LAUNCHER_HOME}/adk-method"
+            ;;
+
+        delete)
+            rm -f "${AISTACK_BMAD_LAUNCHER_HOME}/adk"
+            rm -f "${AISTACK_BMAD_LAUNCHER_HOME}/adk-method"
+            ;;
+    esac
+    
+}
+
+
+adk_settings_configure() {
+    :
+}
+
+adk_settings_remove() {
+    :
+}
