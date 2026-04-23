@@ -184,10 +184,17 @@ runtime_analysis_all() {
     done
 }
 
+# install dependencies described in properties APP_FEATURE_LIST
+# for eacth :
+# some stella features will be installed and loaded into current PATH and at each aistack launch (type 1)
+# ignored dependencies (type 2)
+# other dependencies, not from stella, will be installed and not loaded into current PATH nor at each aistack launch (type 3)
+# other features, from stella, will be installed in an export way and loaded into current PATH but not at each aistack launch (type 4)
 aistack_install_dependency() {
     local dep="$1"
 
     case "$dep" in
+        # type 1
         yq*)
             # internal dependencies for aistack (which will be added to aistack PATH while running)
             $STELLA_API get_feature "yq"
@@ -196,12 +203,12 @@ aistack_install_dependency() {
             # internal dependencies for aistack (which will be added to aistack PATH while running)
             $STELLA_API get_feature "jq"
             ;;
+        # type 2 : not installed
         bats*|patchelf*|cliproxyapi*);;
+        # type 3
         bun)
             bun_install
             ;;
-
-        # install other dependencies in an isolated way. (None of those will never been added aistack PATH while running)
         nodejs)
             node_install
             # TODO : change install nvm for glibc 2.17
@@ -217,6 +224,7 @@ aistack_install_dependency() {
         # this notation do not stop case statement workflow and continue to next pattern without testing any match
         #;&
             ;;
+        # type 4
         *)
             # other dependencies (for mcp servers and other commands) in an isolated way. (None of those will never been added to any PATH)
             _feature=""
@@ -235,6 +243,7 @@ aistack_install_dependency() {
         miniforge3)
             # install pipx and uv after having installaing miniforge3 in previsous case match
             echo "-- install python pipx and uv package/project manager"
+            # NOTE : Here $AISTACK_PYTHON_BIN_PATH is empty but $PATH contains mamba PATH, because it was installed just brefore
             PATH="${AISTACK_PYTHON_BIN_PATH}:${PATH}" mamba install -y pipx uv
             ;;
     esac
@@ -372,10 +381,10 @@ require() {
 
     case "$feature" in
         "json5")
-            if ! PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" type json5 >/dev/null 2>&1; then
+            if ! PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" type json5 >/dev/null 2>&1; then
                 # install json5 nodejs package (to correct invalid json)
                 # https://github.com/json5/json5
-                PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" npm install -g json5 1>/dev/null
+                PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install -g json5 1>/dev/null
                 [ $? -ne 0 ] && {
                     echo "ERROR : installing json5 nodejs package"
                     return 1

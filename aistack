@@ -5,6 +5,9 @@ _CURRENT_RUNNING_DIR="$( cd "$( dirname "." )" && pwd )"
 STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/stella-link.sh" include
 
+# NOTE
+#   From HERE, $STELLA_ORIGINAL_SYSTEM_PATH contains $PATH before stella features are included
+
 . "${_CURRENT_FILE_DIR}/lib/lib.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_json.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_yaml.sh"
@@ -196,7 +199,7 @@ main() {
         bun)
             if ! check_requirements "bun"; then echo " -- ERROR : bun missing, launch aistack init"; exit 1; fi;
             if [ "$AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE" = "true" ]; then
-                PATH="${AISTACK_BUN_BIN_PATH}:${PATH}" "$command" "$@"
+                PATH="${AISTACK_BUN_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             else
                 exit 1
             fi
@@ -204,7 +207,7 @@ main() {
         npm|npx)
             if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
             if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
-                PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" "$command" "$@"
+                PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             else
                 exit 1
             fi
@@ -220,7 +223,7 @@ main() {
         pip|pipx|uv)
             if ! check_requirements "python"; then echo " -- ERROR : python missing, launch aistack init"; exit 1; fi;     
             if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
-                PATH="${AISTACK_PYTHON_BIN_PATH}:${PATH}" "$command" "$@"
+                PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             else
                 exit 1
             fi
@@ -242,7 +245,7 @@ main() {
             #             exit 1
             #         fi
             #         echo "Setting npm config: $key = $value"
-            #         PATH="${AISTACK_NODEJS_BIN_PATH}:${PATH}" npm config set "$key" "$value" -g
+            #         PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm config set "$key" "$value" -g
             #         ;;
             #     *)
             #         echo "Error: Unknown command $sub_command for npm-config"
