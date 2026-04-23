@@ -45,3 +45,35 @@ An open-source AI agent that brings the power of Gemini directly into your termi
 * License usage for gemini 
   * https://geminicli.com/docs/get-started/authentication/
 * gemini-cli reads $HOME/.agents/skills and $HOME/.gemini/skills
+
+## gemini cli A2A server 
+
+* add a connectivity to use gemini-cli using A2A protocol
+  * A2A protocol  ⇄  Gemini CLI (process local)
+
+```
+┌──────────────────────┐
+│  Agent client A2A    │
+└──────────┬───────────┘
+           │ A2A
+           ▼
+┌──────────────────────┐
+│ Gemini CLI A2A Server│
+└──────────┬───────────┘
+           │ stdin/stdout
+           ▼
+┌──────────────────────┐
+│   Gemini CLI         │
+└──────────────────────┘
+```
+
+* package npm 
+  * https://www.npmjs.com/package/@google/gemini-cli-a2a-server
+  * source code integrated in gemini-cli code source :
+    * https://github.com/google-gemini/gemini-cli/tree/main/packages/a2a-server
+* authentification mode used by A2A server
+  * https://github.com/google-gemini/gemini-cli/blob/main/packages/a2a-server/src/config/config.ts
+
+* bridge API connecting to A2A server : Gemini CLI - A2A API Proxy Server
+  * https://www.npmjs.com/package/@vitorcen/gemini-cli-2-api
+  * https://github.com/vitorcen/gemini-cli-2-api

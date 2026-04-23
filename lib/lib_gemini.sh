@@ -154,3 +154,19 @@ gemini_remove_command() {
 
     rm -f "${AISTACK_GEMINI_CONFIG_CMD_HOME}/${command_file}"
 }
+
+
+# gemini cli A2A server ------------------------
+# https://www.npmjs.com/package/@google/gemini-cli-a2a-server
+# https://github.com/google-gemini/gemini-cli/tree/main/packages/a2a-server
+
+
+gemini_cli_a2a_srv_install() {
+   
+    echo "Installing Gemini CLI A2A server https://www.npmjs.com/package/@google/gemini-cli-a2a-server"
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli-a2a-server
+}
+
+gemini_cli_a2a_srv_uninstall() {
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli-a2a-server
+}
