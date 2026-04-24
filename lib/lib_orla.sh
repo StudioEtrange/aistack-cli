@@ -147,9 +147,6 @@ orla_settings_configure() {
     echo " - set for orla agent mode a default backend named ollama with endpoint http://localhost:11434"
     orla_agent_register_default_backend "default_ollama" "ollama" "http://localhost:11434"
     orla_agent_register_default_model
-
-    echo " - generate a CLIProxyAPI API key for Orla to connect to CPA backend"
-    orla_generate_cpa_key
 }
 
 orla_settings_remove() {
@@ -164,7 +161,8 @@ orla_info() {
 
         echo "Orla API endpoint : $(orla_settings_get_api_endpoint)"
 
-        [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ] && echo "Connected to CLIProxyAPI using API key : $AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
+        [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_ORLA (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE)" || \
+            echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE)"
     else
         echo "No Orla configuration file found. ($AISTACK_ORLA_CONFIG_FILE)"
     fi
@@ -280,25 +278,52 @@ orla_generate_cpa_key() {
     # Generating a CPA API key for Orla
     export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA="$($STELLA_API generate_password 48 "[:alnum:]")"
     cpa_settings_api_key_add "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
+    if [ $? -ne 0 ]; then
+        export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA=
+        echo "ERROR: Failed to generate and register CPA API key for Orla."
+        return 1
+    fi
     echo "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" > "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE"
+
+    # each time an api key is generated we need to refrech the launcher to update env vars
+    orla_launcher_manage "create"
 }
 
 orla_unregister_cpa_key() {
-    if [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" ]; then
-        # Remove existing CPA API key for Orla
-        cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
-    fi
+    # Remove existing CPA API key for Orla
+    cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
+    export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA=
+    rm -f "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE"
 }
 
+# needs cpa to be running
 orla_connect_cpa() {
     local orla_mode="${1}" # agent or serve
     local model="${2}"
-
+    
+    if ! cpa_is_configured; then
+        echo "ERROR: Failed to generate and register CLIProxyAPI API key for Orla : CLIProxyAPI is not configured."
+        return 1
+    fi
+    
+    # needs cpa conf file exists
+    echo "generate a CLIProxyAPI API key for Orla to connect to CPA backend"
+    orla_generate_cpa_key
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to generate and register CLIProxyAPI API key for Orla."
+        return 1
+    fi
+   
     local default_model
     if [ -n "${model}" ]; then
         default_model="$model"
     else
         # request cpa to get the first model available as the default model for orla AGENT mode
+        # cpa_get_model_list needs cpa to be running
+         if ! cpa_instance_reachable; then
+            echo "Error: CLIProxyAPI instance is not reachable. Please make sure CLIProxyAPI is running and properly configured."
+            return 1
+        fi
         default_model="$(cpa_get_model_list | head -n 1)"
     fi
 

@@ -274,7 +274,7 @@ yaml_set_key_into_file() {
     fi
     if [ ! -s "$target_file" ]; then
         mkdir -p "$(dirname "$target_file")"
-        echo "{}" > "$target_file"
+        echo "" > "$target_file"
     fi
 
 
@@ -345,7 +345,7 @@ yaml_del_key_from_file() {
     fi
     if [ ! -s "$target_file" ]; then
         echo "WARN : file not found $target_file"
-        return
+        return 0
     fi
 
     local yq_expr
@@ -385,7 +385,7 @@ merge_yaml_file() {
 
     if [ ! -s "$file_to_merge_into" ]; then
         mkdir -p "$(dirname "$file_to_merge_into")"
-        echo "{}" > "$file_to_merge_into"
+        echo "" > "$file_to_merge_into"
     fi
 
     local tmp_merge="$(mktemp)"

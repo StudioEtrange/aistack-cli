@@ -268,14 +268,21 @@ cpa_settings_api_key_reset() {
     cpa_remove_config ".api-keys"
 }
 
+# cpa must have been installed before
 cpa_settings_api_key_create() {
     local key="$($STELLA_API generate_password 48 "[:alnum:]")"
     cpa_settings_api_key_add "$key"
     echo "New API key created: $key"
 }
 
+# cpa must have been installed before, for the config file exists
 cpa_settings_api_key_add() {
     local key="$1"
+
+    if ! cpa_is_configured; then
+        echo "ERROR: file $AISTACK_CLIPROXYAPI_CONFIG_FILE not found"
+        return 1
+    fi
 
     local tmp_target_file="$(mktemp)"
     # NOTE : avoid using -i (and -P) to preserve file formatting like quote style for values
@@ -293,7 +300,13 @@ cpa_settings_api_key_add() {
 cpa_settings_api_key_del() {
     local key="$1"
 
-    [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ] || { echo "ERROR: file $AISTACK_CLIPROXYAPI_CONFIG_FILE not found" >&2; return 1; }
+    if [ -z "$key" ]; then
+        return 1
+    fi
+
+    if ! cpa_is_configured; then
+        return 1
+    fi
 
     local tmp_target_file="$(mktemp)"
     # NOTE : avoid using -i (and -P) to preserve file formatting like quote style for values
@@ -364,8 +377,49 @@ cpa_settings_configure_tls() {
 
 
 cpa_get_model_list() {
+    
+    if ! cpa_instance_reachable; then
+        return 1
+    fi
+
     curl -skL -X GET http://localhost:8317/v1/models \
         -H "Authorization: Bearer $(cpa_settings_api_key_get 0)" \
         -H "Content-Type: application/json" | jq -r '.data[]?.id // empty' | sort
 
+}
+
+cpa_is_configured() {
+    [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]
+}
+
+cpa_instance_reachable() {
+    local address
+    local http_code
+    local curl_rc
+
+    address="$(cpa_settings_get_address)"
+
+    http_code="$(
+        curl -skL \
+            -X GET "${address}" \
+            -H "Content-Type: application/json" \
+            -o /dev/null \
+            -w "%{http_code}" \
+            2>/dev/null
+    )"
+    curl_rc=$?
+
+    # curl execution error (DNS, timeout, connection refused, TLS failure, etc.)
+    if [ "$curl_rc" -ne 0 ]; then
+        echo "ERROR: unable to reach server: ${address}" >&2
+        return 1
+    fi
+
+    # HTTP response is not 200
+    if [ "$http_code" != "200" ]; then
+        echo "ERROR: server returned HTTP ${http_code} for ${address}" >&2
+        return 1
+    fi
+
+    return 0
 }

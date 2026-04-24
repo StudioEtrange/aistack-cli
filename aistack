@@ -41,7 +41,7 @@ Options:
     gc : gemini-cli - https://google-gemini.github.io/gemini-cli
     gc install [@version]           Install and configure Gemini CLI. (main versions are latest, nightly, preview) (when asked to relaunch gemini cli, use 'aistack gc launch' command)
     gc uninstall                    Uninstalling Gemini CLI and unregister Gemini CLI PATH. (keep all configuration unchanged, to remove configuration use 'aistack gc reset' command)
-    gc configure                    Configure Gemini CLI. ('aistack gc install' include configuration)
+    gc configure                    Configure Gemini CLI with some default values. But do not fully reset all other existing config values. ('aistack gc install' include configuration)
     gc show-config                  Show current Gemini CLI configuration.
     gc reset                        Reset all Gemini CLI configuration.
     gc register <shell>|vs          Register Gemini CLI PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
@@ -60,7 +60,7 @@ Options:
     oc : opencode - https://opencode.ai
     oc install                          Install and configure Opencode.
     oc uninstall                        Uninstall Opencode and unregister Opencode PATH (keep all configuration unchanged, to remove configuration use 'aistack oc reset' command)
-    oc configure                        Configure Opencode. ('aistack oc install' include configuration)
+    oc configure                        Configure Opencode with some default values. But do not fully reset all other existing config values. ('aistack oc install' include configuration)
     oc show-config                      Show current Opencode configuration.
     oc reset                            Reset all Opencode configuration.
     oc register <shell>|vs              Register Opencode PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
@@ -75,7 +75,7 @@ Options:
     kc : Kilo Code CLI and VS Code extension - https://kilo.ai/
     kc install [cli|extension]          Install and configure Kilo Code. By default, installs the CLI.
     kc uninstall [cli|extension]        Uninstall Kilo Code and unregister Kilo Code PATH. (keep all configuration unchanged, to remove configuration use 'aistack kc reset' command)
-    kc configure                        Configure Kilo Code. ('aistack kc install' include configuration)
+    kc configure                        Configure Kilo Code with some default values. But do not fully reset all other existing config values. ('aistack kc install' include configuration)
     kc info                             Print Kilo Code informations.
     kc show-config                      Show current Kilo Code configuration.
     kc reset                            Reset all Kilo Code configuration.
@@ -95,7 +95,7 @@ Options:
     orla : Orla - https://github.com/dorcha-inc/orla
     orla install                      Install and configure Orla.
     orla uninstall                    Uninstalling Orla and unregister Orla PATH. (keep all configuration unchanged, to remove configuration use 'aistack gc reset' command)
-    orla configure                    Configure Orla. ('aistack orla install' include configuration)
+    orla configure                    Configure Orla with some default values. But do not fully reset all other existing config values. ('aistack orla install' include configuration)
     orla info                         Print Orla informations.
     orla show-config                  Show current Orla configuration.
     orla reset                        Reset all Orla configuration.
@@ -113,7 +113,7 @@ Options:
     cpa : CLIProxyAPI - https://github.com/router-for-me/CLIProxyAPI
     cpa install                          Install and configure CLIProxyAPI.
     cpa uninstall                        Uninstall CLIProxyAPI. (keeping all configuration unchanged. to remove configuration use 'aistack cpa reset' command)
-    cpa configure                        Configure CLIProxyAPI. ('aistack cpa install' include configuration)
+    cpa configure                        Configure CLIProxyAPI with some default values. Erase all existing API keys but do not fully reset all other existing config values. ('aistack cpa install' include configuration)
     cpa info                             Print CLIProxyAPI informations.
     cpa show-config                      Show current CLIProxyAPI configuration.
     cpa reset                            Reset all CLIProxyAPI configuration.
@@ -121,19 +121,19 @@ Options:
     cpa login gemini-oauth [--project_id <your_project_id>]                     Login to Gemini OAuth.
     cpa login openai-oauth               Login to OpenAI OAuth.
     cpa login qwen-oauth                 Login to Qwen OAuth.
-    cpa set <key> <value> ["string"]     Set a CLIProxyAPI key in setting file. (i.e: cpa set port 8000) Use optional "string" if option value is a string.
-    cpa get <key>                        Get a CLIProxyAPI key from setting file. (i.e: cpa get api-key.0)
-    cpa key generate                     Generate a new API key for CLIProxyAPI and add it to the configuration.
+    cpa set <config key> <value> ["string"]     Set a CLIProxyAPI key in setting file. (i.e: cpa set port 8000) Use optional "string" if option value is a string.
+    cpa get <config key>                        Get a CLIProxyAPI key from setting file. (i.e: cpa get api-key.0)
+    cpa key generate                     Generate a new API key for CLIProxyAPI and add it to the configuration. (cpa must be installed before)
     cpa key list                         List all API keys from CLIProxyAPI configuration.
     cpa key get <N>                      Get API key N. (i.e: cpa key get 0)
     cpa key reset                        Remove all API keys from CLIProxyAPI configuration.
-    cpa key delete <key>                 Remove an API key from CLIProxyAPI configuration.
+    cpa key delete <key>                 Remove an API key from CLIProxyAPI configuration. (cpa must be installed before)
     cpa model list                       List all available LLM models from CLIProxyAPI endpoint.
     ----
     asm : Agent Skill Manager - https://github.com/luongnv89/asm
     asm install [@version]                Install and configure asm.
     asm uninstall                         Uninstall asm and unregister asm PATH.
-    asm configure                         Configure asm. ('aistack asm install' include configuration)
+    asm configure                         Configure asm with some default values. But do not fully reset all other existing config values. ('aistack asm install' include configuration)
     asm show-config                       Show current asm configuration.
     asm reset                             Reset asm configuration.
     asm register <shell>|vs               Register asm PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").

@@ -345,7 +345,7 @@ json_del_key_from_file() {
     fi
     if [ ! -s "$target_file" ]; then
         echo "WARN : file not found $target_file"
-        return
+        return 0
     fi
 
     test_and_fix_json_file "$target_file"

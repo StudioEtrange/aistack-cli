@@ -11,7 +11,7 @@ kilo_path() {
     # The Kilo CLI is a fork of OpenCode and supports the same configuration options
     export AISTACK_KILO_CONFIG_FILE="${AISTACK_KILO_CONFIG_HOME}/kilo.jsonc"
     
-    # cpa key for orla to connect to cpa backend
+    # cpa key for kilo to connect to cpa backend
     export AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE="${AISTACK_KILO_CONFIG_HOME}/cpa_key_for_kc"
     [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_KILO="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE")"
 
@@ -118,9 +118,7 @@ kilo_settings_configure() {
 
     echo "add some default settings :"
     merge_json_file "${AISTACK_POOL}/settings/kilo/kilo.jsonc" "$AISTACK_KILO_CONFIG_FILE"
-    
-    echo " - generate a CLIProxyAPI API key for Kilo Code to connect to CPA backend"
-    kilo_generate_cpa_key
+
 }
 
 kilo_settings_remove() {
@@ -132,9 +130,9 @@ kilo_settings_remove() {
 kilo_info() {
     echo "Configuration file : $AISTACK_KILO_CONFIG_FILE"
 
-    [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ] && echo "Connected to CLIProxyAPI using API key : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
+    [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)" || \
+        echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)"
 
-    # TODO
 }
 
 kilo_show_config() {
@@ -284,21 +282,43 @@ kilo_generate_cpa_key() {
     # Generating a CPA API key for kilo
     export AISTACK_CLIPROXYAPI_KEY_FOR_KILO="$($STELLA_API generate_password 48 "[:alnum:]")"
     cpa_settings_api_key_add "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
+    if [ $? -ne 0 ]; then
+        export AISTACK_CLIPROXYAPI_KEY_FOR_KILO=
+        echo "ERROR: Failed to generate and register CPA API key for Kilo Code."
+        return 1
+    fi
     echo "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" > "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE"
+
+    # each time an api key is generated we need to refrech the launcher to update env vars
+    kilo_launcher_manage "create"
 }
 
 kilo_unregister_cpa_key() {
-    if [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ]; then
-        # Remove existing CPA API key for kilo
-        cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
-    fi
+    # Remove existing CPA API key for kilo
+    cpa_settings_api_key_del "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
+    export AISTACK_CLIPROXYAPI_KEY_FOR_KILO=
+    rm -f "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE"
 }
 
+# needs cpa to be running if model is empty, to retrieve model list from CLIProxyAPI
 kilo_connect_cpa() {
     # empty means all available models
     local model="${1}"
+    local model_list
 
-    #kilo_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@ai-sdk/openai-compatible" "$(cpa_settings_get_api_endpoint)"  "AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
+    if ! cpa_is_configured; then
+        echo "ERROR: Failed to generate and register CLIProxyAPI API key for Kilo Code : CLIProxyAPI is not configured."
+        return 1
+    fi
+    
+    # needs cpa conf file exists
+    echo "generate a CLIProxyAPI API key for Kilo Code to connect to CPA backend"
+    kilo_generate_cpa_key
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to generate and register CLIProxyAPI API key for Kilo Code."
+        return 1
+    fi
+
     kilo_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@ai-sdk/openai-compatible" "$(cpa_settings_get_api_endpoint)" "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ""
 
     local default_model
@@ -306,7 +326,13 @@ kilo_connect_cpa() {
         kilo_register_model "aistack-cpa" "${model}" "${model}" "AIStack cpa-${mmodel}"
         default_model="${model}"
     else
-        for m in $(cpa_get_model_list); do
+        if ! cpa_instance_reachable; then
+            echo "ERROR: Failed to generate and register CPA API key for Kilo Code : CLIProxyAPI instance is not reachable. Please make sure CLIProxyAPI is running and properly configured."
+            return 1
+        fi
+        # cpa_get_model_list needs cpa to be running
+        model_list="$(cpa_get_model_list)"
+        for m in $model_list; do
             # the first model available will be the default model
             [ -z "${default_model}" ] && default_model="${m}"
             kilo_register_model "aistack-cpa" "${m}" "${m}" "AIStack cpa-${m}"

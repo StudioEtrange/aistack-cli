@@ -24,9 +24,28 @@ Kilo is the all-in-one agentic engineering platform.
   * Kilo Code is built upon Vercel AI SDK using its unified provider architecture 
     * https://github.com/vercel/ai
     * https://ai-sdk.dev/docs/foundations/providers-and-models
-  * with CPA
+
+## Kilo Code connected to CPA
+* how to commands :
     ```
     ./aistack kc connect cpa
     ./aistack kc launch -- run "hello"
     ./aistack kc launch -- run "hello" --model "aistack-cpa/gemini-2.5-flash-lite"
     ```
+
+* commands lifecycle :
+  * kilo install
+      kilo configure
+
+  * kilo connect [NEEDS CPA RUNNING to get available models]
+      generate api key
+        remove previously generated api key from cpa conf file
+        record api key in a kilo private file
+        add api key into cpa conf file (cpa_settings_api_key_add)
+      register all available model into kilo conf file (using cpa_get_model_list)
+        add api key into kilo conf file for those models
+
+  * cpa install
+    * fill cpa config with some default values
+    * delete all previously existing api keys
+    * create one api key and one management api key
