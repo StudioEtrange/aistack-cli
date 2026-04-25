@@ -11,9 +11,8 @@ case "$sub_command" in
 
         orla_launcher_manage
 
-        echo "You could now register it's path in shell OR vscode terminal"
-        echo "$0 orla register bash|zsh|fish"
-        echo "   OR"
+        echo "You should register it's path into a spacific supported shell OR vscode terminal"
+        echo "$0 orla register all|bash|zsh|fish"
         echo "$0 orla register vs"
         ;;
     uninstall)
@@ -41,7 +40,7 @@ case "$sub_command" in
         orla_launcher_manage
         ;;
     register)
-        echo "Registering Orla launcher in PATH for $1"
+        echo "Registering Orla launcher in PATH"
         case "$1" in
             "vs")
                 orla_path_register_for_vs_terminal
@@ -119,12 +118,17 @@ case "$sub_command" in
                         orla_connect_cpa "serve" "$3"
                         ;;
                     *)
-                        echo "Error: Unknown service $1 for Orla connect command"
+                        echo "ERROR: Unknown service $1 for Orla connect command"
                         usage
                         exit 1
                         ;;
                 esac
                 ;;
+			*)
+				echo "ERROR: Unknown target $2 for Orla connect command"
+				usage
+				exit 1
+				;;
         esac
         ;;
     agent|serve)

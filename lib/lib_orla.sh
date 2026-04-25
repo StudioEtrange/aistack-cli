@@ -66,7 +66,7 @@ orla_path_register_for_shell() {
     path_register_for_shell "orla" "$shell_name" "${AISTACK_ORLA_LAUNCHER_HOME}"
 }
 orla_path_unregister_for_shell() {
-    local shell_name="$1"
+    local shell_name="${1:-all}"
     path_unregister_for_shell "orla" "$shell_name"
 }
 orla_path_register_for_vs_terminal() {

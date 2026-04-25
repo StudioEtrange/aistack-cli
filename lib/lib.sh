@@ -291,19 +291,6 @@ aistack_init() {
 
 aistack_uninstall() {
     # TODO : check missing unregister functions in this list
-	
-	if check_requirements "nodejs"; then 
-		# need json nom package to manipulate vscode config
-		gemini_path_unregister_for_vs_terminal
-		opencode_path_unregister_for_vs_terminal
-		orla_path_unregister_for_vs_terminal
-		bmad_path_unregister_for_vs_terminal
-		adk_path_unregister_for_vs_terminal
-		asm_path_unregister_for_vs_terminal
-		kilo_path_unregister_for_vs_terminal
-	else
-		echo "INFO : registred PATHs from vscode will not be cleaned because of not available nodejs ecosystem"
-	fi
 
 	echo "INFO : clean various PATHs for shells"
 	gemini_path_unregister_for_shell "all"
@@ -314,6 +301,19 @@ aistack_uninstall() {
 	asm_path_unregister_for_shell "all"
 	kilo_path_unregister_for_shell "all"
     
+	if check_requirements "nodejs"; then 
+		# need json nom package to manipulate vscode config
+		gemini_path_unregister_for_vs_terminal
+		opencode_path_unregister_for_vs_terminal
+		orla_path_unregister_for_vs_terminal
+		bmad_path_unregister_for_vs_terminal
+		adk_path_unregister_for_vs_terminal
+		asm_path_unregister_for_vs_terminal
+		kilo_path_unregister_for_vs_terminal
+	else
+		echo "INFO : registred PATHs from vscode will not be cleaned because nodejs ecosystem is not available "
+	fi
+
 	echo "INFO : delete dependencies"
 
     aistack_remove_dependencies
@@ -498,11 +498,12 @@ github_get_latest_release() {
 
 
 
-# add a path at PATH env variable list when a shell launch
+# add a path at PATH env variable by configuring shell rc files
 path_register_for_shell() {
     local name="$1"
     local shell_name="$2"
     local path_to_add="$3"
+	# TODO set_path_now not implemented
     local set_path_now="${4:-false}"
 
     local rc_file
@@ -510,41 +511,47 @@ path_register_for_shell() {
     local BEGIN_MARK="# >>> aistack-${name}-path >>>"
     local END_MARK="# <<< aistack-${name}-path <<<"
 
-    [ "$shell_name" = "bash" ] && rc_file="$HOME/.bashrc"
-    [ "$shell_name" = "zsh" ] && rc_file="$HOME/.zshrc"
-    [ "$shell_name" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"
+	[ "$shell_name" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name"
 
-    case "$shell_name" in
-        "bash"|"zsh")
-            [ -f "$rc_file" ] && path_unregister_for_shell "$name" "$shell_name" || touch "$rc_file"
-            if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
-                {
-                    echo "$BEGIN_MARK"
-                    echo "export PATH=\"${path_to_add}:\$PATH\""
-                    echo "$END_MARK"
-                } >> "$rc_file"
-            fi
-            ;;
-        "fish")
-            mkdir -p "$(dirname "$rc_file")"
-            [ -f "$rc_file" ] && path_unregister_for_shell "$name" "$shell_name" || touch "$rc_file"
-            if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
-                {
-                    echo "$BEGIN_MARK"
-                    echo "set -gx PATH \"${path_to_add}\" \$PATH"
-                    echo "$END_MARK"
-                } >> "$rc_file"
-            fi
-            ;;
-         *) 
-            echo "ERROR : unsupported shell $shell_name"
-            ;;
-    esac
+	for s in $shell_list; do
+		[ "$s" = "bash" ] && rc_file="$HOME/.bashrc"
+		[ "$s" = "zsh" ] && rc_file="$HOME/.zshrc"
+		[ "$s" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"
+
+		case "$s" in
+			"bash"|"zsh")
+				[ -f "$rc_file" ] && path_unregister_for_shell "$name" "$s" 1>/dev/null 2>&1 || touch "$rc_file"
+				if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
+					{
+						echo "$BEGIN_MARK"
+						echo "export PATH=\"${path_to_add}:\$PATH\""
+						echo "$END_MARK"
+					} >> "$rc_file"
+				fi
+    			echo "- register $name PATH for shell $s"
+				;;
+			"fish")
+				mkdir -p "$(dirname "$rc_file")"
+				[ -f "$rc_file" ] && path_unregister_for_shell "$name" "$s" 1>/dev/null 2>&1 || touch "$rc_file"
+				if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
+					{
+						echo "$BEGIN_MARK"
+						echo "set -gx PATH \"${path_to_add}\" \$PATH"
+						echo "$END_MARK"
+					} >> "$rc_file"
+				fi
+    			echo "- register $name PATH for shell $s"
+				;;
+			*) 
+				echo "ERROR : unsupported shell $s"
+				;;
+		esac
+	done
 
 }
 
 # remove path
-# use 'all' shell_name to unregister to all known shell
+# use 'all' to unregister to all known shell
 path_unregister_for_shell() {
     local name="$1"
     local shell_name="$2"

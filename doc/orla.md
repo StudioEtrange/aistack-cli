@@ -28,7 +28,7 @@ info
   launch orla standalone agent
   ```
   # use a model of the default backend
-  ./aistack orla agent "tell me a short story in two sentences and 512 caracters max" -m "openai:gemini-2.5-flash"
+  ./aistack orla agent "tell me a short story in two sentences and 512 caracters max" -m "openai:gpt-5.2"
 
   # use the default model of the default backend
   ./aistack orla agent "tell me a short story in two sentences and 512 caracters max"
