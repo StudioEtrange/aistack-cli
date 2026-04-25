@@ -238,14 +238,19 @@ aistack_install_dependency() {
             else
                 echo "!! WARN : $dep is not a valid feature for stella framework"
             fi
-            # this notation do not stop case statement workflow and continue to next pattern by testing next pattern
-            ;;&
-        miniforge3)
-            # install pipx and uv after having installaing miniforge3 in previsous case match
-            echo "-- install python pipx and uv package/project manager"
-            # NOTE : Here $AISTACK_PYTHON_BIN_PATH is empty but $PATH contains mamba PATH, because it was installed just brefore
-            PATH="${AISTACK_PYTHON_BIN_PATH}:${PATH}" mamba install -y pipx uv
+
+            # intall post step
+            case $dep in
+                 miniforge3)
+                    # install pipx and uv after having installaing miniforge3 in previsous case match
+                    echo "-- install python pipx and uv package/project manager"
+                    # NOTE : Here $AISTACK_PYTHON_BIN_PATH is empty but $PATH contains mamba PATH, because it was installed just brefore
+                    PATH="${AISTACK_PYTHON_BIN_PATH}:${PATH}" mamba install -y pipx uv
+                    ;;
+            esac
+
             ;;
+       
     esac
 }
 
