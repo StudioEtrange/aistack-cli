@@ -20,3 +20,4 @@
 * superpowers
 * support bun configuration file and for bunx
 * cam
+* recreate launcher at each init

@@ -291,24 +291,35 @@ aistack_init() {
 
 aistack_uninstall() {
     # TODO : check missing unregister functions in this list
-    gemini_path_unregister_for_shell "all"
-    gemini_path_unregister_for_vs_terminal
-    opencode_path_unregister_for_shell "all"
-    opencode_path_unregister_for_vs_terminal
-    orla_path_unregister_for_shell "all"
-    orla_path_unregister_for_vs_terminal
-    bmad_path_unregister_for_shell "all"
-    bmad_path_unregister_for_vs_terminal
-    adk_path_unregister_for_shell "all"
-    adk_path_unregister_for_vs_terminal
-    asm_path_unregister_for_shell "all"
-    asm_path_unregister_for_vs_terminal
-    kilo_path_unregister_for_shell "all"
-    kilo_path_unregister_for_vs_terminal
+	
+	if check_requirements "nodejs"; then 
+		# need json nom package to manipulate vscode config
+		gemini_path_unregister_for_vs_terminal
+		opencode_path_unregister_for_vs_terminal
+		orla_path_unregister_for_vs_terminal
+		bmad_path_unregister_for_vs_terminal
+		adk_path_unregister_for_vs_terminal
+		asm_path_unregister_for_vs_terminal
+		kilo_path_unregister_for_vs_terminal
+	else
+		echo "INFO : registred PATHs from vscode will not be cleaned because of not available nodejs ecosystem"
+	fi
+
+	echo "INFO : clean various PATHs for shells"
+	gemini_path_unregister_for_shell "all"
+	opencode_path_unregister_for_shell "all"
+	orla_path_unregister_for_shell "all"
+	bmad_path_unregister_for_shell "all"
+	adk_path_unregister_for_shell "all"
+	asm_path_unregister_for_shell "all"
+	kilo_path_unregister_for_shell "all"
+    
+	echo "INFO : delete dependencies"
 
     aistack_remove_dependencies
     runtime_path_file_remove
 
+	echo "INFO : delete tools launcher"
     rm -Rf "${AISTACK_MCP_LAUNCHER_HOME}"
     rm -Rf "${AISTACK_LAUNCHER_HOME}"
 
