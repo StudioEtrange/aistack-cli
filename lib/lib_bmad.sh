@@ -25,7 +25,7 @@ bmad_path_register_for_shell() {
     path_register_for_shell "bmad" "$shell_name" "${AISTACK_BMAD_LAUNCHER_HOME}"
 }
 bmad_path_unregister_for_shell() {
-    local shell_name="$1"
+    local shell_name="${1:-all}"
     path_unregister_for_shell "bmad" "$shell_name"
 }
 bmad_path_register_for_vs_terminal() {
@@ -60,10 +60,12 @@ bmad_launcher_manage() {
     case $action in
 
         create)
+			# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+            # and executed by the default /bin/sh on the current system
             {
                 echo '#!/bin/sh'
                 for v in $bmad_launch_export_variables; do
-                    printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                    printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
                 done
 
                 declare -f bmad_launch

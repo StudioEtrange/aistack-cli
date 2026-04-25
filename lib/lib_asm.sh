@@ -14,7 +14,7 @@ asm_path_register_for_shell() {
 	path_register_for_shell "asm" "$shell_name" "${AISTACK_ASM_LAUNCHER_HOME}"
 }
 asm_path_unregister_for_shell() {
-	local shell_name="$1"
+    local shell_name="${1:-all}"
 	path_unregister_for_shell "asm" "$shell_name"
 }
 asm_path_register_for_vs_terminal() {
@@ -60,6 +60,8 @@ asm_launcher_manage() {
 
 	case $action in
 		create)
+			# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+            # and executed by the default /bin/sh on the current system
 			{
 				echo '#!/bin/sh'
 				for v in $asm_launch_export_variables; do

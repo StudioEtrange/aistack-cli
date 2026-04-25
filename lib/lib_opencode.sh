@@ -18,7 +18,7 @@ opencode_path_register_for_shell() {
     path_register_for_shell "opencode" "$shell_name" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
 }
 opencode_path_unregister_for_shell() {
-    local shell_name="$1"
+    local shell_name="${1:-all}"
     path_unregister_for_shell "opencode" "$shell_name"
 }
 opencode_path_register_for_vs_terminal() {
@@ -61,8 +61,6 @@ opencode_launcher_manage() {
 
     case $action in
         create)
-            # runtime_path_file_generate
-
             # echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
@@ -74,10 +72,12 @@ opencode_launcher_manage() {
             #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # fi
 
+			# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+            # and executed by the default /bin/sh on the current system
             {
                 echo '#!/bin/sh'
                 for v in $opencode_launch_variables; do
-                    printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+                    printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
                 done
 
                 declare -f opencode_launch
