@@ -15,7 +15,7 @@ opencode_path() {
 # add opencode launcher in path for shell
 opencode_path_register_for_shell() {
     local shell_name="$1"
-    path_register_for_shell "opencode" "$shell_name" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+    path_register_for_shell "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}" "$shell_name"
 }
 opencode_path_unregister_for_shell() {
     local shell_name="${1:-all}"

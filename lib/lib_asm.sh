@@ -11,7 +11,7 @@ asm_path() {
 # add asm launcher in path for shell
 asm_path_register_for_shell() {
 	local shell_name="$1"
-	path_register_for_shell "asm" "$shell_name" "${AISTACK_ASM_LAUNCHER_HOME}"
+	path_register_for_shell "asm" "${AISTACK_ASM_LAUNCHER_HOME}" "$shell_name"
 }
 asm_path_unregister_for_shell() {
     local shell_name="${1:-all}"

@@ -501,12 +501,23 @@ github_get_latest_release() {
 # add a path at PATH env variable by configuring shell rc files
 path_register_for_shell() {
     local name="$1"
-    local shell_name="$2"
-    local path_to_add="$3"
-	# TODO set_path_now not implemented
+	local path_to_add="$2"
+    local shell_name="$3"
+	# TODO set_path_now not implemented, should modify current PATH value now
     local set_path_now="${4:-false}"
 
     local rc_file
+	local err=0
+
+	if [ -z "$path_to_add" ]; then
+        echo "ERROR: No path to add parameter provided."
+        return 1
+    fi
+
+	if [ -z "$shell_name" ]; then
+        echo "ERROR: No shell name provided."
+        return 1
+    fi
 
     local BEGIN_MARK="# >>> aistack-${name}-path >>>"
     local END_MARK="# <<< aistack-${name}-path <<<"
@@ -544,10 +555,12 @@ path_register_for_shell() {
 				;;
 			*) 
 				echo "ERROR : unsupported shell $s"
+				err=1
 				;;
 		esac
 	done
 
+	return $err
 }
 
 # remove path

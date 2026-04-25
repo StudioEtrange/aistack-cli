@@ -56,7 +56,7 @@ kilo_uninstall() {
 # add gemini launcher in path for shell
 kilo_path_register_for_shell() {
     local shell_name="$1"
-    path_register_for_shell "kilo" "$shell_name" "${AISTACK_KILO_LAUNCHER_HOME}"
+    path_register_for_shell "kilo" "${AISTACK_KILO_LAUNCHER_HOME}" "$shell_name"
 }
 kilo_path_unregister_for_shell() {
     local shell_name="${1:-all}"

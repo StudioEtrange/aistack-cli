@@ -63,7 +63,7 @@ orla_uninstall() {
 # add gemini launcher in path for shell
 orla_path_register_for_shell() {
     local shell_name="$1"
-    path_register_for_shell "orla" "$shell_name" "${AISTACK_ORLA_LAUNCHER_HOME}"
+	path_register_for_shell "orla" "${AISTACK_ORLA_LAUNCHER_HOME}" "$shell_name"
 }
 orla_path_unregister_for_shell() {
     local shell_name="${1:-all}"

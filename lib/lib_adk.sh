@@ -19,7 +19,7 @@ adk_uninstall() {
 
 adk_path_register_for_shell() {
     local shell_name="$1"
-    path_register_for_shell "adk" "$shell_name" "${AISTACK_BMAD_LAUNCHER_HOME}"
+    path_register_for_shell "adk" "${AISTACK_BMAD_LAUNCHER_HOME}" "$shell_name"
 }
 adk_path_unregister_for_shell() {
     local shell_name="${1:-all}"

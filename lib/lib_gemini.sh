@@ -14,7 +14,7 @@ gemini_path() {
 # add gemini launcher in path for shell
 gemini_path_register_for_shell() {
     local shell_name="$1"
-    path_register_for_shell "gemini" "$shell_name" "${AISTACK_GEMINI_LAUNCHER_HOME}"
+    path_register_for_shell "gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}" "$shell_name"
 }
 gemini_path_unregister_for_shell() {
     local shell_name="${1:-all}"

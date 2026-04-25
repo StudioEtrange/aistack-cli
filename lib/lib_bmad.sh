@@ -22,7 +22,7 @@ bmad_uninstall() {
 
 bmad_path_register_for_shell() {
     local shell_name="$1"
-    path_register_for_shell "bmad" "$shell_name" "${AISTACK_BMAD_LAUNCHER_HOME}"
+    path_register_for_shell "bmad" "${AISTACK_BMAD_LAUNCHER_HOME}" "$shell_name"
 }
 bmad_path_unregister_for_shell() {
     local shell_name="${1:-all}"
