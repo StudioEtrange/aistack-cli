@@ -44,8 +44,8 @@ Options:
     gc configure                    Configure Gemini CLI with some default values. But do not fully reset all other existing config values. ('aistack gc install' include configuration)
     gc show-config                  Show current Gemini CLI configuration.
     gc reset                        Reset all Gemini CLI configuration.
-    gc register <shell>|vs          Register Gemini CLI PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
-    gc unregister <shell>|vs        Unregister Gemini CLI PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs").
+    gc register <all|shell|vs>      Register Gemini CLI PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    gc unregister [<all|shell|vs>]  Unregister Gemini CLI PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     gc launch [context folder] -- <gemini cli command>                  
                                     Launch Gemini CLI. Instead use 'gemini' command if ${AISTACK_GEMINI_LAUNCHER_HOME} is in your PATH.
                                     Use 'aistack gc register <shell>' to set it in your PATH.
@@ -63,8 +63,8 @@ Options:
     oc configure                        Configure Opencode with some default values. But do not fully reset all other existing config values. ('aistack oc install' include configuration)
     oc show-config                      Show current Opencode configuration.
     oc reset                            Reset all Opencode configuration.
-    oc register <shell>|vs              Register Opencode PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
-    oc unregister <shell>|vs            Unregister Opencode PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs")
+    oc register <all|shell|vs>          Register Opencode PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    oc unregister [<all|shell|vs>]      Unregister Opencode PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     oc launch [context folder] -- <opencode command>
                                         Launch Opencode. Instead use 'opencode' command if ${AISTACK_OPENCODE_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack oc register <shell>' to set it in your PATH.
@@ -79,8 +79,8 @@ Options:
     kc info                             Print Kilo Code informations.
     kc show-config                      Show current Kilo Code configuration.
     kc reset                            Reset all Kilo Code configuration.
-    kc register <shell>|vs              Register Kilo Code PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
-    kc unregister <shell>|vs            Unregister Kilo Code PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs").
+    kc register <all|shell|vs>          Register Kilo Code PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    kc unregister [<all|shell|vs>]      Unregister Kilo Code PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     kc launch [context folder] -- <other kilo code options>
                                         Launch Kilo Code. Instead use 'kilo' command if ${AISTACK_KILO_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack kc register <shell>' to set it in your PATH.
@@ -99,8 +99,8 @@ Options:
     orla info                         Print Orla informations.
     orla show-config                  Show current Orla configuration.
     orla reset                        Reset all Orla configuration.
-    orla register <all|specific shell|vs>        Register Orla PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
-    orla unregister [<all|specific shell|vs>]    Unregister Orla PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
+    orla register <all|shell|vs>.     Register Orla PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    orla unregister [<all|shell|vs>]  Unregister Orla PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     orla agent <other orla options>   Execute Orla agent command. (i.e: aistack orla agent "Hello world" -m "gemini-2.5-flash")
     orla serve <other orla options>   Execute Orla serve command - Launch Orla API service.
     orla launch [context folder] -- <Orla command>                  
@@ -122,7 +122,7 @@ Options:
     cpa login openai-oauth               Login to OpenAI OAuth.
     cpa login qwen-oauth                 Login to Qwen OAuth.
     cpa set <config key> <value> ["string"]     Set a CLIProxyAPI key in setting file. (i.e: cpa set port 8000) Use optional "string" if option value is a string.
-    cpa get <config key>                        Get a CLIProxyAPI key from setting file. (i.e: cpa get api-key.0)
+    cpa get <config key>                 Get a CLIProxyAPI key from setting file. (i.e: cpa get api-key.0)
     cpa key generate                     Generate a new API key for CLIProxyAPI and add it to the configuration. (cpa must be installed before)
     cpa key list                         List all API keys from CLIProxyAPI configuration.
     cpa key get <N>                      Get API key N. (i.e: cpa key get 0)
@@ -136,8 +136,8 @@ Options:
     asm configure                         Configure asm with some default values. But do not fully reset all other existing config values. ('aistack asm install' include configuration)
     asm show-config                       Show current asm configuration.
     asm reset                             Reset asm configuration.
-    asm register <shell>|vs               Register asm PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
-    asm unregister <shell>|vs             Unregister asm PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs").
+    asm register <all|shell|vs>           Register asm PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    asm unregister [<all|shell|vs>]       Unregister asm PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     asm launch [context folder] -- <asm command>
                                           Launch asm. Instead use 'asm' command if ${AISTACK_ASM_LAUNCHER_HOME} is in your PATH.
                                           Use 'aistack asm register <shell>' to set it in your PATH.
@@ -147,16 +147,16 @@ Options:
     app killport <port>                  Kill process running on a specific port.
     ----
     bmad <install|uninstall>            Install/Uninstall bmad cli.
-    bmad register <shell>|vs            Register bmad cli PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
-    bmad unregister <shell>|vs          Unregister bmad cli PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs").
+    bmad register <all|shell|vs>.       Register bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    bmad unregister [<all|shell|vs>]    Unregister bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     bmad launch -- <bmad command>       Launch bmad cli. (i.e: aistack bmad launch -- --help)
                                         Instead use 'bmad' or 'bmad-method' command if ${AISTACK_BMAD_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack bmad register <shell>' to set it in your PATH.
     ----
     Agent Development Kit (ADK) - (https://adk.dev/)
     adk <install|uninstall>             Install/Uninstall the adk for python.
-    adk register <shell>|vs             Register adk PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
-    adk unregister <shell>|vs           Unregister adk PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs").
+    adk register <all|shell|vs>         Register adk PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    adk unregister [<all|shell|vs>]     Unregister adk PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     adk launch -- <adk command>         Launch adk. (i.e: aistack adk launch -- --help)
                                         Instead use 'adk' command if ${AISTACK_ADK_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack adk register <shell>' to set it in your PATH.

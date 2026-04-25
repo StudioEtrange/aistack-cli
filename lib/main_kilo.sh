@@ -13,9 +13,8 @@ case "$sub_command" in
         
         kilo_launcher_manage
 
-        echo "You could now register it's path in shell OR vscode terminal"
-        echo "$0 kc register bash|zsh|fish"
-        echo "   OR"
+        echo "You should register it's path into a spacific supported shell OR vscode terminal"
+        echo "$0 kc register all|bash|zsh|fish"
         echo "$0 kc register vs"
         ;;
     uninstall)
