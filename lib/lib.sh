@@ -121,7 +121,7 @@ aistack_info() {
     fi
     echo "AISTACK_INTERNAL_MAMBA_AVAILABLE : $AISTACK_INTERNAL_MAMBA_AVAILABLE"
     echo
-    echo "--dependencies--"
+    echo "--declared need dependencies--"
     for f in $STELLA_APP_FEATURE_LIST; do
         echo "  - $f"
     done
@@ -234,7 +234,8 @@ aistack_install_dependency() {
             if [ ! "$_feature" = "" ]; then
                 echo "-- install $_feature"
                 mkdir -p "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/${_feature_name}"
-                $STELLA_API feature_install "$dep" "EXPORT ${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/${_feature_name}"
+				# will not update current PATH nor PATH at future aistack launch for theses dependencies
+                $STELLA_API feature_install "$dep" "NO_PATH_UPDATE EXPORT ${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/${_feature_name}"
             else
                 echo "!! WARN : $dep is not a valid feature for stella framework"
             fi
@@ -244,8 +245,10 @@ aistack_install_dependency() {
                  miniforge3)
                     # install pipx and uv after having installaing miniforge3 in previsous case match
                     echo "-- install python pipx and uv package/project manager"
-                    # NOTE : Here $AISTACK_PYTHON_BIN_PATH is empty but $PATH contains mamba PATH, because it was installed just brefore
-                    PATH="${AISTACK_PYTHON_BIN_PATH}:${PATH}" mamba install -y pipx uv
+                    # NOTE : Here $AISTACK_PYTHON_BIN_PATH is empty because runtime_path was executed before
+					# rereun runtume_path to set runtime path because we need to use mamba right now (without restarting aistack-cli)
+					runtime_path
+                    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y pipx uv
                     ;;
             esac
 
@@ -287,7 +290,7 @@ aistack_init() {
 }
 
 aistack_uninstall() {
-    # TODO : check missing unregister functions in this list of call
+    # TODO : check missing unregister functions in this list
     gemini_path_unregister_for_shell "all"
     gemini_path_unregister_for_vs_terminal
     opencode_path_unregister_for_shell "all"
@@ -523,7 +526,7 @@ path_register_for_shell() {
             fi
             ;;
          *) 
-            echo "error : unsupported shell $shell_name"
+            echo "ERROR : unsupported shell $shell_name"
             ;;
     esac
 
@@ -556,10 +559,11 @@ path_unregister_for_shell() {
                         $0 == end { skip=0; next } !skip 
                     ' "$rc_file" > "$tmp_file" && mv "$tmp_file" "$rc_file"
                     rm -f "$tmp_file"
+    				echo "- unregister $name PATH for shell $s"
                 fi
                 ;;
             *) 
-                echo "error : unsupported shell : $s"
+                echo "ERROR : unsupported shell : $s"
                 ;;
         esac
     done
