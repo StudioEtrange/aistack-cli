@@ -99,7 +99,7 @@ Options:
     orla info                         Print Orla informations.
     orla show-config                  Show current Orla configuration.
     orla reset                        Reset all Orla configuration.
-    orla register <all|shell|vs>.     Register Orla PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    orla register <all|shell|vs>      Register Orla PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
     orla unregister [<all|shell|vs>]  Unregister Orla PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     orla agent <other orla options>   Execute Orla agent command. (i.e: aistack orla agent "Hello world" -m "gemini-2.5-flash")
     orla serve <other orla options>   Execute Orla serve command - Launch Orla API service.
@@ -147,7 +147,7 @@ Options:
     app killport <port>                  Kill process running on a specific port.
     ----
     bmad <install|uninstall>            Install/Uninstall bmad cli.
-    bmad register <all|shell|vs>.       Register bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    bmad register <all|shell|vs>        Register bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
     bmad unregister [<all|shell|vs>]    Unregister bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     bmad launch -- <bmad command>       Launch bmad cli. (i.e: aistack bmad launch -- --help)
                                         Instead use 'bmad' or 'bmad-method' command if ${AISTACK_BMAD_LAUNCHER_HOME} is in your PATH.
