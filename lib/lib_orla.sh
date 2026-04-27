@@ -20,6 +20,23 @@ orla_path() {
 }
 
 
+# add gemini launcher in path for shell
+orla_path_register_for_shell() {
+    local shell_name="$1"
+	path_register_for_shell "orla" "${AISTACK_ORLA_LAUNCHER_HOME}" "$shell_name"
+}
+orla_path_unregister_for_shell() {
+    local shell_name="${1:-all}"
+    path_unregister_for_shell "orla" "$shell_name"
+}
+orla_path_register_for_vs_terminal() {
+    vscode_path_register_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
+}
+orla_path_unregister_for_vs_terminal() {
+    vscode_path_unregister_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
+}
+
+
 # Download and install cliproxyapi from GitHub releases.
 # @param {string} $1 - Optional version to install (e.g., "v0.1.0").
 #                      If not provided, the latest version will be fetched.
@@ -60,21 +77,6 @@ orla_uninstall() {
 }
 
 
-# add gemini launcher in path for shell
-orla_path_register_for_shell() {
-    local shell_name="$1"
-	path_register_for_shell "orla" "${AISTACK_ORLA_LAUNCHER_HOME}" "$shell_name"
-}
-orla_path_unregister_for_shell() {
-    local shell_name="${1:-all}"
-    path_unregister_for_shell "orla" "$shell_name"
-}
-orla_path_register_for_vs_terminal() {
-    vscode_path_register_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
-}
-orla_path_unregister_for_vs_terminal() {
-    vscode_path_unregister_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
-}
 
 
 

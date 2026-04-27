@@ -43,7 +43,6 @@ gemini_uninstall() {
 
 gemini_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
 gemini_launch() {
-    set -- "$@"
 
     (
         . "${AISTACK_RUNTIME_PATH_FILE}"

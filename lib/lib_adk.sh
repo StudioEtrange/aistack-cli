@@ -5,18 +5,6 @@ adk_path() {
     
 }
 
-
-adk_install() {
-
-    echo "Installing adk for python"
-    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --verbose google-adk
-}
-
-adk_uninstall() {
-    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose google-adk
-}
- 
-
 adk_path_register_for_shell() {
     local shell_name="$1"
     path_register_for_shell "adk" "${AISTACK_BMAD_LAUNCHER_HOME}" "$shell_name"
@@ -31,6 +19,19 @@ adk_path_register_for_vs_terminal() {
 adk_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "adk" "${AISTACK_BMAD_LAUNCHER_HOME}"
 }
+
+adk_install() {
+
+    echo "Installing adk for python"
+    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --verbose google-adk
+}
+
+adk_uninstall() {
+    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose google-adk
+}
+ 
+
+
 
 
 

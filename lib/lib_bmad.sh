@@ -5,21 +5,6 @@ bmad_path() {
     
 }
 
-
-bmad_install() {
-    local version="$1"
-    [ -z "${version}" ] && version="@latest"
-
-    echo "Installing bmad-method ${version}"
-    # available versions : https://www.npmjs.com/package/bmad-method
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g bmad-method${version}
-}
-
-bmad_uninstall() {
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g bmad-method
-}
- 
-
 bmad_path_register_for_shell() {
     local shell_name="$1"
     path_register_for_shell "bmad" "${AISTACK_BMAD_LAUNCHER_HOME}" "$shell_name"
@@ -36,6 +21,20 @@ bmad_path_unregister_for_vs_terminal() {
 }
 
 
+bmad_install() {
+    local version="$1"
+    [ -z "${version}" ] && version="@latest"
+
+    echo "Installing bmad-method ${version}"
+    # available versions : https://www.npmjs.com/package/bmad-method
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g bmad-method${version}
+}
+
+bmad_uninstall() {
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g bmad-method
+}
+ 
+
 
 bmad_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
 bmad_launch() {
@@ -51,7 +50,6 @@ bmad_launch() {
         fi
     )
 }
-
 
 
 bmad_launcher_manage() {

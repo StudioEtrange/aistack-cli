@@ -3,21 +3,6 @@ gsd_path() {
     mkdir -p "${AISTACK_GSD_LAUNCHER_HOME}"
 }
 
-
-gsd_install() {
-    local version="$1"
-    [ -z "${version}" ] && version="@latest"
-
-    echo "Installing gsd ${version}"
-    # available versions : https://www.npmjs.com/package/get-shit-done-cc
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g get-shit-done-cc${version}
-}
-
-gsd_uninstall() {
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g get-shit-done-cc
-}
- 
-
 gsd_path_register_for_shell() {
     local shell_name="$1"
     path_register_for_shell "gsd" "${AISTACK_GSD_LAUNCHER_HOME}" "$shell_name"
@@ -33,11 +18,24 @@ gsd_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
 }
 
+gsd_install() {
+    local version="$1"
+    [ -z "${version}" ] && version="@latest"
+
+    echo "Installing gsd ${version}"
+    # available versions : https://www.npmjs.com/package/get-shit-done-cc
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g get-shit-done-cc${version}
+}
+
+gsd_uninstall() {
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g get-shit-done-cc
+}
+ 
+
 
 
 gsd_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
 gsd_launch() {
-	set -- "$@"
     (
         . "${AISTACK_RUNTIME_PATH_FILE}"
 

@@ -12,25 +12,8 @@ opencode_path() {
     # aistack path for oc
     export AISTACK_OPENCODE_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/opencode"
     mkdir -p "${AISTACK_OPENCODE_LAUNCHER_HOME}"
-
-
 }
 
-
-opencode_install() {
-    local version="$1"
-    [ -z "${version}" ] && version="@latest"
-
-    echo "Installing Opencode CLI"
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
-
-}
-
-opencode_uninstall() {
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
-    opencode_path_unregister_for_shell "all"
-    opencode_path_unregister_for_vs_terminal
-}
 
 # add opencode launcher in path for shell
 opencode_path_register_for_shell() {
@@ -48,11 +31,25 @@ opencode_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
 }
 
+opencode_install() {
+    local version="$1"
+    [ -z "${version}" ] && version="@latest"
+
+    echo "Installing Opencode CLI"
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
+
+}
+
+opencode_uninstall() {
+    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
+    opencode_path_unregister_for_shell "all"
+    opencode_path_unregister_for_vs_terminal
+}
+
+
 
 opencode_launch_variables="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
 opencode_launch() {
-    set -- "$@"
-
     (
         . "${AISTACK_RUNTIME_PATH_FILE}"
 
