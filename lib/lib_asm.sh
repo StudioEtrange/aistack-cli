@@ -65,7 +65,7 @@ asm_launcher_manage() {
 			{
 				echo '#!/bin/sh'
 				for v in $asm_launch_export_variables; do
-					printf '%s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+					printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
 				done
 
 				declare -f asm_launch
