@@ -242,10 +242,9 @@ kilo_register_model() {
     
     local reasoning="$5" # true | false
     local tool_call="$6" # true | false
-    local reasoning="$7" # true | false
 
-    local limit_context="$8"
-    local limit_output="$9"
+    local limit_context="$7"
+    local limit_output="$8"
 
 
     original_provider_id="$provider_id"
@@ -312,7 +311,7 @@ kilo_connect_cpa() {
         echo "ERROR: Failed to generate and register CLIProxyAPI API key for Kilo Code : CLIProxyAPI is not configured."
         return 1
     fi
-    
+
     # needs cpa conf file exists
     echo "generate a CLIProxyAPI API key for Kilo Code to connect to CPA backend"
     kilo_generate_cpa_key
@@ -344,5 +343,3 @@ kilo_connect_cpa() {
     [ -n "$default_model" ] && kilo_register_default_model "aistack-cpa" "$default_model"
 
 }
-
-

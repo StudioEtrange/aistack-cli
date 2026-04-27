@@ -67,6 +67,18 @@ case "$sub_command" in
     show-config)
         opencode_show_config
         ;;
+    info)
+        opencode_info
+        ;;
+
+    connect)
+        case "$1" in
+            cpa)
+                echo "Connecting Opencode to CLIProxyAPI"
+                opencode_connect_cpa "$2"
+                ;;
+        esac
+        ;;
 
     launch)
         opencode_launcher_manage

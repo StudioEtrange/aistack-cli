@@ -96,7 +96,7 @@ case "$sub_command" in
         case "$1" in
             cpa)
                 echo "Connecting Kilo Code to CLIProxyAPI - For VS Code extension, restart VS Code or disable/reload extension"
-                kilo_connect_cpa
+                kilo_connect_cpa "$2"
                 ;;      
         esac
         ;;
