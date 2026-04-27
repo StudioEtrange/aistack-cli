@@ -1,7 +1,7 @@
 adk_path() {
 
-    export AISTACK_BMAD_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/adk"
-    mkdir -p "${AISTACK_BMAD_LAUNCHER_HOME}"
+    export AISTACK_ADK_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/adk"
+    mkdir -p "${AISTACK_ADK_LAUNCHER_HOME}"
     
 }
 
@@ -67,15 +67,12 @@ adk_launcher_manage() {
                 declare -f adk_launch
 
                 echo adk_launch \"\$@\"
-            } | tee "${AISTACK_BMAD_LAUNCHER_HOME}/adk" "${AISTACK_BMAD_LAUNCHER_HOME}/adk-method" > /dev/null
-
-            chmod +x "${AISTACK_BMAD_LAUNCHER_HOME}/adk"
-            chmod +x "${AISTACK_BMAD_LAUNCHER_HOME}/adk-method"
+            } > "${AISTACK_ADK_LAUNCHER_HOME}/adk"
+            chmod +x "${AISTACK_ADK_LAUNCHER_HOME}/adk"
             ;;
 
         delete)
-            rm -f "${AISTACK_BMAD_LAUNCHER_HOME}/adk"
-            rm -f "${AISTACK_BMAD_LAUNCHER_HOME}/adk-method"
+            rm -f "${AISTACK_ADK_LAUNCHER_HOME}/adk"
             ;;
     esac
     
