@@ -26,6 +26,7 @@ aistack_path() {
     orla_path
     kilo_path
     bmad_path
+	gsd_path
     adk_path
     asm_path
 }
@@ -297,6 +298,7 @@ aistack_uninstall() {
 	opencode_path_unregister_for_shell "all"
 	orla_path_unregister_for_shell "all"
 	bmad_path_unregister_for_shell "all"
+	gsd_path_unregister_for_shell "all"
 	adk_path_unregister_for_shell "all"
 	asm_path_unregister_for_shell "all"
 	kilo_path_unregister_for_shell "all"
@@ -307,6 +309,7 @@ aistack_uninstall() {
 		opencode_path_unregister_for_vs_terminal
 		orla_path_unregister_for_vs_terminal
 		bmad_path_unregister_for_vs_terminal
+		gsd_path_unregister_for_vs_terminal
 		adk_path_unregister_for_vs_terminal
 		asm_path_unregister_for_vs_terminal
 		kilo_path_unregister_for_vs_terminal

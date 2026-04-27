@@ -20,6 +20,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_orla.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_gsd.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_adk.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_asm.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
@@ -148,12 +149,21 @@ Options:
     ----
     app killport <port>                  Kill process running on a specific port.
     ----
+	BMAD-Method - https://docs.bmad-method.org/
     bmad <install|uninstall>            Install/Uninstall bmad cli.
     bmad register <all|shell|vs>        Register bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
     bmad unregister [<all|shell|vs>]    Unregister bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
     bmad launch -- <bmad command>       Launch bmad cli. (i.e: aistack bmad launch -- --help)
                                         Instead use 'bmad' or 'bmad-method' command if ${AISTACK_BMAD_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack bmad register <shell>' to set it in your PATH.
+    ----
+	gsd - get-shit-done - https://github.com/gsd-build/get-shit-done
+	gsd <install|uninstall>            Install/Uninstall get-shit-done-cc cli.
+    gsd register <all|shell|vs>        Register get-shit-done-cc cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    gsd unregister [<all|shell|vs>]    Unregister get-shit-done-cc cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
+    gsd launch -- <gsd command>        Launch get-shit-done-cc cli. (i.e: aistack gsd launch -- --help)
+									   Instead use 'get-shit-done-cc' command if ${AISTACK_GSD_LAUNCHER_HOME} is in your PATH.
+                                       Use 'aistack gsd register <shell>' to set it in your PATH.
     ----
     Agent Development Kit (ADK) - (https://adk.dev/)
     adk <install|uninstall>             Install/Uninstall the adk for python.
@@ -294,6 +304,9 @@ main() {
             ;;
         bmad)
             . "${_CURRENT_FILE_DIR}/lib/main_bmad.sh"
+            ;;
+		gsd)
+            . "${_CURRENT_FILE_DIR}/lib/main_gsd.sh"
             ;;
         adk)
             . "${_CURRENT_FILE_DIR}/lib/main_adk.sh"

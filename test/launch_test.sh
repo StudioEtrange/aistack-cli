@@ -25,6 +25,7 @@ function init_aistack_test_env() {
 	. "$STELLA_APP_ROOT/../lib/lib_kilo.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_orla.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_bmad.sh"
+	. "$STELLA_APP_ROOT/../lib/lib_gsd.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_adk.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_asm.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_mcp.sh"
