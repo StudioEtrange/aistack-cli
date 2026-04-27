@@ -18,6 +18,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_opencode.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_codex.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_orla.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_gsd.sh"
@@ -74,6 +75,18 @@ Options:
     oc mcp calculator install|uninstall         Add mcp-calculator local server configuration.
     oc mcp github install|uninstall             Add mcp-github remote server configuration.
     oc mcp context7 install|uninstall           Add mcp-context7 local server configuration.
+    ----
+    cx : codex - https://github.com/openai/codex
+    cx install [@version]           Install and configure Codex CLI.
+    cx uninstall                    Uninstalling Codex CLI and unregister Codex CLI PATH (keep all configuration unchanged, to remove configuration use 'aistack cx reset' command)
+    cx configure                    Configure Codex CLI. ('aistack cx install' include configuration)
+    cx show-config                  Show current Codex CLI configuration.
+    cx reset                        Reset all Codex CLI configuration.
+    cx register <shell>|vs          Register Codex CLI PATH into shell env PATH ("bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs")
+    cx unregister <shell>|vs        Unregister Codex CLI PATH into shell env PATH ("bash", "zsh", "fish" or "all") or into VS Code integrated terminal env PATH ("vs")
+    cx launch [context folder] -- <other codex options>
+                                    Launch Codex CLI. Instead use 'codex' command if ${AISTACK_CODEX_LAUNCHER_HOME} is in your PATH,
+                                    you could use 'aistack cx register <shell>'
     ----
     kc : Kilo Code CLI and VS Code extension - https://kilo.ai/
     kc install [cli|extension]          Install and configure Kilo Code. By default, installs the CLI.
@@ -295,6 +308,9 @@ main() {
             ;;
         cpa)
             . "${_CURRENT_FILE_DIR}/lib/main_cpa.sh"
+            ;;
+        cx)
+            . "${_CURRENT_FILE_DIR}/lib/main_cx.sh"
             ;;
         vs)
             . "${_CURRENT_FILE_DIR}/lib/main_vs.sh"

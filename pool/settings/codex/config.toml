@@ -1,0 +1,5 @@
+# Default settings managed by aistack.
+# https://github.com/openai/codex
+model = "gpt-5-codex"
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"

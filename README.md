@@ -3,7 +3,7 @@
 
 # AIStack CLI
 
-AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode`, `asm`, `kilo code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `bmad-method` cli, `get-shit-done-cc` cli or `ADK`, and so on. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `opencode`, `codex`, `asm`, `kilo code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `bmad-method` cli, `get-shit-done-cc` cli or `ADK`, and so on. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
 
 ## Key Features of AIStack
 
@@ -79,6 +79,14 @@ See [Gemini CLI](doc/geminicli.md)
 ### Opencode
 
 See [Opencode](doc/opencode.md) 
+
+### Codex
+
+See [Codex](doc/codex.md) 
+
+### VS Code
+
+See [VS Code](doc/vscode.md) 
 
 ### CLIProxyAPI
 
