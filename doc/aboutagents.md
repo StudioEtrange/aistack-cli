@@ -15,6 +15,8 @@
     * https://github.com/obra/superpowers/tree/main
   * BMAD
     * https://github.com/bmad-code-org/BMAD-METHOD
+  * GSD - get-shit-done
+    * https://github.com/gsd-build/get-shit-done
 
 * voltagent
   * platform multi-agent systems — development, observability, and deployment
@@ -47,6 +49,7 @@
   * Will McGinnis's python development
     * https://github.com/wdm0006/python-skills
     * https://mcginniscommawill.com/guides/python-library-development/
+  * https://github.com/mattpocock/skills
 
 * skills registry hostable :
   * skillhub

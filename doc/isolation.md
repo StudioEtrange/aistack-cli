@@ -13,7 +13,11 @@
   * Kata Containers : microvm + container engine : https://katacontainers.io/
   * https://github.com/trycua/cua
     * Open-source infrastructure for Computer-Use Agents. Sandboxes, SDKs, and benchmarks to train and evaluate AI agents that can control full desktops (macOS, Linux, Windows).
-  
+  * smol machines
+    * https://smolmachines.com/
+    * https://github.com/smol-machines/smolvm
+    * based on linux KVM, macos Hypervisor.framework
+
 * os based
   * firejail - https://github.com/netblue30/firejail  https://firejail.wordpress.com/ - use linux kernel functionality
   * bubblewrap - https://github.com/containers/bubblewrap - attempts to allow unprivileged users to use container features - Low-level unprivileged sandboxing tool
@@ -21,4 +25,20 @@
     * https://github.com/Use-Tusk/fence/blob/main/docs/agents.md
   * srt - Anthropic Sandbox Runtime - BETA - 3,5k stars - nodejs -  https://github.com/anthropic-experimental/sandbox-runtime A lightweight sandboxing tool for enforcing filesystem and network restrictions on arbitrary processes at the OS level without container - macos (use sandbox-exec) / linux (use bubblewrap)
   
+
+---
+
+* linux kvm setup
+  * To enable KVM:
+    * 1. Ensure virtualization is enabled in your BIOS/UEFI
+    * 2. Load the KVM kernel module:
+    *    sudo modprobe kvm
+    *    sudo modprobe kvm_intel  # For Intel CPUs
+    *    sudo modprobe kvm_amd    # For AMD CPUs
+  * For persistent loading, add to /etc/modules-load.d/kvm.conf:
+    *    kvm
+    *    kvm_intel  # or kvm_amd
+  * Add your user to the 'kvm' group:
+    * sudo usermod -aG kvm $USER"
+
   
