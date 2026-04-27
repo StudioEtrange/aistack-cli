@@ -21,3 +21,20 @@
 * support bun configuration file and for bunx
 * cam
 * recreate launcher at each init
+* local doc querying through a mcp server : 
+  * https://github.com/neuledge/context
+  * npm package @neuledge/context
+  * The search is currently keyword-based (FTS5 + BM25). It works well for direct queries like “middleware authentication” 
+  * no semantic search
+  * https://medium.com/@moshesimantov/i-built-a-context7-local-first-alternative-with-claude-code-eb14c9fd654f
+  ```
+  # Install
+  npm install -g @neuledge/context
+
+  # Add some docs
+  context add https://github.com/vercel/next.js
+  context add https://github.com/vercel/ai
+
+  # Connect to your AI agent (Claude Code example)
+  claude mcp add context -- context serve
+  ```

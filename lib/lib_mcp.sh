@@ -81,7 +81,6 @@ mcp_server_manage() {
                     echo "    Installing"
                     PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx -y @wonderwhy-er/desktop-commander@latest setup
                     echo "    Configuring"
-                    export STELLA_ORIGINAL_SYSTEM_PATH
                     case "$agent_name" in
                         "gc")gemini_merge_config "${AISTACK_POOL}/mcp-servers/desktop-commander/gemini-cli/settings.json";;
                         "oc")echo " -- ERROR : not supported";exit 1;;
@@ -107,9 +106,7 @@ mcp_server_manage() {
             case "$action" in
                 "install")
                     echo "    Installing"
-                    #${AISTACK_PYTHON_BIN_PATH}pip install -v mcp-server-calculator
-                    PATH="${AISTACK_PYTHON_BIN_PATH}:${PATH}" uv pip install mcp-server-calculator --system
-                    #${AISTACK_PYTHON_BIN_PATH}python -m uv pip install -v mcp-server-calculator
+                    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install mcp-server-calculator --system
                     echo "    Configuring"
                     case "$agent_name" in
                         "gc")gemini_merge_config "${AISTACK_POOL}/mcp-servers/calculator/gemini-cli/settings.json";;
@@ -126,7 +123,7 @@ mcp_server_manage() {
                         *)echo " -- ERROR : missing or unknown target $agent_name";exit 1;;
                     esac
                     echo "    Uninstalling"
-                    ${AISTACK_PYTHON_BIN_PATH}pip uninstall -y mcp-server-calculator
+                    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip uninstall -y mcp-server-calculator
                     ;;
             esac
             ;;
@@ -142,7 +139,7 @@ mcp_server_manage() {
                     #echo "exec \"npx\" -y @upstash/context7-mcp --api-key \"\${CONTEXT7_API_KEY}\"" >> "${AISTACK_MCP_LAUNCHER_HOME}/context7"
                     #chmod +x "${AISTACK_MCP_LAUNCHER_HOME}/context7"
 
-                    [ ! -z "$other_arg" ] && export CONTEXT7_API_KEY="$other_arg"                        
+                    [ ! -z "$other_arg" ] && export CONTEXT7_API_KEY="$other_arg" || export CONTEXT7_API_KEY=""
                     echo "    Provided optional CONTEXT7_API_KEY : $CONTEXT7_API_KEY"
                     case "$agent_name" in
                         "gc")gemini_merge_config "${AISTACK_POOL}/mcp-servers/context7/gemini-cli/settings.json";;

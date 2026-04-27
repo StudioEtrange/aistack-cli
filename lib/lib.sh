@@ -6,7 +6,7 @@ aistack_path() {
     export AISTACK_LAUNCHER_HOME="${STELLA_APP_WORK_ROOT}/launcher"
     mkdir -p "${AISTACK_LAUNCHER_HOME}"
 
-    export AISTACK_MCP_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/mcp"
+    export AISTACK_MCP_LAUNCHER_HOME="${STELLA_APP_WORK_ROOT}/launcher-mcp"
     mkdir -p "${AISTACK_MCP_LAUNCHER_HOME}"
 
     export AISTACK_ISOLATED_DEPENDENCIES_ROOT="${STELLA_APP_WORK_ROOT}/isolated_dependencies"
