@@ -34,7 +34,7 @@ case "$sub_command" in
         esac
         ;;
     unregister)
-        echo "Unegistering adk launcher PATH from $1"
+        echo "Unregistering adk launcher PATH from $1"
         case "$1" in
             "vs")
                 adk_path_unregister_for_vs_terminal
@@ -45,14 +45,18 @@ case "$sub_command" in
         esac
         ;;
     launch)
-        adk_launcher_manage
+        #adk_launcher_manage
+		if adk_is_installed; then
+			[ "$1" = "--" ] && shift
 
-        [ "$1" = "--" ] && shift
-
-        adk_launch "$@"
+			adk_launch "$@"
+		else
+			echo "ERROR: adk is not installed"
+			exit 1
+		fi
         ;;
     *)
-        echo "Error: Unknown command $sub_command for adk"
+        echo "ERROR: Unknown command $sub_command for adk"
         usage
         exit 1
         ;;

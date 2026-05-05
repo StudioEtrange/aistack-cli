@@ -1,6 +1,6 @@
 
 
-vscode_path() {
+vscode_init() {
     local target="${1:-guess}"
 
    

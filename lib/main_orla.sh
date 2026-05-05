@@ -30,14 +30,10 @@ case "$sub_command" in
     configure)
         echo "Configuring Orla"
         orla_settings_configure
-
-        orla_launcher_manage
         ;;
     reset)
         echo "Resetting Orla configuration"
         orla_settings_remove
-
-        orla_launcher_manage
         ;;
     register)
         echo "Registering Orla launcher in PATH"
@@ -51,7 +47,7 @@ case "$sub_command" in
         esac
         ;;
     unregister)
-        echo "Unegistering Orla launcher PATH from $1"
+        echo "Unregistering Orla launcher PATH from $1"
         case "$1" in
             "vs")
                 orla_path_unregister_for_vs_terminal
@@ -65,32 +61,31 @@ case "$sub_command" in
         orla_info
         ;;
     show-config)
-        if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
-            echo "Current Orla configuration file : $AISTACK_ORLA_CONFIG_FILE"
-            cat "$AISTACK_ORLA_CONFIG_FILE"
-        else
-            echo "No Orla configuration file found."
-        fi
+		orla_show_config
         ;;
 
     launch)
-        orla_launcher_manage
+        #orla_launcher_manage
+		if orla_is_installed; then
+			local folder=
+			if [ -n "$1" ] && [ "$1" != "--" ]; then
+				folder="$1"
+				if [ -d "$folder" ]; then
+					echo "change to context folder : $folder"
+					cd "$folder" || exit 1
+					shift
+				else
+					echo "ERROR: Directory '$folder' not found"
+					exit 1
+				fi
+			fi
+			[ "$1" = "--" ] && shift
 
-        local folder=
-        if [ -n "$1" ] && [ "$1" != "--" ]; then
-            folder="$1"
-            if [ -d "$folder" ]; then
-                echo "change to context folder : $folder"
-                cd "$folder" || exit 1
-                shift
-            else
-                echo "Error: Directory '$folder' not found"
-                exit 1
-            fi
-        fi
-        [ "$1" = "--" ] && shift
-
-        orla_launch "$@"
+			orla_launch "$@"
+		else
+			echo "ERROR: Orla is not installed"
+			exit 1
+		fi
         ;;
     set)
         case "$3" in
@@ -135,7 +130,7 @@ case "$sub_command" in
         orla_launch "$sub_command" "$@"
         ;;
     *)
-        echo "Error: Unknown command $sub_command for Orla"
+        echo "ERROR: Unknown command $sub_command for Orla"
         usage
         exit 1
         ;;

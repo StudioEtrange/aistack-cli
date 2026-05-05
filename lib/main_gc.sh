@@ -33,14 +33,14 @@ case "$sub_command" in
         gemini_settings_configure
         vscode_settings_configure "gemini"
 
-        gemini_launcher_manage
+        #gemini_launcher_manage
         ;;
     reset)
         echo "Resetting Gemini CLI configuration"
         gemini_settings_remove
         vscode_settings_remove "gemini"
 
-        gemini_launcher_manage
+        #gemini_launcher_manage
         ;;
     register)
         echo "Registering Gemini CLI launcher in PATH for $1"
@@ -54,7 +54,7 @@ case "$sub_command" in
         esac
         ;;
     unregister)
-        echo "Unegistering Gemini CLI launcher PATH from $1"
+        echo "Unregistering Gemini CLI launcher PATH from $1"
         case "$1" in
             "vs")
                 gemini_path_unregister_for_vs_terminal
@@ -65,32 +65,33 @@ case "$sub_command" in
         esac
         ;;
     show-config)
-        if [ -f "$AISTACK_GEMINI_CONFIG_FILE" ]; then
-            echo "Current Gemini CLI configuration file : $AISTACK_GEMINI_CONFIG_FILE"
-            cat "$AISTACK_GEMINI_CONFIG_FILE"
-        else
-            echo "No Gemini CLI configuration file found."
-        fi
+		gemini_show_config
         ;;
-
+    info)
+        gemini_info
+        ;;
     launch)
-        gemini_launcher_manage
+        #gemini_launcher_manage
+		if gemini_is_installed; then
+			local folder=
+			if [ -n "$1" ] && [ "$1" != "--" ]; then
+				folder="$1"
+				if [ -d "$folder" ]; then
+					echo "change to context folder : $folder"
+					cd "$folder" || exit 1
+					shift
+				else
+					echo "ERROR: Directory '$folder' not found"
+					exit 1
+				fi
+			fi
+			[ "$1" = "--" ] && shift
 
-        local folder=
-        if [ -n "$1" ] && [ "$1" != "--" ]; then
-            folder="$1"
-            if [ -d "$folder" ]; then
-                echo "change to context folder : $folder"
-                cd "$folder" || exit 1
-                shift
-            else
-                echo "Error: Directory '$folder' not found"
-                exit 1
-            fi
-        fi
-        [ "$1" = "--" ] && shift
-
-        gemini_launch "$@"
+			gemini_launch "$@"
+		else
+			echo "ERROR: Gemini CLI is not installed"
+			exit 1
+		fi
         ;;
     mcp)
         mcp_server_manage "$1" "$2" "$command" "$3"
@@ -112,7 +113,7 @@ case "$sub_command" in
         esac
         ;;
     *)
-        echo "Error: Unknown command $sub_command for gc"
+        echo "ERROR: Unknown command $sub_command for gc"
         usage
         exit 1
         ;;

@@ -31,8 +31,13 @@ function init_aistack_test_env() {
 	. "$STELLA_APP_ROOT/../lib/lib_mcp.sh"
 
 	# initialize aistack paths (see in file aistack)
-	aistack_path 1>/dev/null 2>&1
-	runtime_path 1>/dev/null 2>&1
+	aistack_init 1>/dev/null 2>&1
+	aistack_runtime_detect 1>/dev/null 2>&1
+	aistack_runtime_bootstrap_generate 1>/dev/null 2>&1
+
+	aistack_tool_detect 1>/dev/null 2>&1
+	aistack_mcp_detect 1>/dev/null 2>&1
+	aistack_launcher_regenerate 1>/dev/null 2>&1
 
 	# install dependencies
 	#( aistack_install_dependencies 1>/dev/null 2>&1 )

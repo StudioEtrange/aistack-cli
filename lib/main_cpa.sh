@@ -27,25 +27,16 @@ case "$sub_command" in
     configure)
         echo "Configuring CLIProxyAPI"
         cpa_settings_configure
-
-        cpa_launcher_manage
         ;;
     reset)
         echo "Resetting CLIProxyAPI configuration"
         cpa_settings_remove
-
-        cpa_launcher_manage
         ;;
     info)
         cpa_info
         ;;
-    show-config)
-        if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
-            echo "Current CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
-            cat "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
-        else
-            echo "No CLIProxyAPI configuration file found."
-        fi
+	show-config)
+		cpa_show_config
         ;;
     set)
         case "$3" in
@@ -79,30 +70,35 @@ case "$sub_command" in
                 cpa_settings_api_key_get "$2"
                 ;;
             *)
-                echo "Error: Unknown command $1 for CLIProxyAPI key"
+                echo "ERROR: Unknown command $1 for CLIProxyAPI key"
                 usage
                 exit 1
                 ;;
         esac
         ;;
     launch)
-        cpa_launcher_manage
+        #cpa_launcher_manage
 
-        local folder=
-        if [ -n "$1" ] && [ "$1" != "--" ]; then
-            folder="$1"
-            if [ -d "$folder" ]; then
-                echo "change to context folder : $folder"
-                cd "$folder" || exit 1
-                shift
-            else
-                echo "Error: Directory '$folder' not found"
-                exit 1
-            fi
-        fi
-        [ "$1" = "--" ] && shift
+		if cpa_is_installed; then
+			local folder=
+			if [ -n "$1" ] && [ "$1" != "--" ]; then
+				folder="$1"
+				if [ -d "$folder" ]; then
+					echo "change to context folder : $folder"
+					cd "$folder" || exit 1
+					shift
+				else
+					echo "ERROR: Directory '$folder' not found"
+					exit 1
+				fi
+			fi
+			[ "$1" = "--" ] && shift
 
-        cpa_launch "$@"
+			cpa_launch "$@"
+		else
+			echo "ERROR: CLIProxyAPI is not installed"
+			exit 1
+		fi
         ;;
     model)
         case "$1" in
@@ -110,7 +106,7 @@ case "$sub_command" in
                 cpa_get_model_list
                 ;;
             *)
-                echo "Error: Unknown command $1 for CLIProxyAPI model"
+                echo "ERROR: Unknown command $1 for CLIProxyAPI model"
                 usage
                 exit 1
                 ;;
@@ -131,7 +127,7 @@ case "$sub_command" in
                 cpa_login_qwen_oauth "${@}"
                 ;;
             *)
-                echo "Error: not supported $1"
+                echo "ERROR: not supported $1"
                 usage
                 exit 1
                 ;;
@@ -139,7 +135,7 @@ case "$sub_command" in
         ;;
     
     *)
-        echo "Error: Unknown command $sub_command for CLIProxyAPI"
+        echo "ERROR: Unknown command $sub_command for CLIProxyAPI"
         usage
         exit 1
         ;;

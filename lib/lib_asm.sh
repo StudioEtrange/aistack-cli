@@ -1,4 +1,4 @@
-asm_path() {
+asm_init() {
 	export AISTACK_ASM_CONFIG_HOME="${HOME}/.config/agent-skill-manager"
 	mkdir -p "${AISTACK_ASM_CONFIG_HOME}"
 	export AISTACK_ASM_CONFIG_FILE="${AISTACK_ASM_CONFIG_HOME}/settings.json"
@@ -8,20 +8,13 @@ asm_path() {
 	mkdir -p "${AISTACK_ASM_LAUNCHER_HOME}"
 }
 
-# add asm launcher in path for shell
-asm_path_register_for_shell() {
-	local shell_name="$1"
-	path_register_for_shell "asm" "${AISTACK_ASM_LAUNCHER_HOME}" "$shell_name"
-}
-asm_path_unregister_for_shell() {
-    local shell_name="${1:-all}"
-	path_unregister_for_shell "asm" "$shell_name"
-}
-asm_path_register_for_vs_terminal() {
-	vscode_path_register_for_vs_terminal "asm" "${AISTACK_ASM_LAUNCHER_HOME}"
-}
-asm_path_unregister_for_vs_terminal() {
-	vscode_path_unregister_for_vs_terminal "asm" "${AISTACK_ASM_LAUNCHER_HOME}"
+asm_is_installed() {
+	export AISTACK_ASM_TOOL_AVAILABLE="false"
+	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
+	[ -x "$AISTACK_NODEJS_BIN_PATH/asm" ] || return 1
+	export AISTACK_ASM_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/asm"
+	export AISTACK_ASM_TOOL_AVAILABLE="true"
+	return 0
 }
 
 asm_install() {
@@ -32,19 +25,40 @@ asm_install() {
 	PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g agent-skill-manager${version}
 	# using bun package manager
 	# PATH="${AISTACK_BUN_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g agent-skill-manager${version}
+	asm_is_installed
 }
 
 asm_uninstall() {
 	PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g agent-skill-manager
 	# using bun package manager
 	# PATH="${AISTACK_BUN_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g agent-skill-manager
+	asm_is_installed
 }
 
-asm_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
-asm_launch() {
+asm_path_register_for_shell() {
+	local shell_name="$1"
+	if asm_is_installed; then
+		path_register_for_shell "asm" "${AISTACK_ASM_LAUNCHER_HOME}" "$shell_name"
+	fi
+}
+asm_path_unregister_for_shell() {
+    local shell_name="${1:-all}"
+	path_unregister_for_shell "asm" "$shell_name"
+}
+asm_path_register_for_vs_terminal() {
+	if asm_is_installed; then
+		vscode_path_register_for_vs_terminal "asm" "${AISTACK_ASM_LAUNCHER_HOME}"
+	fi
+}
+asm_path_unregister_for_vs_terminal() {
+	vscode_path_unregister_for_vs_terminal "asm" "${AISTACK_ASM_LAUNCHER_HOME}"
+}
 
+
+asm_launch_export_variables="AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
+asm_launch() {
 	(
-		. "${AISTACK_RUNTIME_PATH_FILE}"
+		. "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
 
 		if [ "$#" -gt 0 ]; then
 			"$AISTACK_NODEJS_BIN_PATH/asm" "$@"
@@ -59,34 +73,34 @@ asm_launcher_manage() {
 
 	case $action in
 		create)
-			# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-            # and executed by the default /bin/sh on the current system
-			{
-				echo '#!/bin/sh'
-				for v in $asm_launch_export_variables; do
-					printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-				done
+			if asm_is_installed; then
+				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+				# and executed by the default /bin/sh on the current system
+				{
+					echo '#!/bin/sh'
+					for v in $asm_launch_export_variables; do
+						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+					done
 
-				declare -f asm_launch
+					declare -f asm_launch
 
-				echo asm_launch \"\$@\"
-			} > "${AISTACK_ASM_LAUNCHER_HOME}/asm"
+					echo asm_launch \"\$@\"
+				} > "${AISTACK_ASM_LAUNCHER_HOME}/asm"
 
-			chmod +x "${AISTACK_ASM_LAUNCHER_HOME}/asm"
+				chmod +x "${AISTACK_ASM_LAUNCHER_HOME}/asm"
+			fi
 			;;
+
 		delete)
 			rm -f "${AISTACK_ASM_LAUNCHER_HOME}/asm"
+			;;
+
+		refresh_if_exists)
+			[ -f "${AISTACK_ASM_LAUNCHER_HOME}/asm" ] && ( asm_launcher_manage "delete"; asm_launcher_manage "create" )
 			;;
 	esac
 }
 
-asm_settings_configure() {
-	:
-}
-
-asm_settings_remove() {
-	rm -Rf "$AISTACK_ASM_CONFIG_HOME"
-}
 
 asm_show_config() {
 	if [ -f "$AISTACK_ASM_CONFIG_FILE" ]; then
@@ -95,4 +109,13 @@ asm_show_config() {
 	else
 		echo "No asm configuration file found."
 	fi
+}
+
+
+asm_settings_configure() {
+	:
+}
+
+asm_settings_remove() {
+	rm -Rf "$AISTACK_ASM_CONFIG_HOME"
 }

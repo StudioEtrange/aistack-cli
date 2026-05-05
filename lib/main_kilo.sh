@@ -34,7 +34,7 @@ case "$sub_command" in
         # TODO
         #vscode_settings_configure "kilo"
 
-        kilo_launcher_manage
+        #kilo_launcher_manage
         ;;
     reset)
         echo "Resetting Kilo Code configuration"
@@ -42,7 +42,7 @@ case "$sub_command" in
         # TODO
         #vscode_settings_remove "kilo"
 
-        kilo_launcher_manage
+        #kilo_launcher_manage
         ;;
     register)
         echo "Registering Kilo Code CLI launcher in PATH for $1"
@@ -74,23 +74,27 @@ case "$sub_command" in
         ;;
 
     launch)
-        kilo_launcher_manage
+        #kilo_launcher_manage
+		if kilo_is_installed; then
+			local folder=
+			if [ -n "$1" ] && [ "$1" != "--" ]; then
+				folder="$1"
+				if [ -d "$folder" ]; then
+					echo "change to context folder : $folder"
+					cd "$folder" || exit 1
+					shift
+				else
+					echo "ERROR: Directory '$folder' not found"
+					exit 1
+				fi
+			fi
+			[ "$1" = "--" ] && shift
 
-        local folder=
-        if [ -n "$1" ] && [ "$1" != "--" ]; then
-            folder="$1"
-            if [ -d "$folder" ]; then
-                echo "change to context folder : $folder"
-                cd "$folder" || exit 1
-                shift
-            else
-                echo "Error: Directory '$folder' not found"
-                exit 1
-            fi
-        fi
-        [ "$1" = "--" ] && shift
-
-        kilo_launch "$@"
+        	kilo_launch "$@"
+		else
+			echo "ERROR: kilo is not installed"
+			exit 1
+		fi
         ;;
     connect)
         case "$1" in

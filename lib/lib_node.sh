@@ -1,5 +1,5 @@
 # node and nvm paths
-node_path() {
+node_init() {
     export AISTACK_NVM_HOME="${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/nvm"
     mkdir -p "$AISTACK_NVM_HOME"
     export NVM_DIR="${AISTACK_NVM_HOME}"

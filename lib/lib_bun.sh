@@ -1,4 +1,4 @@
-bun_path() {
+bun_init() {
     export BUN_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_DEPENDENCIES_ROOT/bun"
     mkdir -p "${BUN_FEAT_INSTALL_ROOT}"
 

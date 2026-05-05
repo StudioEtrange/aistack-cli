@@ -32,15 +32,11 @@ case "$sub_command" in
         echo "Configuring Opencode CLI"
         opencode_settings_configure
         vscode_settings_configure "opencode"
-
-        opencode_launcher_manage
         ;;
     reset)
         echo "Resetting Opencode configuration"
         opencode_settings_remove
         vscode_settings_remove "opencode"
-
-        opencode_launcher_manage
         ;;
     register)
         echo "Registering Gemini CLI launcher in PATH for $1"
@@ -54,7 +50,7 @@ case "$sub_command" in
         esac
         ;;
     unregister)
-        echo "Unegistering Opencode launcher PATH from $1"
+        echo "Unregistering Opencode launcher PATH from $1"
         case "$1" in
             "vs")
                 opencode_path_unregister_for_vs_terminal
@@ -81,29 +77,33 @@ case "$sub_command" in
         ;;
 
     launch)
-        opencode_launcher_manage
+        #opencode_launcher_manage
+		if opencode_is_installed; then
+			local folder=
+			if [ -n "$1" ] && [ "$1" != "--" ]; then
+				folder="$1"
+				if [ -d "$folder" ]; then
+					echo "change to context folder : $folder"
+					cd "$folder" || exit 1
+					shift
+				else
+					echo "ERROR: Directory '$folder' not found"
+					exit 1
+				fi
+			fi
+			[ "$1" = "--" ] && shift
 
-        local folder=
-        if [ -n "$1" ] && [ "$1" != "--" ]; then
-            folder="$1"
-            if [ -d "$folder" ]; then
-                echo "change to context folder : $folder"
-                cd "$folder" || exit 1
-                shift
-            else
-                echo "Error: Directory '$folder' not found"
-                exit 1
-            fi
-        fi
-        [ "$1" = "--" ] && shift
-
-        opencode_launch "$@"
+			opencode_launch "$@"
+		else
+			echo "ERROR: Opencode is not installed"
+			exit 1
+		fi
         ;;
     mcp)
         mcp_server_manage "$1" "$2" "$command" "$3"
         ;;
     *)
-        echo "Error: Unknown command $sub_command for oc"
+        echo "ERROR: Unknown command $sub_command for oc"
         usage
         exit 1
         ;;

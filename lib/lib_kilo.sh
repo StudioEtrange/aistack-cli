@@ -1,11 +1,10 @@
-kilo_path() {
+kilo_init() {
     # aistack path for kilo code
     export AISTACK_KILO_CONFIG_HOME="${HOME}/.config/kilo"
     mkdir -p "${AISTACK_KILO_CONFIG_HOME}"
 
     export AISTACK_KILO_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/kilo"
     mkdir -p "${AISTACK_KILO_LAUNCHER_HOME}"
-
 
     # kilo code specific paths
     # The Kilo CLI is a fork of OpenCode and supports the same configuration options
@@ -15,6 +14,16 @@ kilo_path() {
     export AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE="${AISTACK_KILO_CONFIG_HOME}/cpa_key_for_kc"
     [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_KILO="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE")"
 
+}
+
+
+kilo_is_installed() {
+	export AISTACK_KILO_TOOL_AVAILABLE="false"
+	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
+	[ -x "$AISTACK_NODEJS_BIN_PATH/kilo" ] || return 1
+	export AISTACK_KILO_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/kilo"
+	export AISTACK_KILO_TOOL_AVAILABLE="true"
+	return 0
 }
 
 kilo_install() {
@@ -27,7 +36,8 @@ kilo_install() {
             echo "Installing Kilo Code CLI ${version}"
             # available versions : https://www.npmjs.com/package/@kilocode/cli
             PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
-            ;;
+            kilo_is_installed
+			;;
         "extension")
             vscode_extension_manage "kilocode.Kilo-Code" "install"
             ;;
@@ -44,6 +54,7 @@ kilo_uninstall() {
             PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
             kilo_path_unregister_for_shell "all"
             kilo_path_unregister_for_vs_terminal
+			kilo_is_installed
             ;;
         "extension")
             vscode_extension_manage "kilocode.Kilo-Code" "uninstall"
@@ -53,30 +64,30 @@ kilo_uninstall() {
 }
 
 
-# add gemini launcher in path for shell
 kilo_path_register_for_shell() {
     local shell_name="$1"
-    path_register_for_shell "kilo" "${AISTACK_KILO_LAUNCHER_HOME}" "$shell_name"
+	if kilo_is_installed; then
+    	path_register_for_shell "kilo" "${AISTACK_KILO_LAUNCHER_HOME}" "$shell_name"
+	fi
 }
 kilo_path_unregister_for_shell() {
     local shell_name="${1:-all}"
     path_unregister_for_shell "kilo" "$shell_name"
 }
 kilo_path_register_for_vs_terminal() {
-    vscode_path_register_for_vs_terminal "kilo" "${AISTACK_KILO_LAUNCHER_HOME}"
+	if kilo_is_installed; then
+    	vscode_path_register_for_vs_terminal "kilo" "${AISTACK_KILO_LAUNCHER_HOME}"
+	fi
 }
 kilo_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "kilo" "${AISTACK_KILO_LAUNCHER_HOME}"
 }
 
 
-
-kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
+kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
 kilo_launch() {
-    set -- "$@"
-
     (
-        . "${AISTACK_RUNTIME_PATH_FILE}"
+        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "$AISTACK_NODEJS_BIN_PATH/kilo" "$@"
@@ -92,49 +103,43 @@ kilo_launcher_manage() {
     case $action in
 
         create)
-            # create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-            # and executed by the default /bin/sh on the current system
-            {
-                echo '#!/bin/sh'
-                for v in $kilo_launch_export_variables; do
-                    printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-                done
+			if kilo_is_installed; then
+				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+				# and executed by the default /bin/sh on the current system
+				{
+					echo '#!/bin/sh'
+					for v in $kilo_launch_export_variables; do
+						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+					done
 
-                declare -f kilo_launch
+					declare -f kilo_launch
 
-                echo kilo_launch \"\$@\"
-            } > "${AISTACK_KILO_LAUNCHER_HOME}/kilo"
-
-            chmod +x "${AISTACK_KILO_LAUNCHER_HOME}/kilo"
+					echo kilo_launch \"\$@\"
+				} > "${AISTACK_KILO_LAUNCHER_HOME}/kilo"
+				chmod +x "${AISTACK_KILO_LAUNCHER_HOME}/kilo"
+			fi
             ;;
 
         delete)
             rm -f "${AISTACK_KILO_LAUNCHER_HOME}/kilo"
             ;;
+
+		refresh_if_exists)
+			[ -f "${AISTACK_KILO_LAUNCHER_HOME}/kilo" ] && ( kilo_launcher_manage "delete"; kilo_launcher_manage "create" )
+			;;
     esac
     
 }
 
 
-kilo_settings_configure() {
-
-    echo "add some default settings :"
-    merge_json_file "${AISTACK_POOL}/settings/kilo/kilo.jsonc" "$AISTACK_KILO_CONFIG_FILE"
-
-}
-
-kilo_settings_remove() {
-    kilo_unregister_cpa_key
-    rm -Rf "$AISTACK_KILO_CONFIG_HOME"
-}
-
-
 kilo_info() {
     echo "Configuration file : $AISTACK_KILO_CONFIG_FILE"
-
+	echo
+	echo "KILO available : $AISTACK_KILO_TOOL_AVAILABLE"
+	echo "KILO path : $AISTACK_KILO_TOOL_PATH"
+	echo
     [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)" || \
         echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)"
-
 }
 
 kilo_show_config() {
@@ -148,6 +153,18 @@ kilo_show_config() {
 
 
 # generic config management -----------------
+kilo_settings_configure() {
+
+    echo "add some default settings :"
+    merge_json_file "${AISTACK_POOL}/settings/kilo/kilo.jsonc" "$AISTACK_KILO_CONFIG_FILE"
+
+}
+
+kilo_settings_remove() {
+    kilo_unregister_cpa_key
+    rm -Rf "$AISTACK_KILO_CONFIG_HOME"
+}
+
 kilo_remove_config() {
     local key_path="$1"
 

@@ -1,4 +1,4 @@
-opencode_path() {
+opencode_init() {
     # oc specific paths
     export AISTACK_OPENCODE_LOCAL_SHARE_HOME="$HOME/.local/share/opencode"
     export AISTACK_OPENCODE_CONFIG_HOME="$HOME/.config/opencode"
@@ -14,21 +14,13 @@ opencode_path() {
     mkdir -p "${AISTACK_OPENCODE_LAUNCHER_HOME}"
 }
 
-
-# add opencode launcher in path for shell
-opencode_path_register_for_shell() {
-    local shell_name="$1"
-    path_register_for_shell "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}" "$shell_name"
-}
-opencode_path_unregister_for_shell() {
-    local shell_name="${1:-all}"
-    path_unregister_for_shell "opencode" "$shell_name"
-}
-opencode_path_register_for_vs_terminal() {
-    vscode_path_register_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
-}
-opencode_path_unregister_for_vs_terminal() {
-    vscode_path_unregister_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+opencode_is_installed() {
+	export AISTACK_OPENCODE_TOOL_AVAILABLE="false"
+	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
+	[ -x "$AISTACK_NODEJS_BIN_PATH/opencode" ] || return 1
+	export AISTACK_OPENCODE_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/opencode"
+	export AISTACK_OPENCODE_TOOL_AVAILABLE="true"
+	return 0
 }
 
 opencode_install() {
@@ -38,20 +30,39 @@ opencode_install() {
     echo "Installing Opencode CLI"
     PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
 
+	opencode_is_installed
 }
 
 opencode_uninstall() {
     PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
-    opencode_path_unregister_for_shell "all"
-    opencode_path_unregister_for_vs_terminal
+	opencode_is_installed
 }
 
 
+# add opencode launcher in path for shell
+opencode_path_register_for_shell() {
+    local shell_name="$1"
+	if opencode_is_installed; then
+    	path_register_for_shell "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}" "$shell_name"
+	fi
+}
+opencode_path_unregister_for_shell() {
+    local shell_name="${1:-all}"
+    path_unregister_for_shell "opencode" "$shell_name"
+}
+opencode_path_register_for_vs_terminal() {
+	if opencode_is_installed; then
+    	vscode_path_register_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+	fi
+}
+opencode_path_unregister_for_vs_terminal() {
+    vscode_path_unregister_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+}
 
-opencode_launch_variables="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
+opencode_launch_variables="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
 opencode_launch() {
     (
-        . "${AISTACK_RUNTIME_PATH_FILE}"
+        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "$AISTACK_NODEJS_BIN_PATH/opencode" "$@"
@@ -67,7 +78,7 @@ opencode_launcher_manage() {
     case $action in
         create)
             # echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-            # echo ". ${AISTACK_RUNTIME_PATH_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            # echo ". ${AISTACK_RUNTIME_BOOTSTRAP_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
 
@@ -77,25 +88,31 @@ opencode_launcher_manage() {
             #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # fi
 
-			# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-            # and executed by the default /bin/sh on the current system
-            {
-                echo '#!/bin/sh'
-                for v in $opencode_launch_variables; do
-                    printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-                done
+			if opencode_is_installed; then
+				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+				# and executed by the default /bin/sh on the current system
+				{
+					echo '#!/bin/sh'
+					for v in $opencode_launch_variables; do
+						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+					done
 
-                declare -f opencode_launch
+					declare -f opencode_launch
 
-                echo opencode_launch \"\$@\"
-            } > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+					echo opencode_launch \"\$@\"
+				} > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
 
-            chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+				chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+			fi
             ;;
 
         delete)
             rm -f "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             ;;
+	
+		refresh_if_exists)
+			[ -f "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ] && ( opencode_launcher_manage "delete"; opencode_launcher_manage "create" )
+			;;
     esac
 }
 
@@ -105,15 +122,13 @@ opencode_settings_configure() {
     merge_json_file "${AISTACK_POOL}/settings/opencode/opencode.json" "$AISTACK_OPENCODE_CONFIG_FILE"
 }
 
-opencode_settings_remove() {
-    opencode_unregister_cpa_key
-    rm -Rf "$AISTACK_OPENCODE_LOCAL_SHARE_HOME"
-    rm -Rf "$AISTACK_OPENCODE_CONFIG_HOME"
-}
 
 opencode_info() {
     echo "Configuration file : $AISTACK_OPENCODE_CONFIG_FILE"
-
+	echo
+	echo "OPENCODE available : $ISTACK_OPENCODE_TOOL_AVAILABLE"
+	echo "OPENCODE path : $ISTACK_OPENCODE_TOOL_PATH"
+	echo
     [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE)" || \
         echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE)"
 }
@@ -125,6 +140,13 @@ opencode_show_config() {
     else
         echo "No configuration file found. ($AISTACK_OPENCODE_CONFIG_FILE)"
     fi
+}
+
+
+opencode_settings_remove() {
+    opencode_unregister_cpa_key
+    rm -Rf "$AISTACK_OPENCODE_LOCAL_SHARE_HOME"
+    rm -Rf "$AISTACK_OPENCODE_CONFIG_HOME"
 }
 
 opencode_merge_config() {

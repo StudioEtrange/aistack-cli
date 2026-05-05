@@ -183,7 +183,7 @@ mcp_server_manage() {
             esac
             ;;
         *)
-            echo "Error: Unknown mcp $mcp_server_name"
+            echo "ERROR: Unknown mcp $mcp_server_name"
             usage
             exit 1
             ;;

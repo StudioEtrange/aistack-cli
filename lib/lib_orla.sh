@@ -1,4 +1,4 @@
-orla_path() {
+orla_init() {
     # aistack path for orla
     export AISTACK_ORLA_CONFIG_HOME="${HOME}/.orla"
     mkdir -p "${AISTACK_ORLA_CONFIG_HOME}"
@@ -19,21 +19,12 @@ orla_path() {
     
 }
 
-
-# add gemini launcher in path for shell
-orla_path_register_for_shell() {
-    local shell_name="$1"
-	path_register_for_shell "orla" "${AISTACK_ORLA_LAUNCHER_HOME}" "$shell_name"
-}
-orla_path_unregister_for_shell() {
-    local shell_name="${1:-all}"
-    path_unregister_for_shell "orla" "$shell_name"
-}
-orla_path_register_for_vs_terminal() {
-    vscode_path_register_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
-}
-orla_path_unregister_for_vs_terminal() {
-    vscode_path_unregister_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
+orla_is_installed() {
+	export AISTACK_ORLA_TOOL_AVAILABLE="false"
+	[ -x "$ORLA_FEAT_INSTALL_ROOT/orla" ] || return 1
+	export AISTACK_ORLA_TOOL_AVAILABLE="true"
+	export AISTACK_ORLA_TOOL_PATH="$CPA_FEAT_INSTALL_ROOT/orla"
+	return 0
 }
 
 
@@ -68,19 +59,42 @@ orla_install() {
     echo "Downloading and installing Orla ${version} from ${download_url} to ${ORLA_FEAT_INSTALL_ROOT}..."
     $STELLA_API get_resource "Orla" "${download_url}" "HTTP_ZIP" "$ORLA_FEAT_INSTALL_ROOT" "DEST_ERASE"
     echo "Orla installed successfully."
+
+	orla_is_installed
 }
  
 orla_uninstall() {
     echo "Uninstalling Orla from ${ORLA_FEAT_INSTALL_ROOT}..."
     rm -Rf "${ORLA_FEAT_INSTALL_ROOT}"
     echo "Orla uninstalled successfully."
+
+	orla_is_installed
 }
 
 
 
+# add gemini launcher in path for shell
+orla_path_register_for_shell() {
+    local shell_name="$1"
+	if orla_is_installed; then
+		path_register_for_shell "orla" "${AISTACK_ORLA_LAUNCHER_HOME}" "$shell_name"
+	fi
+}
+orla_path_unregister_for_shell() {
+    local shell_name="${1:-all}"
+    path_unregister_for_shell "orla" "$shell_name"
+}
+orla_path_register_for_vs_terminal() {
+	if orla_is_installed; then
+    	vscode_path_register_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
+	fi
+}
+orla_path_unregister_for_vs_terminal() {
+    vscode_path_unregister_for_vs_terminal "orla" "${AISTACK_ORLA_LAUNCHER_HOME}"
+}
 
 
-orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_RUNTIME_PATH_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
+orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
 orla_launch() {
     set -- "$@"
 
@@ -89,7 +103,7 @@ orla_launch() {
     fi
 
     (
-        . "${AISTACK_RUNTIME_PATH_FILE}"
+        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "${ORLA_FEAT_INSTALL_ROOT}/orla" "$@"
@@ -110,44 +124,35 @@ orla_launcher_manage() {
             # # launcher based on a symbolic link
             # ln -fsv "${ORLA_FEAT_INSTALL_ROOT}/orla" "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
 
-            # create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-            # and executed by the default /bin/sh on the current system
-            {
-                echo '#!/bin/sh'
-                for v in $orla_launch_export_variables; do
-                    printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-                done
+			if orla_is_installed; then
+				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+				# and executed by the default /bin/sh on the current system
+				{
+					echo '#!/bin/sh'
+					for v in $orla_launch_export_variables; do
+						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+					done
 
-                declare -f orla_launch
+					declare -f orla_launch
 
-                echo orla_launch \"\$@\"
-            } > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+					echo orla_launch \"\$@\"
+				} > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
 
-            chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+				chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+			fi
             ;;
 
         delete)
             rm -f "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
             ;;
+
+		refresh_if_exists)
+			[ -f "${AISTACK_ORLA_LAUNCHER_HOME}/orla" ] && ( orla_launcher_manage "delete"; orla_launcher_manage "create" )
+			;;
     esac
     
 }
 
-
-orla_settings_configure() {
-
-    echo "add some default settings :"
-    echo " - set default listening address for orla service to localhost:8081"
-    orla_settings_set_listen_address "localhost:8081"
-    echo " - set for orla agent mode a default backend named ollama with endpoint http://localhost:11434"
-    orla_agent_register_default_backend "default_ollama" "ollama" "http://localhost:11434"
-    orla_agent_register_default_model
-}
-
-orla_settings_remove() {
-    orla_unregister_cpa_key
-    rm -Rf "$AISTACK_ORLA_CONFIG_HOME"
-}
 
 
 orla_info() {
@@ -161,7 +166,37 @@ orla_info() {
     else
         echo "No Orla configuration file found. ($AISTACK_ORLA_CONFIG_FILE)"
     fi
+
+	echo
+	echo "Orla available : $AISTACK_ORLA_TOOL_AVAILABLE"
+	echo "Orla path : $AISTACK_ORLA_TOOL_PATH"
+	echo
 }
+
+
+orla_show_config() {
+	if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
+		echo "Current Orla configuration file : $AISTACK_ORLA_CONFIG_FILE"
+		cat "$AISTACK_ORLA_CONFIG_FILE"
+	else
+		echo "No Orla configuration file found."
+	fi
+}
+
+orla_settings_configure() {
+    echo "add some default settings :"
+    echo " - set default listening address for orla service to localhost:8081"
+    orla_settings_set_listen_address "localhost:8081"
+    echo " - set for orla agent mode a default backend named ollama with endpoint http://localhost:11434"
+    orla_agent_register_default_backend "default_ollama" "ollama" "http://localhost:11434"
+    orla_agent_register_default_model
+}
+
+orla_settings_remove() {
+    orla_unregister_cpa_key
+    rm -Rf "$AISTACK_ORLA_CONFIG_HOME"
+}
+
 
 
 
@@ -280,7 +315,7 @@ orla_generate_cpa_key() {
     fi
     echo "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA" > "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE"
 
-    # each time an api key is generated we need to refrech the launcher to update env vars
+    # each time an api key is generated we need to refresh the launcher to update env vars
     orla_launcher_manage "create"
 }
 
@@ -316,7 +351,7 @@ orla_connect_cpa() {
         # request cpa to get the first model available as the default model for orla AGENT mode
         # cpa_get_model_list needs cpa to be running
          if ! cpa_instance_reachable; then
-            echo "Error: CLIProxyAPI instance is not reachable. Please make sure CLIProxyAPI is running and properly configured."
+            echo "ERROR: CLIProxyAPI instance is not reachable. Please make sure CLIProxyAPI is running and properly configured."
             return 1
         fi
         default_model="$(cpa_get_model_list | head -n 1)"
@@ -341,7 +376,7 @@ orla_connect_cpa() {
                             }'
             ;;
         *)
-            echo "Error: Unknown Orla mode $orla_mode for CPA connection"
+            echo "ERROR: Unknown Orla mode $orla_mode for CPA connection"
             exit 1
             ;;
     esac

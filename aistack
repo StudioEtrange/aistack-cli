@@ -43,6 +43,7 @@ Options:
     gc install [@version]           Install and configure Gemini CLI. (main versions are latest, nightly, preview) (when asked to relaunch gemini cli, use 'aistack gc launch' command)
     gc uninstall                    Uninstalling Gemini CLI and unregister Gemini CLI PATH. (keep all configuration unchanged, to remove configuration use 'aistack gc reset' command)
     gc configure                    Configure Gemini CLI with some default values. But do not fully reset all other existing config values. ('aistack gc install' include configuration)
+    gc info                         Print Gemini CLI informations.
     gc show-config                  Show current Gemini CLI configuration.
     gc reset                        Reset all Gemini CLI configuration.
     gc register <all|shell|vs>      Register Gemini CLI PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
@@ -203,16 +204,31 @@ main() {
             aistack_info
             ;;
         init)
+            aistack_install
+
             aistack_init
+            aistack_runtime_detect
+            aistack_runtime_bootstrap_generate
+            aistack_tool_detect
+            aistack_mcp_detect
+            aistack_launcher_regenerate
             ;;
         uninstall)
             aistack_uninstall
+
+            aistack_init
+            aistack_runtime_detect
+            aistack_runtime_bootstrap_generate
+            aistack_tool_detect
+            aistack_mcp_detect
+            aistack_launcher_regenerate
             ;;
         bun)
             if ! check_requirements "bun"; then echo " -- ERROR : bun missing, launch aistack init"; exit 1; fi;
             if [ "$AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE" = "true" ]; then
                 PATH="${AISTACK_BUN_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             else
+                echo " -- WARN : $command found but outside of aistack-cli, launch aistack init"
                 exit 1
             fi
             ;;
@@ -221,6 +237,7 @@ main() {
             if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
                 PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             else
+                echo " -- WARN : $command found but outside of aistack-cli, launch aistack init"
                 exit 1
             fi
             ;;
@@ -229,6 +246,7 @@ main() {
             if [ "$AISTACK_INTERNAL_NVM_AVAILABLE" = "true" ]; then
                 "$command" "$@"
             else
+                echo " -- WARN : $command found but outside of aistack-cli, launch aistack init"
                 exit 1
             fi
             ;;
@@ -237,6 +255,7 @@ main() {
             if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
                 PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             else
+                echo " -- WARN : $command found but outside of aistack-cli, launch aistack init"
                 exit 1
             fi
             ;;
@@ -260,7 +279,7 @@ main() {
             #         PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm config set "$key" "$value" -g
             #         ;;
             #     *)
-            #         echo "Error: Unknown command $sub_command for npm-config"
+            #         echo "ERROR: Unknown command $sub_command for npm-config"
             #         usage
             #         exit 1
             #         ;;
@@ -281,7 +300,7 @@ main() {
                     process_kill_by_port "$port"
                     ;;
                 *)
-                    echo "Error: Unknown command $sub_command for app"
+                    echo "ERROR: Unknown command $sub_command for app"
                     usage
                     exit 1
                     ;;
@@ -318,7 +337,7 @@ main() {
             . "${_CURRENT_FILE_DIR}/lib/main_asm.sh"
             ;;
         *)
-            echo "Error: Unknown command $command"
+            echo "ERROR: Unknown command $command"
             usage
             exit 1
             ;;
@@ -327,9 +346,15 @@ main() {
     
 }
 
+aistack_init
 
-aistack_path
-runtime_path
+#aistack_runtime_init
+aistack_runtime_detect
+aistack_runtime_bootstrap_generate
 
+#aistack_tooling_init
+aistack_tool_detect
+aistack_mcp_detect
+aistack_launcher_regenerate
 
 main "$@"

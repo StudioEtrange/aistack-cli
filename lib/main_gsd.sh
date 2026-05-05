@@ -39,7 +39,7 @@ case "$sub_command" in
         esac
         ;;
     unregister)
-        echo "Unegistering gsd launcher PATH from $1"
+        echo "Unregistering gsd launcher PATH from $1"
         case "$1" in
             "vs")
                 gsd_path_unregister_for_vs_terminal
@@ -50,14 +50,19 @@ case "$sub_command" in
         esac
         ;;
     launch)
-        gsd_launcher_manage
+        #gsd_launcher_manage
+		if gsd_is_installed; then
 
-        [ "$1" = "--" ] && shift
+			[ "$1" = "--" ] && shift
 
-        gsd_launch "$@"
+			gsd_launch "$@"
+		else
+			echo "ERROR: gsd is not installed"
+			exit 1
+		fi
         ;;
     *)
-        echo "Error: Unknown command $sub_command for gsd"
+        echo "ERROR: Unknown command $sub_command for gsd"
         usage
         exit 1
         ;;

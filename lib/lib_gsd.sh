@@ -1,22 +1,17 @@
-gsd_path() {
+gsd_init() {
     export AISTACK_GSD_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/gsd"
     mkdir -p "${AISTACK_GSD_LAUNCHER_HOME}"
 }
 
-gsd_path_register_for_shell() {
-    local shell_name="$1"
-    path_register_for_shell "gsd" "${AISTACK_GSD_LAUNCHER_HOME}" "$shell_name"
+gsd_is_installed() {
+	export AISTACK_GSD_TOOL_AVAILABLE="false"
+	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
+	[ -x "$AISTACK_NODEJS_BIN_PATH/get-shit-done-cc" ] || return 1
+	export AISTACK_GSD_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/get-shit-done-cc"
+	export AISTACK_GSD_TOOL_AVAILABLE="true"
+	return 0
 }
-gsd_path_unregister_for_shell() {
-    local shell_name="${1:-all}"
-    path_unregister_for_shell "gsd" "$shell_name"
-}
-gsd_path_register_for_vs_terminal() {
-    vscode_path_register_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
-}
-gsd_path_unregister_for_vs_terminal() {
-    vscode_path_unregister_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
-}
+
 
 gsd_install() {
     local version="$1"
@@ -25,19 +20,41 @@ gsd_install() {
     echo "Installing gsd ${version}"
     # available versions : https://www.npmjs.com/package/get-shit-done-cc
     PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g get-shit-done-cc${version}
+
+	gsd_is_installed
 }
 
 gsd_uninstall() {
     PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g get-shit-done-cc
+	gsd_is_installed
 }
- 
+
+gsd_path_register_for_shell() {
+    local shell_name="$1"
+	if gsd_is_installed; then
+    	path_register_for_shell "gsd" "${AISTACK_GSD_LAUNCHER_HOME}" "$shell_name"
+	fi
+}
+gsd_path_unregister_for_shell() {
+    local shell_name="${1:-all}"
+    path_unregister_for_shell "gsd" "$shell_name"
+}
+gsd_path_register_for_vs_terminal() {
+	if gsd_is_installed; then
+    	vscode_path_register_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
+	fi
+}
+gsd_path_unregister_for_vs_terminal() {
+    vscode_path_unregister_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
+}
 
 
 
-gsd_launch_export_variables="AISTACK_RUNTIME_PATH_FILE AISTACK_NODEJS_BIN_PATH"
+
+gsd_launch_export_variables="AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
 gsd_launch() {
     (
-        . "${AISTACK_RUNTIME_PATH_FILE}"
+        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "${AISTACK_NODEJS_BIN_PATH}/get-shit-done-cc" "$@"
@@ -55,25 +72,31 @@ gsd_launcher_manage() {
     case $action in
 
         create)
-			# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-            # and executed by the default /bin/sh on the current system
-            {
-                echo '#!/bin/sh'
-                for v in $gsd_launch_export_variables; do
-                    printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-                done
+			if gsd_is_installed; then
+				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+				# and executed by the default /bin/sh on the current system
+				{
+					echo '#!/bin/sh'
+					for v in $gsd_launch_export_variables; do
+						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+					done
 
-                declare -f gsd_launch
+					declare -f gsd_launch
 
-                echo gsd_launch \"\$@\"
-            } > "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc"
+					echo gsd_launch \"\$@\"
+				} > "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc"
 
-            chmod +x "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc"
-            ;;
+				chmod +x "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc"
+            fi
+			;;
 
         delete)
             rm -f "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc"
             ;;
+
+		refresh_if_exists)
+			[ -f "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc" ] && ( gsd_launcher_manage "delete"; gsd_launcher_manage "create" )
+			;;
     esac
     
 }

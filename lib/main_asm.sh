@@ -27,14 +27,10 @@ case "$sub_command" in
 	configure)
 		echo "Configuring asm"
 		asm_settings_configure
-
-		asm_launcher_manage
 		;;
 	reset)
 		echo "Resetting asm configuration"
 		asm_settings_remove
-
-		asm_launcher_manage
 		;;
 	register)
 		echo "Registering asm launcher in PATH for $1"
@@ -48,7 +44,7 @@ case "$sub_command" in
 		esac
 		;;
 	unregister)
-		echo "Unegistering asm launcher PATH from $1"
+		echo "Unregistering asm launcher PATH from $1"
 		case "$1" in
 			"vs")
 				asm_path_unregister_for_vs_terminal
@@ -62,26 +58,29 @@ case "$sub_command" in
 		asm_show_config
 		;;
 	launch)
-		asm_launcher_manage
-
-		local folder=
-		if [ -n "$1" ] && [ "$1" != "--" ]; then
-			folder="$1"
-			if [ -d "$folder" ]; then
-				echo "change to context folder : $folder"
-				cd "$folder" || exit 1
-				shift
-			else
-				echo "Error: Directory '$folder' not found"
-				exit 1
+		#asm_launcher_manage
+		if asm_is_installed; then
+			local folder=
+			if [ -n "$1" ] && [ "$1" != "--" ]; then
+				folder="$1"
+				if [ -d "$folder" ]; then
+					echo "change to context folder : $folder"
+					cd "$folder" || exit 1
+					shift
+				else
+					echo "ERROR: Directory '$folder' not found"
+					exit 1
+				fi
 			fi
+			[ "$1" = "--" ] && shift
+			asm_launch "$@"
+		else
+			echo "ERROR: asm is not installed"
+			exit 1
 		fi
-		[ "$1" = "--" ] && shift
-
-		asm_launch "$@"
 		;;
 	*)
-		echo "Error: Unknown command $sub_command for asm"
+		echo "ERROR: Unknown command $sub_command for asm"
 		usage
 		exit 1
 		;;

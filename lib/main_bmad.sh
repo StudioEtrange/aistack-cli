@@ -39,7 +39,7 @@ case "$sub_command" in
         esac
         ;;
     unregister)
-        echo "Unegistering bmad launcher PATH from $1"
+        echo "Unregistering bmad launcher PATH from $1"
         case "$1" in
             "vs")
                 bmad_path_unregister_for_vs_terminal
@@ -50,14 +50,18 @@ case "$sub_command" in
         esac
         ;;
     launch)
-        bmad_launcher_manage
+        #bmad_launcher_manage
+		if bmad_is_installed; then
+			[ "$1" = "--" ] && shift
 
-        [ "$1" = "--" ] && shift
-
-        bmad_launch "$@"
+			bmad_launch "$@"
+		else
+			echo "ERROR: bmad is not installed"
+			exit 1
+		fi
         ;;
     *)
-        echo "Error: Unknown command $sub_command for bmad"
+        echo "ERROR: Unknown command $sub_command for bmad"
         usage
         exit 1
         ;;

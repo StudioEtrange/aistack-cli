@@ -1,6 +1,6 @@
 
 
-aistack_path() {
+aistack_init() {
     export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
     
     export AISTACK_LAUNCHER_HOME="${STELLA_APP_WORK_ROOT}/launcher"
@@ -12,33 +12,37 @@ aistack_path() {
     export AISTACK_ISOLATED_DEPENDENCIES_ROOT="${STELLA_APP_WORK_ROOT}/isolated_dependencies"
     mkdir -p "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}"
 
-    export AISTACK_RUNTIME_PATH_FILE="${STELLA_APP_WORK_ROOT}/path/runtime_path.sh"
+    export AISTACK_RUNTIME_BOOTSTRAP_FILE="${STELLA_APP_WORK_ROOT}/path/runtime_path.sh"
     mkdir -p "${STELLA_APP_WORK_ROOT}/path"
 
-    node_path
-    bun_path
-    gemini_path
-    opencode_path
+	node_init
+    bun_init
+
     # FORCE_VSCODE_MODE could be "remote" : means using vscode remote extension
     # FORCE_VSCODE_MODE could be empty "" : try to guess
-    vscode_path "$FORCE_VSCODE_MODE"
-    cpa_path
-    orla_path
-    kilo_path
-    bmad_path
-	gsd_path
-    adk_path
-    asm_path
+	vscode_init "$FORCE_VSCODE_MODE"
+
+	gemini_init
+    opencode_init
+    cpa_init
+    orla_init
+    kilo_init
+    bmad_init
+	gsd_init
+    adk_init
+    asm_init
 }
 
 
-runtime_path() {
+aistack_runtime_detect() {
     
-    runtime_analysis_all
+    for f in $STELLA_APP_FEATURE_LIST; do
+        aistack_runtime_detect_dependencies "$f"
+    done
 
     # TODO : do we set launcher in PATH ?
     # add launchers to current path
-    # WARN : in AISTACK_RUNTIME_PATH_FILE launchers are after runtime path in resolution order
+    # WARN : in AISTACK_RUNTIME_BOOTSTRAP_FILE launchers are after runtime path in resolution order
     # export PATH="${AISTACK_GEMINI_LAUNCHER_HOME}:${PATH}"
     # export PATH="${AISTACK_OPENCODE_LAUNCHER_HOME}:${PATH}"
     # export PATH="${AISTACK_ORLA_LAUNCHER_HOME}:${PATH}"
@@ -68,87 +72,30 @@ runtime_path() {
         export AISTACK_PYTHON_BIN_PATH=""
     fi
 
-    runtime_path_file_generate
 
 }
 
 
-aistack_info() {
-
-    echo "AISTACK_POOL: $AISTACK_POOL"
-    echo "AISTACK_LAUNCHER_HOME: $AISTACK_LAUNCHER_HOME"
-    echo "AISTACK_MCP_LAUNCHER_HOME: $AISTACK_MCP_LAUNCHER_HOME"
-    echo "AISTACK_ISOLATED_DEPENDENCIES_ROOT: $AISTACK_ISOLATED_DEPENDENCIES_ROOT"
-    echo "AISTACK_RUNTIME_PATH_FILE: $AISTACK_RUNTIME_PATH_FILE"
-    echo
-    echo "--JavaScript ecosystem--"
-    echo "AISTACK_INTERNAL_NVM_AVAILABLE : $AISTACK_INTERNAL_NVM_AVAILABLE"
-    echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
-    echo "NVM_DIR : $NVM_DIR"
-
-    echo "AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE"
-    if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
-        echo "AISTACK_NODEJS_BIN_PATH : $AISTACK_NODEJS_BIN_PATH"
-        echo "AISTACK_INTERNAL_NODEJS_RUNTIME_PATH : $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH"
-        echo "NodeJS version : $($AISTACK_INTERNAL_NODEJS_RUNTIME_PATH --version)"
-        echo "NPM version : $(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --version)"
-        echo "NPM cache dir : $(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get cache)"
-        local npm_userconfig="$(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get userconfig)"
-        case "$npm_userconfig" in
-            "undefined"|"")
-                echo "NPM userconfig file : not defined"
-                ;;
-            *)
-                echo "NPM userconfig file : $npm_userconfig"
-                [ -f "$npm_userconfig" ] && echo "NPM userconfig file exists" || echo "NPM userconfig file does not exist"
-                ;;
-        esac
-    fi
-    echo
-    echo "AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE"
-    if [ "$AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE" = "true" ]; then
-        echo "AISTACK_BUN_BIN_PATH : $AISTACK_BUN_BIN_PATH"
-        echo "AISTACK_INTERNAL_BUN_RUNTIME_PATH : $AISTACK_INTERNAL_BUN_RUNTIME_PATH"
-        echo "Bun version : $($AISTACK_INTERNAL_BUN_RUNTIME_PATH --version)"
-    fi
-
-    echo
-    echo "--python ecosystem--"
-    echo "AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE"
-    if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
-        echo "AISTACK_PYTHON_BIN_PATH : $AISTACK_PYTHON_BIN_PATH"
-        echo "AISTACK_INTERNAL_PYTHON_RUNTIME_PATH : $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH"
-        echo "Python version : $($AISTACK_INTERNAL_PYTHON_RUNTIME_PATH --version)"
-    fi
-    echo "AISTACK_INTERNAL_MAMBA_AVAILABLE : $AISTACK_INTERNAL_MAMBA_AVAILABLE"
-    echo
-    echo "--declared need dependencies--"
-    for f in $STELLA_APP_FEATURE_LIST; do
-        echo "  - $f"
-    done
-    echo
-    echo "PATH : $PATH"
-}
 
 # create files to add runtime dependencies needed for any tool to run
-runtime_path_file_generate() {
-    echo '#!/bin/sh' > "${AISTACK_RUNTIME_PATH_FILE}"
+aistack_runtime_bootstrap_generate() {
+    echo '#!/bin/sh' > "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
     # kodejs bin tools
-    [ -n "$AISTACK_NODEJS_BIN_PATH" ] && echo "export PATH=\"${AISTACK_NODEJS_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
+    [ -n "$AISTACK_NODEJS_BIN_PATH" ] && echo "export PATH=\"${AISTACK_NODEJS_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
     # bun bin tools
-    [ -n "$AISTACK_BUN_BIN_PATH" ] && echo "export PATH=\"${AISTACK_BUN_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
+    [ -n "$AISTACK_BUN_BIN_PATH" ] && echo "export PATH=\"${AISTACK_BUN_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
     # python bin tools
-    [ -n "$AISTACK_PYTHON_BIN_PATH" ] && echo "export PATH=\"${AISTACK_PYTHON_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_PATH_FILE}"
+    [ -n "$AISTACK_PYTHON_BIN_PATH" ] && echo "export PATH=\"${AISTACK_PYTHON_BIN_PATH}:\${PATH}\"" >> "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
     
-    chmod +x "${AISTACK_RUNTIME_PATH_FILE}"
+    chmod +x "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
 }
 
-runtime_path_file_remove() {
-    rm -f "${AISTACK_RUNTIME_PATH_FILE}"
+aistack_runtime_bootstrap_remove() {
+    rm -f "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
 }
 
 
-runtime_analysis() {
+aistack_runtime_detect_dependencies() {
     local dep="$1"
 
     case "$dep" in
@@ -179,10 +126,47 @@ runtime_analysis() {
     esac
 }
 
-runtime_analysis_all() {
-    for f in $STELLA_APP_FEATURE_LIST; do
-        runtime_analysis "$f"
-    done
+aistack_tool_detect() {
+	asm_is_installed
+	adk_is_installed
+	bmad_is_installed
+	cpa_is_installed
+	gemini_is_installed
+	gsd_is_installed
+	kilo_is_installed
+	opencode_is_installed
+	orla_is_installed
+
+}
+
+
+aistack_mcp_detect() {
+	:
+}
+
+
+aistack_launcher_tool_regenerate() (
+
+	adk_launcher_manage "refresh_if_exists"
+	asm_launcher_manage "refresh_if_exists"
+	bmad_launcher_manage "refresh_if_exists"
+	cpa_launcher_manage "refresh_if_exists"
+	gemini_launcher_manage "refresh_if_exists"
+	gsd_launcher_manage "refresh_if_exists"
+	kilo_launcher_manage "refresh_if_exists"
+	opencode_launcher_manage "refresh_if_exists"
+	orla_launcher_manage "refresh_if_exists"
+
+)
+
+aistack_launcher_mcp_regenerate() (
+	# NOTE : for now, we do not use any launcher for mcp server
+	:
+)
+
+aistack_launcher_regenerate() {
+	aistack_launcher_tool_regenerate
+	aistack_launcher_mcp_regenerate
 }
 
 # install dependencies described in properties APP_FEATURE_LIST
@@ -246,15 +230,14 @@ aistack_install_dependency() {
                  miniforge3)
                     # install pipx and uv after having installaing miniforge3 in previsous case match
                     echo "-- install python pipx and uv package/project manager"
-                    # NOTE : Here $AISTACK_PYTHON_BIN_PATH is empty because runtime_path was executed before
-					# rereun runtume_path to set runtime path because we need to use mamba right now (without restarting aistack-cli)
-					runtime_path
+                    # NOTE : Here $AISTACK_PYTHON_BIN_PATH is empty because aistack_runtime_detect was executed before
+					# rereun aistack_runtime_detect to set runtime path because we need to use mamba right now just after having installed python (without restarting aistack-cli)
+					aistack_runtime_detect
+                    aistack_runtime_bootstrap_generate
                     PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y pipx uv
                     ;;
             esac
-
             ;;
-       
     esac
 }
 
@@ -270,22 +253,26 @@ aistack_install_dependencies() {
     done
 
     # generate runtime path files with dependencies path to use them in launchers and other tools
-    runtime_path_file_generate
-}
+    #runtime_path_file_generate
+    aistack_runtime_detect
+  	aistack_runtime_bootstrap_generate
+  }
 
 
 aistack_remove_dependencies() {
+	aistack_runtime_bootstrap_remove
+
     # remove isolated dependencies and runtime
     rm -Rf "${AISTACK_ISOLATED_DEPENDENCIES_ROOT}"
     # remove dependencies
     rm -Rf "${STELLA_APP_FEATURE_ROOT}"
 
-    runtime_path_file_remove
+    
 }
 
 
 
-aistack_init() {
+aistack_install() {
     aistack_remove_dependencies
     aistack_install_dependencies
 }
@@ -320,9 +307,8 @@ aistack_uninstall() {
 	echo "INFO : delete dependencies"
 
     aistack_remove_dependencies
-    runtime_path_file_remove
 
-	echo "INFO : delete tools launcher"
+	echo "INFO : delete tools and launchers"
     rm -Rf "${AISTACK_MCP_LAUNCHER_HOME}"
     rm -Rf "${AISTACK_LAUNCHER_HOME}"
 
@@ -469,7 +455,7 @@ process_kill_by_port() {
             kill -9 "$p"
         done
     else
-        echo "Error: lsof nor netstat able to find process."
+        echo "ERROR: lsof nor netstat able to find process."
         return 1
     fi
 }
@@ -601,4 +587,78 @@ path_unregister_for_shell() {
                 ;;
         esac
     done
+}
+
+
+
+aistack_info() {
+
+    echo "AISTACK_POOL: $AISTACK_POOL"
+    echo "AISTACK_LAUNCHER_HOME: $AISTACK_LAUNCHER_HOME"
+    echo "AISTACK_MCP_LAUNCHER_HOME: $AISTACK_MCP_LAUNCHER_HOME"
+    echo "AISTACK_ISOLATED_DEPENDENCIES_ROOT: $AISTACK_ISOLATED_DEPENDENCIES_ROOT"
+    echo "AISTACK_RUNTIME_BOOTSTRAP_FILE: $AISTACK_RUNTIME_BOOTSTRAP_FILE"
+    echo
+    echo "--JavaScript ecosystem--"
+    echo "AISTACK_INTERNAL_NVM_AVAILABLE : $AISTACK_INTERNAL_NVM_AVAILABLE"
+    echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
+    echo "NVM_DIR : $NVM_DIR"
+
+    echo "AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE"
+    if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
+        echo "AISTACK_NODEJS_BIN_PATH : $AISTACK_NODEJS_BIN_PATH"
+        echo "AISTACK_INTERNAL_NODEJS_RUNTIME_PATH : $AISTACK_INTERNAL_NODEJS_RUNTIME_PATH"
+        echo "NodeJS version : $($AISTACK_INTERNAL_NODEJS_RUNTIME_PATH --version)"
+        echo "NPM version : $(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --version)"
+        echo "NPM cache dir : $(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get cache)"
+        local npm_userconfig="$(PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get userconfig)"
+        case "$npm_userconfig" in
+            "undefined"|"")
+                echo "NPM userconfig file : not defined"
+                ;;
+            *)
+                echo "NPM userconfig file : $npm_userconfig"
+                [ -f "$npm_userconfig" ] && echo "NPM userconfig file exists" || echo "NPM userconfig file does not exist"
+                ;;
+        esac
+    fi
+    echo
+    echo "AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE"
+    if [ "$AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE" = "true" ]; then
+        echo "AISTACK_BUN_BIN_PATH : $AISTACK_BUN_BIN_PATH"
+        echo "AISTACK_INTERNAL_BUN_RUNTIME_PATH : $AISTACK_INTERNAL_BUN_RUNTIME_PATH"
+        echo "Bun version : $($AISTACK_INTERNAL_BUN_RUNTIME_PATH --version)"
+    fi
+
+    echo
+    echo "--python ecosystem--"
+    echo "AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE : $AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE"
+    if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
+        echo "AISTACK_PYTHON_BIN_PATH : $AISTACK_PYTHON_BIN_PATH"
+        echo "AISTACK_INTERNAL_PYTHON_RUNTIME_PATH : $AISTACK_INTERNAL_PYTHON_RUNTIME_PATH"
+        echo "Python version : $($AISTACK_INTERNAL_PYTHON_RUNTIME_PATH --version)"
+    fi
+    echo "AISTACK_INTERNAL_MAMBA_AVAILABLE : $AISTACK_INTERNAL_MAMBA_AVAILABLE"
+    echo
+    echo "--declared need dependencies--"
+    for f in $STELLA_APP_FEATURE_LIST; do
+        echo "  - $f"
+    done
+	echo
+    echo "--tools status--"
+	local var name p
+	while IFS= read -r var; do
+		case "$var" in
+			AISTACK_*_TOOL_AVAILABLE)
+			name="${var#AISTACK_}"
+			name="${name%_TOOL_AVAILABLE}"
+			printf '%s available : %s\n' "$name" "${!var}"
+			path_var="${var/_TOOL_AVAILABLE/_TOOL_PATH}"
+			printf '%s path : %s\n' "$name" "${!path_var}"
+			;;
+		esac
+	done < <(compgen -v AISTACK_ | sort)
+	echo
+	echo
+    echo "PATH : $PATH"
 }

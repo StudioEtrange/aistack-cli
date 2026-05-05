@@ -1,4 +1,4 @@
-cpa_path() {
+cpa_init() {
     # aistack path for cli proxy api
     export AISTACK_CLIPROXYAPI_CONFIG_HOME="${HOME}/.cli-proxy-api"
     mkdir -p "${AISTACK_CLIPROXYAPI_CONFIG_HOME}"
@@ -17,6 +17,15 @@ cpa_path() {
     mkdir -p "${CPA_FEAT_INSTALL_ROOT}"
     
 }
+
+cpa_is_installed() {
+	export AISTACK_CLIPROXYAPI_TOOL_AVAILABLE="false"
+	[ -x "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api" ] || return 1
+	export AISTACK_CLIPROXYAPI_TOOL_AVAILABLE="true"
+	export AISTACK_CLIPROXYAPI_TOOL_PATH="$CPA_FEAT_INSTALL_ROOT/cli-proxy-api"
+	return 0
+}
+
 
 
 # Download and install cliproxyapi from GitHub releases.
@@ -51,12 +60,16 @@ cpa_install() {
     echo "Downloading and installing CLIProxyAPI ${version} from ${download_url} to ${CPA_FEAT_INSTALL_ROOT}..."
     $STELLA_API get_resource "CLIProxyAPI" "${download_url}" "HTTP_ZIP" "$CPA_FEAT_INSTALL_ROOT" "DEST_ERASE"
     echo "CLIProxyAPI installed successfully."
+
+	cpa_is_installed
 }
  
 cpa_uninstall() {
     echo "Uninstalling CLIProxyAPI from ${CPA_FEAT_INSTALL_ROOT}..."
     rm -Rf "${CPA_FEAT_INSTALL_ROOT}"
     echo "CLIProxyAPI uninstalled successfully."
+
+	cpa_is_installed
 }
 
 cpa_launch_export_variables="AISTACK_CLIPROXYAPI_CONFIG_FILE CPA_FEAT_INSTALL_ROOT"
@@ -77,29 +90,64 @@ cpa_launcher_manage() {
 
     case $action in
         create)
-            # create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-            # and executed by the default /bin/sh on the current system
-            {
-                echo '#!/bin/sh'
-                for v in $cpa_launch_export_variables; do
-                    printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-                done
+			if cpa_is_installed; then
+				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
+				# and executed by the default /bin/sh on the current system
+				{
+					echo '#!/bin/sh'
+					for v in $cpa_launch_export_variables; do
+						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+					done
 
-                declare -f cpa_launch
+					declare -f cpa_launch
 
-                echo cpa_launch \"\$@\"
-            } > "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+					echo cpa_launch \"\$@\"
+				} > "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
 
-            chmod +x "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
-
+				chmod +x "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+			fi
             ;;
 
         delete)
             rm -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
             ;;
+
+		refresh_if_exists)
+			[ -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api" ] && ( cpa_launcher_manage "delete"; cpa_launcher_manage "create" )
+			;;
     esac
 }
 
+
+cpa_info() {
+    if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+        echo "CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
+
+        local address="$(cpa_settings_get_address)"
+
+        echo "Management UI : ${address}/management.html"
+        echo "Management key : $(cpa_settings_management_api_key_get)"
+
+        echo "CLIProxyAPI API endpoint : $(cpa_settings_get_api_endpoint)" 
+        echo "CLIProxyAPI API keys list :" 
+        cpa_settings_api_key_list
+    else
+        echo "No CLIProxyAPI configuration file found. ($AISTACK_CLIPROXYAPI_CONFIG_FILE)"
+    fi
+	echo
+	echo "CLIProxyAPI available : $AISTACK_CLIPROXYAPI_TOOL_AVAILABLE"
+	echo "CLIProxyAPI path : $AISTACK_CLIPROXYAPI_TOOL_PATH"
+	echo
+}
+
+cpa_show_config() {
+	if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+		echo "Current CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
+		cat "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
+	else
+		echo "No CLIProxyAPI configuration file found. ($AISTACK_CLIPROXYAPI_CONFIG_FILE)"
+	fi
+}
 
 cpa_settings_configure() {
 
@@ -123,22 +171,6 @@ cpa_settings_remove() {
 }
 
 
-cpa_info() {
-    if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
-        echo "CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
-
-        local address="$(cpa_settings_get_address)"
-
-        echo "Management UI : ${address}/management.html"
-        echo "Management key : $(cpa_settings_management_api_key_get)"
-
-        echo "CLIProxyAPI API endpoint : $(cpa_settings_get_api_endpoint)" 
-        echo "CLIProxyAPI API keys list :" 
-        cpa_settings_api_key_list
-    else
-        echo "No CLIProxyAPI configuration file found. $AISTACK_CLIPROXYAPI_CONFIG_FILE"
-    fi
-}
 
 
 
