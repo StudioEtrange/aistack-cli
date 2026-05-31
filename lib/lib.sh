@@ -412,6 +412,33 @@ require() {
 }
 
 
+get_platform() {
+	local os_arch=""
+	local platform=""
+
+	case "$STELLA_CURRENT_PLATFORM" in
+		linux)
+			[ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="linux_amd64"
+            [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="linux_arm64"
+			platform="${os_arch}"
+			if [ -f /lib/libc.musl-x86_64.so.1 ] || [ -f /lib/libc.musl-aarch64.so.1 ] || ldd /bin/ls 2>&1 | grep -q musl; then
+				platform="${platform}_musl"
+			fi
+			;;
+		darwin)
+            [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="darwin_amd64"
+            [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="darwin_arm64"
+			platform="${os_arch}"
+			;;
+		*)
+			echo "ERROR: Unsupported architecture: $STELLA_CURRENT_CPU_FAMILY" >&2
+			return 1
+			;;
+	esac
+
+	printf '%s' "$platform"
+}
+
 # Generate a self-signed certificate
 # @param {string} $1 - key file path
 # @param {string} $2 - cert file path
@@ -562,6 +589,7 @@ path_register_for_shell() {
 	[ "$shell_name" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name"
 
 	for s in $shell_list; do
+		# TODO : for bash also modify $HOME/.bash_profile ?
 		[ "$s" = "bash" ] && rc_file="$HOME/.bashrc"
 		[ "$s" = "zsh" ] && rc_file="$HOME/.zshrc"
 		[ "$s" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"

@@ -21,126 +21,20 @@ agy_is_installed() {
 	return 0
 }
 
-agy_get_platform() {
-	local os_arch=""
-	local platform=""
 
-	case "$STELLA_CURRENT_PLATFORM" in
-		linux)
-			[ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="linux_amd64"
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="linux_arm64"
-			platform="${os_arch}"
-			if [ -f /lib/libc.musl-x86_64.so.1 ] || [ -f /lib/libc.musl-aarch64.so.1 ] || ldd /bin/ls 2>&1 | grep -q musl; then
-				platform="${platform}_musl"
-			fi
-			;;
-		darwin)
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="darwin_amd64"
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="darwin_arm64"
-			platform="${os_arch}"
-			;;
-		*)
-			echo "ERROR: Unsupported architecture: $STELLA_CURRENT_CPU_FAMILY" >&2
-			return 1
-			;;
-	esac
 
-	printf '%s' "$platform"
-}
-
-# Download and install antigravity-cli from the official Antigravity CLI manifests.
-# @param {string} $1 - Optional version to install. If not provided, latest is used.
-#
-# This function relies on the following environment variables to be set:
-# - AGY_FEAT_INSTALL_ROOT: The directory where antigravity-cli will be installed.
+# https://antigravity.google/download
 agy_install() {
-	local version="$1"
-	local download_base_url="https://antigravity-cli-auto-updater-974169037036.us-central1.run.app"
-	local platform=""
-	local manifest_url=""
-	local manifest_json=""
-	local manifest_version=""
-	local download_url=""
-	local sha512=""
-	local downloader=""
-	local staging_dir=""
-	local staging_payload=""
-	local extracted_binary=""
-	local actual_hash=""
 
-	platform="$(agy_get_platform)" || return 1
-	manifest_url="${download_base_url}/manifests/${platform}.json"
-
-	if command -v curl >/dev/null 2>&1; then
-		downloader="curl"
-	elif command -v wget >/dev/null 2>&1; then
-		downloader="wget"
-	else
-		echo "ERROR: Either curl or wget is required to install Antigravity CLI."
-		return 1
-	fi
-
-	echo "Querying Antigravity CLI release manifest for ${platform}..."
-	if [ "$downloader" = "curl" ]; then
-		manifest_json="$(curl -fsSL "$manifest_url")" || return 1
-	else
-		manifest_json="$(wget -q -O - "$manifest_url")" || return 1
-	fi
-
-	manifest_version="$(printf '%s' "$manifest_json" | jq -r '.version // empty')"
-	download_url="$(printf '%s' "$manifest_json" | jq -r '.url // empty')"
-	sha512="$(printf '%s' "$manifest_json" | jq -r '.sha512 // empty')"
-
-	if [ -z "$manifest_version" ] || [ -z "$download_url" ] || [ -z "$sha512" ]; then
-		echo "ERROR: Failed to parse Antigravity CLI release manifest."
-		return 1
-	fi
-
-	if [ -n "$version" ] && [ "$version" != "latest" ] && [ "$version" != "$manifest_version" ]; then
-		echo "ERROR: Antigravity CLI manifest only exposes latest version ${manifest_version}; requested ${version}."
-		return 1
-	fi
-
-	staging_dir="${AGY_FEAT_INSTALL_ROOT}/staging"
-	rm -Rf "$staging_dir"
-	mkdir -p "$staging_dir" "$AGY_FEAT_INSTALL_ROOT" || return 1
-
-	case "$download_url" in
-		*.tar.gz*)
-			staging_payload="$staging_dir/agy.tar.gz"
-			extracted_binary="$staging_dir/antigravity"
-			;;
-		*)
-			staging_payload="$staging_dir/agy"
-			extracted_binary="$staging_payload"
-			;;
-	esac
-
-	echo "Downloading Antigravity CLI ${manifest_version} from ${download_url}..."
-	if [ "$downloader" = "curl" ]; then
-		curl -fsSL -o "$staging_payload" "$download_url" || return 1
-	else
-		wget -q -O "$staging_payload" "$download_url" || return 1
-	fi
-
-	case "$download_url" in
-		*.tar.gz*)
-			tar -xzf "$staging_payload" -C "$staging_dir" antigravity || return 1
-			;;
-	esac
-
-	cp "$extracted_binary" "$AGY_FEAT_INSTALL_ROOT/agy" || return 1
-	chmod +x "$AGY_FEAT_INSTALL_ROOT/agy"
-
-	# if [ "$STELLA_CURRENT_PLATFORM" = "darwin" ]; then
-	# 	xattr -d com.apple.quarantine "$AGY_FEAT_INSTALL_ROOT/agy" 2>/dev/null || true
-	# fi
-
-	rm -Rf "$staging_dir"
-	echo "Antigravity CLI installed successfully."
+	# use a temporary HOME to avoid rc file modification in HOME
+	local tmp_home="$(mktemp -d)"
+	curl -fsSL https://antigravity.google/cli/install.sh | HOME="${tmp_home}" bash -s -- --dir "${AGY_FEAT_INSTALL_ROOT}"
+	rm -rf "$tmp_home"
 
 	agy_is_installed
 }
+
+
 
 agy_uninstall() {
 	echo "Uninstalling Antigravity CLI from ${AGY_FEAT_INSTALL_ROOT}..."
