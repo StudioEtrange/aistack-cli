@@ -150,7 +150,8 @@ gemini_settings_configure() {
 }
 
 gemini_settings_remove() {
-    rm -Rf "$AISTACK_GEMINI_CONFIG_HOME"
+    #rm -Rf "$AISTACK_GEMINI_CONFIG_HOME"
+    remove_dir_with_exceptions "$AISTACK_GEMINI_CONFIG_HOME" "antigravity-cli"
 }
 
 

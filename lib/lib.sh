@@ -23,6 +23,7 @@ aistack_init() {
 	vscode_init "$FORCE_VSCODE_MODE"
 
 	gemini_init
+	agy_init
     opencode_init
     cpa_init
     orla_init
@@ -127,6 +128,7 @@ aistack_runtime_detect_dependencies() {
 }
 
 aistack_tool_detect() {
+	agy_is_installed
 	asm_is_installed
 	adk_is_installed
 	bmad_is_installed
@@ -148,6 +150,7 @@ aistack_mcp_detect() {
 aistack_launcher_tool_regenerate() (
 
 	adk_launcher_manage "refresh_if_exists"
+	agy_launcher_manage "refresh_if_exists"
 	asm_launcher_manage "refresh_if_exists"
 	bmad_launcher_manage "refresh_if_exists"
 	cpa_launcher_manage "refresh_if_exists"
@@ -289,6 +292,7 @@ aistack_uninstall() {
 	adk_path_unregister_for_shell "all"
 	asm_path_unregister_for_shell "all"
 	kilo_path_unregister_for_shell "all"
+	agy_path_unregister_for_shell "all"
     
 	if check_requirements "nodejs"; then 
 		# need json nom package to manipulate vscode config
@@ -300,6 +304,7 @@ aistack_uninstall() {
 		adk_path_unregister_for_vs_terminal
 		asm_path_unregister_for_vs_terminal
 		kilo_path_unregister_for_vs_terminal
+		agy_path_unregister_for_vs_terminal
 	else
 		echo "INFO : registred PATHs from vscode will not be cleaned because nodejs ecosystem is not available "
 	fi
@@ -499,15 +504,44 @@ github_get_latest_release() {
     echo -n "$latest_tag"
 }
 
+# Sample:
+# remove_dir_except_names "$HOME/.gemini" \
+#     "antigravity-cli" \
+#	  "GEMINI.md" \
+#  	  "settings.json"
+remove_dir_with_exceptions() {
+    local target_dir="$1"
+    shift
 
+    if [ -z "$target_dir" ]; then
+        echo "ERROR: missing target_dir" >&2
+        return 1
+    fi
+
+    if [ "$#" -eq 0 ]; then
+        echo "ERROR: missing names to keep" >&2
+        return 1
+    fi
+
+    [ -d "$target_dir" ] || return 0
+
+    local find_args=()
+    local keep_name
+
+    for keep_name in "$@"; do
+        find_args+=( ! -name "$keep_name" )
+    done
+
+    find "$target_dir" -mindepth 1 -maxdepth 1 \
+        "${find_args[@]}" \
+        -exec rm -rf -- {} +
+}
 
 # add a path at PATH env variable by configuring shell rc files
 path_register_for_shell() {
     local name="$1"
 	local path_to_add="$2"
     local shell_name="$3"
-	# TODO set_path_now not implemented, should modify current PATH value now
-    local set_path_now="${4:-false}"
 
     local rc_file
 	local err=0

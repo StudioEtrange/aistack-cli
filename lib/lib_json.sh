@@ -561,10 +561,10 @@ json_tweak_value_of_list() {
     local value="$2"
     local separator="$3" # separator of values in the list
     local mode="${4:-ALWAYS_PREPEND}"
-    # ALWAYS_PREPEND add path or move it at the begining position
-    # ALWAYS_POSTPEND add path or move it at the end position
-    # PREPEND_IF_NOT_EXISTS add path at the begining position only if not already present
-    # POSTPEND_IF_NOT_EXISTS add path at the end position only if not already present
+    # ALWAYS_PREPEND add value or move it at the begining position
+    # ALWAYS_POSTPEND add value or move it at the end position
+    # PREPEND_IF_NOT_EXISTS add value at the begining position only if not already present
+    # POSTPEND_IF_NOT_EXISTS add value at the end position only if not already present
     # REMOVE remove all occurences of a fix expression
     # REMOVE_REGEXP remove all occurences of an regexp expression
 

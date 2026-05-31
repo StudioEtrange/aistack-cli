@@ -21,8 +21,8 @@ kilo_is_installed() {
 	export AISTACK_KILO_TOOL_AVAILABLE="false"
 	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
 	[ -x "$AISTACK_NODEJS_BIN_PATH/kilo" ] || return 1
-	export AISTACK_KILO_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/kilo"
 	export AISTACK_KILO_TOOL_AVAILABLE="true"
+	export AISTACK_KILO_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/kilo"
 	return 0
 }
 

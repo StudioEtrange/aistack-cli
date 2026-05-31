@@ -139,6 +139,9 @@ vscode_settings_configure() {
         "opencode" )
             merge_json_file "${AISTACK_POOL}/settings/opencode/settings-for-vscode.json" "$AISTACK_VSCODE_CONFIG_FILE"
         ;;
+		"antigravity" )
+            merge_json_file "${AISTACK_POOL}/settings/antigravity-cli/settings-for-vscode.json" "$AISTACK_VSCODE_CONFIG_FILE"
+		;;
     esac
 }
 
@@ -149,6 +152,7 @@ vscode_settings_remove() {
     case "$target" in
         "gemini");;
         "opencode" );;
+		"antigravity" );;
     esac
 }
 

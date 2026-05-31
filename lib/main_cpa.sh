@@ -52,7 +52,7 @@ case "$sub_command" in
         cpa_get_config "$1"
         ;;
     # this is for API key management :
-    key)
+    key|keys)
         case "$1" in
             generate)
                 cpa_settings_api_key_create
@@ -100,7 +100,7 @@ case "$sub_command" in
 			exit 1
 		fi
         ;;
-    model)
+    model|models)
         case "$1" in
             list)
                 cpa_get_model_list

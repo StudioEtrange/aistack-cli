@@ -13,6 +13,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_yaml.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_node.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_bun.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_agy.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_cpa.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_vscode.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
@@ -133,6 +134,19 @@ Options:
     cpa key reset                        Remove all API keys from CLIProxyAPI configuration.
     cpa key delete <key>                 Remove an API key from CLIProxyAPI configuration. (cpa must be installed before)
     cpa model list                       List all available LLM models from CLIProxyAPI endpoint.
+    ----
+    agy : Antigravity CLI - https://antigravity.google/
+    agy install [latest]                Install Antigravity CLI.
+    agy uninstall                       Uninstall Antigravity CLI and unregister Antigravity CLI PATH.
+    agy configure                    	Configure Antigravity CLI with some default values. But do not fully reset all other existing config values. ('aistack orla install' include configuration)
+	agy info                            Print Antigravity CLI informations.
+    agy show-config                  	Show current Antigravity CLI  configuration.
+    agy reset                       	Reset all Antigravity CLI configuration.
+	agy register <all|shell|vs>         Register Antigravity CLI PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    agy unregister [<all|shell|vs>]     Unregister Antigravity CLI PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
+    agy launch [context folder] -- <antigravity command>
+                                        Launch Antigravity CLI. Instead use 'agy' command if ${AISTACK_ANTIGRAVITY_LAUNCHER_HOME} is in your PATH.
+                                        Use 'aistack agy register <shell>' to set it in your PATH.
     ----
     asm : Agent Skill Manager - https://github.com/luongnv89/asm
     asm install [@version]                Install and configure asm.
@@ -314,6 +328,9 @@ main() {
             ;;
         cpa)
             . "${_CURRENT_FILE_DIR}/lib/main_cpa.sh"
+            ;;
+        agy)
+            . "${_CURRENT_FILE_DIR}/lib/main_agy.sh"
             ;;
         vs)
             . "${_CURRENT_FILE_DIR}/lib/main_vs.sh"

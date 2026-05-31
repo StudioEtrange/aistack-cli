@@ -29,11 +29,38 @@
   * https://github.com/VoltAgent?q=awesome&type=all&language=&sort=
 
 
+## Context files (aka Rules)
+
+* Context files location
+  * about gemini : https://antigravity.google/docs/gcli-migration
+    | *SCOPE* | Gemini CLI | Antigravity CLI |
+    | ---- | ---- | ---- |
+    | *Global* | ~/.gemini/GEMINI.md | ~/.gemini/GEMINI.md |
+    | *Workspace* | ./GEMINI.md and ./AGENTS.md | ./GEMINI.md and ./AGENTS.md |
+
+
+## MCP servers
+
+* MCP files location
+  * about gemini : https://antigravity.google/docs/gcli-migration
+    | *SCOPE* | Gemini CLI | Antigravity CLI |
+    | ---- | ---- | ---- |
+    | *Global* | ~/.gemini/settings.json | ~/.gemini/antigravity-cli/mcp_config.json |
+    | *Workspace* | .gemini/settings.json | .agents/mcp_config.json |
+
 ## Skills
 
 * doc and specifications :
   * https://agentskills.io/
   * https://github.com/agentskills/agentskills
+
+* skills files location
+  * about gemini : https://antigravity.google/docs/gcli-migration
+    | *SCOPE* | Gemini CLI | Antigravity CLI |
+    | ---- | ---- | ---- |
+    | *Global* | ~/.gemini/skills/ | ~/.gemini/antigravity-cli/skills/  |
+    | *Workspace* |.gemini/skills/ or .agents/skills/ | .agents/skills/ |
+
 
 * catalogs :
   * Anthropic skills
