@@ -3,3 +3,5 @@
 **/workspace/
 **/node_modules/
 **/.adk/
+.kilo/
+.antigravitycli/
