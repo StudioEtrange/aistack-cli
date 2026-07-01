@@ -26,7 +26,6 @@
 * superpowers
 * support bun configuration file and for bunx
 * cam
-* recreate launcher at each init
 * local doc querying through a mcp server : 
   * https://github.com/neuledge/context
   * npm package @neuledge/context
@@ -44,7 +43,7 @@
   # Connect to your AI agent (Claude Code example)
   claude mcp add context -- context serve
   ```
-* agent hermes-agent https://github.com/nousresearch/hermes-agent
+
 * ghostdesk
   * MCP server over a linux desktop
   * https://korben.info/ghostdesk-agent-ia-bureau-linux-docker.html

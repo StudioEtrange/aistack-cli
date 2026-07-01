@@ -29,6 +29,25 @@
   * https://github.com/VoltAgent?q=awesome&type=all&language=&sort=
 
 
+## Personal agent
+
+### openclaw alternatives focus on private and self hosted :
+
+* Vellum
+  * https://www.vellum.ai/
+  * https://github.com/vellum-ai/vellum-assistant
+
+* zeroclaw
+  * https://github.com/zeroclaw-labs/zeroclaw
+  * https://www.zeroclawlabs.ai/
+  * self host
+  * rust based
+  * any OS
+
+* Hermes Agent
+  * https://github.com/nousresearch/hermes-agent
+  * statefull by design - each session is turn into a skill to improve next session
+
 ## Context files (aka Rules)
 
 * Context files location
