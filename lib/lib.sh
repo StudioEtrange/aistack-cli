@@ -6,13 +6,16 @@ aistack_initialize() {
     # components ---
     # runtime lists
     export AISTACK_RUNTIME_TO_DETECT="python nodejs bun"
-    export AISTACK_RUNTIME_CORE="bun"
+	# runtimes required for AIStack
+    export AISTACK_RUNTIME_CORE="nodejs"
 
     # modules lists
     export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm"
-    export AISTACK_MODULE_CORE="jq json5"
-    # modules installed before everything else at init - MUST not depends on any runtimes
+	# modules required for AIStack - installed before everything else at init - MUST not depends on any runtimes
     export AISTACK_MODULE_CORE_BOOTSTRAP="yq"
+	# modules required for AIStack - installed after required runtime
+    export AISTACK_MODULE_CORE="jq json5"
+
 
     # add search path of runtimes and modules to tool run context
     #export AISTACK_TOOL_RUN_CONTEXT_ADD_RUNTIME="nodejs bun python"
@@ -200,6 +203,13 @@ aistack_run_context_file_generate() {
 
     echo '#!/bin/sh' > "${AISTACK_RUN_CONTEXT_FILE}"
 
+    # add to run context runtime search path
+    for r in ${AISTACK_TOOL_RUN_CONTEXT_ADD_RUNTIME}; do
+        va="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
+        vp="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
+        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
+    done
+
     # add to run context module search path
     for m in ${AISTACK_TOOL_RUN_CONTEXT_ADD_MODULE}; do
         va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
@@ -207,12 +217,6 @@ aistack_run_context_file_generate() {
         [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
     done
 
-    # add to run context runtime search path
-    for r in ${AISTACK_TOOL_RUN_CONTEXT_ADD_RUNTIME}; do
-        va="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
-        vp="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
-        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
-    done
     
     [ -n "${list_path}" ] && echo "export PATH=\"${list_path}:\${PATH}\"" >> "${AISTACK_RUN_CONTEXT_FILE}"
     chmod +x "${AISTACK_RUN_CONTEXT_FILE}"
