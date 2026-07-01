@@ -54,6 +54,11 @@ agy
 
 **SEE OTHER [Quick Usage](./doc/quickusage.md)**
 
+## Specific documentation interest
+
+* Installing AIStack using a [specific npm registry](./doc/nodejs.md#using-a-npm-registry)
++ Installing AIStack on old linux system, like Redhat/Centos 7 [see GBC](./doc/nodejs.md#using-aistack-on-old-linux-system-with-gbc)
+
 ## Directory Structure
 
 *   `aistack` : Main script.

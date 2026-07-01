@@ -45,13 +45,20 @@ cd aistack-cli
 
 ## Case 2 : Configure Node.js internal runtime
 
-_"I want to set the registry for npm package for the internal Node.js runtime."_
+_"I want to set a npm registry for the internal Node.js runtime."_
 
 ```
 cd aistack-cli
 ./aistack npm config set registry https://registry.local.org/ -g
 ```
 
+_"When I init AIStack, which will install Node.js runtime and some npm packages, I want to set a npm registry for the internal Node.js runtime."_
+
+```
+export AISTACK_INIT_FORCE_NPM_REGISTRY="https://registry.local.org/"
+cd aistack-cli
+./aistack init
+```
 
 ## Case 3 : install gemini-cli
 

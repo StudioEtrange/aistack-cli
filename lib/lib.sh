@@ -43,9 +43,9 @@ aistack_initialize() {
 	node_init
     bun_init
 
-    # FORCE_VSCODE_MODE could be "remote" : means using vscode remote extension
-    # FORCE_VSCODE_MODE could be empty "" : try to guess
-	vscode_init "$FORCE_VSCODE_MODE"
+    # AISTACK_INIT_FORCE_VSCODE_MODE could be "remote" : means using vscode remote extension
+    # AISTACK_INIT_FORCE_VSCODE_MODE could be empty "" : try to guess
+	vscode_init "${AISTACK_INIT_FORCE_VSCODE_MODE}"
 
 	gemini_init
 	agy_init
@@ -554,6 +554,13 @@ aistack_component_core_install() {
     echo "- Install core mandatories runtimes managed by AIStack"
     for r in ${AISTACK_RUNTIME_CORE}; do
         aistack_runtime_install "${r}"
+        if [ "${r}" = "nodejs" ]; then
+            if [ -n "${AISTACK_INIT_FORCE_NPM_REGISTRY}" ]; then
+                if check_binary "npm"; then
+                    npm config set registry "${AISTACK_INIT_FORCE_NPM_REGISTRY}" -g
+                fi
+            fi
+        fi
     done
 
     aistack_runtime_detect

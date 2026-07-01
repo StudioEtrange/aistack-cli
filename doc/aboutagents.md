@@ -103,6 +103,12 @@
     * 2,6k stars 328 forks - last activity april 26
 
 * skills manager :
+  * vercel labs skills
+    * https://github.com/vercel-labs/skills
+    * https://www.npmjs.com/package/skills
+    * CLI - 20k stars - last activity may 26
+    * package npm
+    * list, manage, download skills from various location
   * skillfish
     * https://github.com/knoxgraeme/skillfish
     * CLI - 186 stars 15 forks - last activity april 26
@@ -129,6 +135,7 @@
     * CLI - 197 stars 13 forks - last activity april 26
     * https://luongnv.com/asm/
     * use central folder and symlink to agent skill folder
+    * list, manage, download skills from various location (i.e `asm install https://github.com/anthropics/skills/tree/main/skills/algorithmic-art`)
   * Rito-w/skills-manager
     * https://github.com/Rito-w/skills-manager
     * Desktop IDE - 146 stars 10 forks - last release april 26
