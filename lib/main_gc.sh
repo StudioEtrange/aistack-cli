@@ -1,10 +1,7 @@
-if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
     install)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-
         gemini_install "$1"
 
         echo "Configuring Gemini CLI"
@@ -18,8 +15,6 @@ case "$sub_command" in
         echo "$0 gc register vs"
         ;;
     uninstall)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-
         echo "Uninstalling Gemini CLI and unregister Gemini CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
         gemini_uninstall
         
@@ -113,7 +108,7 @@ case "$sub_command" in
         esac
         ;;
     *)
-        echo "ERROR: Unknown command $sub_command for gc"
+        echo "ERROR: Unknown command ${sub_command} for gc"
         usage
         exit 1
         ;;

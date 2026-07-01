@@ -35,10 +35,11 @@ Usage: aistack [options]
 
 Options:
     init                    Install/Reinstall dependencies.
-    uninstall               Uninstall aistack, all tools, mcp servers and unregister everything from PATH.
+    uninstall               Uninstall AIStack, all tools, mcp servers and unregister everything from PATH.
     help                    Display this help message.
     info                    Display various aistack information and configuration.
-    shell                   Enter aistack context and path.
+    shell                   Enter aistack AIStack and path.
+	runtime add|remove <runtime> Install/remove an AIStack managed runtime to be used in any tool run context (Available: $AISTACK_RUNTIME). Core runtimes are always preinstalled ($AISTACK_RUNTIME_CORE)
     ----
     gc : gemini-cli - https://google-gemini.github.io/gemini-cli
     gc install [@version]           Install and configure Gemini CLI. (main versions are latest, nightly, preview) (when asked to relaunch gemini cli, use 'aistack gc launch' command)
@@ -91,15 +92,9 @@ Options:
                                         Use 'aistack kc register <shell>' to set it in your PATH.
     kc connect cpa [<model>]            Connect Kilo Code CLI and VS Code extension to CLIProxyAPI. Create a CLIProxyAPI provider and register all models into Kilo Code and sets the first as default. <model> provide a specific model. Require 'aistack cpa launch'.
     ----
-    vs info                             Print VS Code informations.
-    vs show-config                      Show current VS Code configuration.
-    vs install|uninstall <extension id>           Install/uninstall a VS Code extension from marketplace into current VS Code session.
-    vs set <key> <value>                Set a VS Code configuration in settings file.
-    vs del <key>                        Delete a VS Code configuration in settings file.
-    ----
     orla : Orla - https://github.com/dorcha-inc/orla
     orla install                      Install and configure Orla.
-    orla uninstall                    Uninstalling Orla and unregister Orla PATH. (keep all configuration unchanged, to remove configuration use 'aistack gc reset' command)
+    orla uninstall                    Uninstalling Orla and unregister Orla PATH. (keep all configuration unchanged, to remove configuration use 'aistack orla reset' command)
     orla configure                    Configure Orla with some default values. But do not fully reset all other existing config values. ('aistack orla install' include configuration)
     orla info                         Print Orla informations.
     orla show-config                  Show current Orla configuration.
@@ -123,9 +118,10 @@ Options:
     cpa show-config                      Show current CLIProxyAPI configuration.
     cpa reset                            Reset all CLIProxyAPI configuration.
     cpa launch [context folder] -- <CLIProxyAPI command>                   Launch CLIProxyAPI.
-    cpa login gemini-oauth [--project_id <your_project_id>]                     Login to Gemini OAuth.
-    cpa login openai-oauth               Login to OpenAI OAuth.
-    cpa login qwen-oauth                 Login to Qwen OAuth.
+    cpa login agy-oauth [--project_id <your_project_id>]                     Login to Antigravity OAuth.
+    cpa login codex-oauth                Login to Codex OAuth (OpenAI).
+    cpa login kimi-oauth                 Login to Kimi OAuth.
+	cpa login claude-oauth                 Login to Claude OAuth (Anthropic)
     cpa set <config key> <value> ["string"]     Set a CLIProxyAPI key in setting file. (i.e: cpa set port 8000) Use optional "string" if option value is a string.
     cpa get <config key>                 Get a CLIProxyAPI key from setting file. (i.e: cpa get api-key.0)
     cpa key generate                     Generate a new API key for CLIProxyAPI and add it to the configuration. (cpa must be installed before)
@@ -138,7 +134,7 @@ Options:
     agy : Antigravity CLI - https://antigravity.google/
     agy install [latest]                Install Antigravity CLI.
     agy uninstall                       Uninstall Antigravity CLI and unregister Antigravity CLI PATH.
-    agy configure                    	Configure Antigravity CLI with some default values. But do not fully reset all other existing config values. ('aistack orla install' include configuration)
+    agy configure                    	Configure Antigravity CLI with some default values. But do not fully reset all other existing config values. ('aistack agy install' include configuration)
 	agy info                            Print Antigravity CLI informations.
     agy show-config                  	Show current Antigravity CLI  configuration.
     agy reset                       	Reset all Antigravity CLI configuration.
@@ -159,10 +155,6 @@ Options:
     asm launch [context folder] -- <asm command>
                                           Launch asm. Instead use 'asm' command if ${AISTACK_ASM_LAUNCHER_HOME} is in your PATH.
                                           Use 'aistack asm register <shell>' to set it in your PATH.
-    ----
-    nvm|npm|npx|bun|pip|pipx|uv [<command>]           Execute nvm, npm, npx, bun, pip, pipx, or uv command using the internal nodejs or python runtime from aistack. (i.e: aistack npm install -g typescript)
-    ----
-    app killport <port>                  Kill process running on a specific port.
     ----
 	BMAD-Method - https://docs.bmad-method.org/
     bmad <install|uninstall>            Install/Uninstall bmad cli.
@@ -187,6 +179,16 @@ Options:
     adk launch -- <adk command>         Launch adk. (i.e: aistack adk launch -- --help)
                                         Instead use 'adk' command if ${AISTACK_ADK_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack adk register <shell>' to set it in your PATH.
+    ----
+    vs info                             Print VS Code informations.
+    vs show-config                      Show current VS Code configuration.
+    vs install|uninstall <extension id>           Install/uninstall a VS Code extension from marketplace into current VS Code session.
+    vs set <key> <value>                Set a VS Code configuration in settings file.
+    vs del <key>                        Delete a VS Code configuration in settings file.
+   	----
+	nvm|npm|npx|bun|pip|pipx|uv [<command>]           Execute nvm, npm, npx, bun, pip, pipx, or uv command using the internal nodejs or python runtime from aistack. (i.e: aistack npm install -g typescript)
+    ----
+    app killport <port>                  Kill process running on a specific port.
     ----
 EOF
 }
@@ -213,96 +215,92 @@ main() {
             ;;
         shell)
             $STELLA_API boot_app_shell "local"
+			exit 0
             ;;
         info)
             aistack_info
+			exit 0
             ;;
         init)
+			# NOTE : aistack_install uninstall everything
             aistack_install
 
-            aistack_init
+            aistack_initialize
             aistack_runtime_detect
-            aistack_runtime_bootstrap_generate
+            aistack_module_detect
+		    aistack_run_context_file_generate
             aistack_tool_detect
             aistack_mcp_detect
             aistack_launcher_regenerate
+			exit 0
             ;;
         uninstall)
             aistack_uninstall
 
-            aistack_init
+            aistack_initialize
             aistack_runtime_detect
-            aistack_runtime_bootstrap_generate
+			aistack_module_detect
+            aistack_run_context_file_generate
             aistack_tool_detect
             aistack_mcp_detect
             aistack_launcher_regenerate
+			exit 0
             ;;
+	esac
+
+
+	# next commands requires core components installed
+	aistack_component_core_is_detected
+
+
+
+	case "$command" in
         bun)
-            if ! check_requirements "bun"; then echo " -- ERROR : bun missing, launch aistack init"; exit 1; fi;
-            if [ "$AISTACK_INTERNAL_BUN_RUNTIME_AVAILABLE" = "true" ]; then
-                PATH="${AISTACK_BUN_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
-            else
-                echo " -- WARN : $command found but outside of aistack-cli, launch aistack init"
-                exit 1
-            fi
+            if ! aistack_runtime_is_detected "bun"; then echo " -- ERROR : bun managed runtime missing, use aistack runtime command"; exit 1; fi;     
+			PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
         npm|npx)
-            if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-            if [ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ]; then
-                PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
-            else
-                echo " -- WARN : $command found but outside of aistack-cli, launch aistack init"
-                exit 1
-            fi
+            if ! aistack_runtime_is_detected "nodejs"; then echo " -- ERROR : nodejs managed runtime missing, use aistack runtime command"; exit 1; fi;     
+			PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
         nvm)
-            if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-            if [ "$AISTACK_INTERNAL_NVM_AVAILABLE" = "true" ]; then
-                "$command" "$@"
+            if ! aistack_runtime_is_detected "nodejs"; then echo " -- ERROR : nodejs managed runtime missing, use aistack runtime command"; exit 1; fi;     
+            if [ "${AISTACK_MODULE_NVM_AVAILABLE}" = "true" ]; then
+                "${command}" "$@"
             else
-                echo " -- WARN : $command found but outside of aistack-cli, launch aistack init"
+                echo " -- WARN : $command not found - reinstall nodejs managed runtime."
                 exit 1
             fi
             ;;
         pip|pipx|uv)
-            if ! check_requirements "python"; then echo " -- ERROR : python missing, launch aistack init"; exit 1; fi;     
-            if [ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ]; then
-                PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
-            else
-                echo " -- WARN : $command found but outside of aistack-cli, launch aistack init"
-                exit 1
-            fi
+            if ! aistack_runtime_is_detected "python"; then echo " -- ERROR : python managed runtime missing, use aistack runtime command"; exit 1; fi;     
+            PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
-        npm-config)
-            echo "WARN : COMMAND CHANGE : use $0 npm config set <key> <value>"
-            # if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-            # local sub_command="$1"
-            # shift
-            # case "$sub_command" in
-            #     set)
-            #         local key="$1"
-            #         shift
-            #         local value="$1"
-            #         shift
-            #         if [ -z "$key" ]; then
-            #             echo " -- ERROR : Missing key for npm-config set"
-            #             usage
-            #             exit 1
-            #         fi
-            #         echo "Setting npm config: $key = $value"
-            #         PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm config set "$key" "$value" -g
-            #         ;;
-            #     *)
-            #         echo "ERROR: Unknown command $sub_command for npm-config"
-            #         usage
-            #         exit 1
-            #         ;;
-            # esac
-            ;;
+		runtime)
+			local sub_command="$1"
+			shift
+            case "${sub_command}" in
+                add)
+					aistack_runtime_install "$1"
+					aistack_runtime_detect
+					aistack_run_context_file_generate
+				;;
+				remove)
+					aistack_runtime_uninstall "$1"
+					aistack_runtime_detect
+					aistack_run_context_file_generate
+				;;
+				*)
+					echo "ERROR: Unknown command ${sub_command} for runtime"
+					usage
+					exit 1
+				;;
+			esac
+			;;
         app)
             local sub_command="$1"
             shift
-            case "$sub_command" in
+            case "${sub_command}" in
                 killport)
                     local port="$1"
                     shift
@@ -314,7 +312,7 @@ main() {
                     process_kill_by_port "$port"
                     ;;
                 *)
-                    echo "ERROR: Unknown command $sub_command for app"
+                    echo "ERROR: Unknown command ${sub_command} for app"
                     usage
                     exit 1
                     ;;
@@ -363,13 +361,13 @@ main() {
     
 }
 
-aistack_init
+aistack_initialize
 
-#aistack_runtime_init
 aistack_runtime_detect
-aistack_runtime_bootstrap_generate
+aistack_module_detect
 
-#aistack_tooling_init
+aistack_run_context_file_generate
+
 aistack_tool_detect
 aistack_mcp_detect
 aistack_launcher_regenerate

@@ -13,16 +13,23 @@ cpa_init() {
     export AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/management-api-key"
     
 
-    export CPA_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_DEPENDENCIES_ROOT/cli-proxy-api"
-    mkdir -p "${CPA_FEAT_INSTALL_ROOT}"
+    export CLIPROXYAPI_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_ROOT/cli-proxy-api"
+    mkdir -p "${CLIPROXYAPI_FEAT_INSTALL_ROOT}"
+
+	export AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED=""
     
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 cpa_is_installed() {
+	local r
 	export AISTACK_CLIPROXYAPI_TOOL_AVAILABLE="false"
-	[ -x "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api" ] || return 1
+	for r in $AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "$CLIPROXYAPI_FEAT_INSTALL_ROOT/cli-proxy-api" ] || return 1
 	export AISTACK_CLIPROXYAPI_TOOL_AVAILABLE="true"
-	export AISTACK_CLIPROXYAPI_TOOL_PATH="$CPA_FEAT_INSTALL_ROOT/cli-proxy-api"
+	export AISTACK_CLIPROXYAPI_TOOL_PATH="$CLIPROXYAPI_FEAT_INSTALL_ROOT/cli-proxy-api"
 	return 0
 }
 
@@ -33,8 +40,9 @@ cpa_is_installed() {
 #                      If not provided, the latest version will be fetched.
 #
 # This function relies on the following environment variables to be set:
-# - CPA_FEAT_INSTALL_ROOT: The directory where cliproxyapi will be installed.
+# - CLIPROXYAPI_FEAT_INSTALL_ROOT: The directory where cliproxyapi will be installed.
 cpa_install() {
+	local r
     local version="$1"
     
     if [ -z "$version" ] || [ "$version" = "latest" ]; then
@@ -42,6 +50,11 @@ cpa_install() {
         version=$(github_get_latest_release "router-for-me/CLIProxyAPI")
         echo "latest version is ${version}"
     fi
+
+	for r in $AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
 
     local os_arch
     case "$STELLA_CURRENT_PLATFORM" in
@@ -57,31 +70,35 @@ cpa_install() {
     local filename="CLIProxyAPI_${version#v}_${os_arch}.tar.gz"
     local download_url="https://github.com/router-for-me/CLIProxyAPI/releases/download/${version}/${filename}"
 
-    echo "Downloading and installing CLIProxyAPI ${version} from ${download_url} to ${CPA_FEAT_INSTALL_ROOT}..."
-    $STELLA_API get_resource "CLIProxyAPI" "${download_url}" "HTTP_ZIP" "$CPA_FEAT_INSTALL_ROOT" "DEST_ERASE"
+    echo "Downloading and installing CLIProxyAPI ${version} from ${download_url} to ${CLIPROXYAPI_FEAT_INSTALL_ROOT}..."
+    $STELLA_API get_resource "CLIProxyAPI" "${download_url}" "HTTP_ZIP" "$CLIPROXYAPI_FEAT_INSTALL_ROOT" "DEST_ERASE"
     echo "CLIProxyAPI installed successfully."
 
 	cpa_is_installed
 }
  
 cpa_uninstall() {
-    echo "Uninstalling CLIProxyAPI from ${CPA_FEAT_INSTALL_ROOT}..."
-    rm -Rf "${CPA_FEAT_INSTALL_ROOT}"
-    echo "CLIProxyAPI uninstalled successfully."
+	if cpa_is_installed; then
+		echo "Uninstalling CLIProxyAPI from ${CLIPROXYAPI_FEAT_INSTALL_ROOT}..."
+		rm -Rf "${CLIPROXYAPI_FEAT_INSTALL_ROOT}"
+		echo "CLIProxyAPI uninstalled successfully."
 
-	cpa_is_installed
+		cpa_is_installed
+	else
+		echo "WARN : not installed or missing a required managed runtime $AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED"
+	fi
 }
 
-cpa_launch_export_variables="AISTACK_CLIPROXYAPI_CONFIG_FILE CPA_FEAT_INSTALL_ROOT"
+cpa_launch_export_variables="AISTACK_CLIPROXYAPI_CONFIG_FILE CLIPROXYAPI_FEAT_INSTALL_ROOT"
 cpa_launch() {
     if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
         set -- --config "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$@"
     fi
 
     if [ "$#" -gt 0 ]; then
-        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api" "$@"
+        "$CLIPROXYAPI_FEAT_INSTALL_ROOT/cli-proxy-api" "$@"
     else
-        "$CPA_FEAT_INSTALL_ROOT/cli-proxy-api"
+        "$CLIPROXYAPI_FEAT_INSTALL_ROOT/cli-proxy-api"
     fi
 }
 
@@ -137,6 +154,7 @@ cpa_info() {
 	echo
 	echo "CLIProxyAPI available : $AISTACK_CLIPROXYAPI_TOOL_AVAILABLE"
 	echo "CLIProxyAPI path : $AISTACK_CLIPROXYAPI_TOOL_PATH"
+	echo "CLIProxyAPI needed managed runtime : $AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED"
 	echo
 }
 
@@ -151,7 +169,7 @@ cpa_show_config() {
 
 cpa_settings_configure() {
 
-   [ ! -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ] && cp -f "$CPA_FEAT_INSTALL_ROOT/config.example.yaml" "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
+   [ ! -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ] && cp -f "$CLIPROXYAPI_FEAT_INSTALL_ROOT/config.example.yaml" "$AISTACK_CLIPROXYAPI_CONFIG_FILE"
 
     echo "add some default settings :"
     cpa_settings_set_host "localhost"
@@ -177,25 +195,31 @@ cpa_settings_remove() {
 
 # login management -----------------
 
-# gemini oauth 
-#  cpa_login_gemini_oauth [--project_id <your_project_id>]
-cpa_login_gemini_oauth() {
-    echo "Login to Gemini OAuth"
+# antigravity oauth 
+#  cpa_login_agy_oauth [--project_id <your_project_id>]
+cpa_login_agy_oauth() {
+    echo "Login to Antigravity OAuth"
     echo "The local OAuth callback uses port 8085"
-    cpa_launch --login --no-browser "$@"
+    cpa_launch --antigravity-login --no-browser "$@"
 }
 
-# openai oauth
-cpa_login_openai_oauth() {
-    echo "Login to OpenAI OAuth"
+# codex oauth
+cpa_login_codex_oauth() {
+    echo "Login to Codex OAuth"
     echo "The local OAuth callback uses port 1455"
     cpa_launch --codex-login --no-browser "$@"
 }
 
-# qwen oauth
-cpa_login_qwen_oauth() {
-    echo "Login to Qwen OAuth"
-    cpa_launch --qwen-login --no-browser "$@"
+# kimi oauth
+cpa_login_kimi_oauth() {
+    echo "Login to Kimi OAuth"
+    cpa_launch --kimi-login --no-browser "$@"
+}
+
+# claude oauth
+cpa_login_claude_oauth() {
+    echo "Login to Claude OAuth"
+    cpa_launch --claude-login --no-browser "$@"
 }
 
 # generic config management -----------------

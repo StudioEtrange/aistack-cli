@@ -1,10 +1,7 @@
-if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
     install)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-
         bmad_install "$1"
 
         echo "Configuring bmad"
@@ -17,8 +14,6 @@ case "$sub_command" in
         echo "$0 bmad register vs"
         ;;
     uninstall)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-
         echo "Uninstalling bmad and unregister bmad PATH (keep all configuration unchanged, to remove configuration use reset command)"
         bmad_uninstall
 
@@ -61,7 +56,7 @@ case "$sub_command" in
 		fi
         ;;
     *)
-        echo "ERROR: Unknown command $sub_command for bmad"
+        echo "ERROR: Unknown command ${sub_command} for bmad"
         usage
         exit 1
         ;;

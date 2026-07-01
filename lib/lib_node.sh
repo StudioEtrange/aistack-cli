@@ -1,9 +1,11 @@
 # node and nvm paths
 node_init() {
-    export AISTACK_NVM_HOME="${AISTACK_ISOLATED_DEPENDENCIES_ROOT}/nvm"
+    export AISTACK_NVM_HOME="${AISTACK_ISOLATED_ROOT}/nvm"
     mkdir -p "$AISTACK_NVM_HOME"
     export NVM_DIR="${AISTACK_NVM_HOME}"
 
+	# those functions are invoqued before runtime_detect
+	# so we cannot use variable AISTACK_MODULE_NVM_AVAILABLE inside them
     nvm_load
     node_activate
 }
@@ -23,13 +25,13 @@ node_uninstall() {
 }
 
 node_activate() {
-    if check_requirements "nvm"; then
+    if type nvm >/dev/null 2>&1; then
         nvm use default >/dev/null
     fi
 }
 
 node_deactivate() {
-    if check_requirements "nvm"; then
+    if type nvm >/dev/null 2>&1; then
         # will remove node from path
         nvm deactivate
     fi
@@ -68,7 +70,7 @@ nvm_load() {
     # undefined other nvm function installed outside of aistack
     nvm_unload
 
-    # --no-use This loads nvm, without auto-using the default version
+    # --no-use This loads nvm, without auto-using the default nodejs version
     if [ -f "$AISTACK_NVM_HOME/nvm.sh" ]; then
         . "$AISTACK_NVM_HOME/nvm.sh" --no-use
         export AISTACK_INTERNAL_NVM_LOADED="true"

@@ -1,5 +1,5 @@
 bun_init() {
-    export BUN_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_DEPENDENCIES_ROOT/bun"
+    export BUN_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_ROOT/bun"
     mkdir -p "${BUN_FEAT_INSTALL_ROOT}"
 
     # when using bun install script, by default bun will install itself in $HOME/.bun

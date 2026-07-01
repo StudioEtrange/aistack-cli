@@ -7,7 +7,7 @@ CLIProxyAPI is a tool that bridges the gap between command-line interfaces and A
 
   * https://help.router-for.me/
   * https://github.com/router-for-me/CLIProxyAPI
-  * https://github.com/router-for-me/CLIProxyAPIPlus
+  * https://github.com/router-for-me/CLIProxyAPIPlus - more functionnality
   * Installer project : https://github.com/brokechubb/cliproxyapi-installer
 
 ## Quickstart
@@ -22,13 +22,13 @@ CLIProxyAPI is a tool that bridges the gap between command-line interfaces and A
 ./aistack cpa launch
 ```
 
-* authenticate to gemini cli
-    * note : The local OAuth callback for Gemini via OAuth uses port 8085.
+* authenticate to antigravity oauth
+    * note : The local OAuth callback for antigravity via OAuth uses port 8085.
     ```
-    ./aistack cpa login gemini-oauth [--project_id <your_project_id>]
+    ./aistack cpa login antigravity-oauth [--project_id <your_project_id>]
     ```
   * if you are on a Google One plan, select it. It is the free tier with google personnal account
-  * alternative : go to http://localhost:8317/management.html go to OAuth login / Gemini CLI OAuth
+  * alternative : go to http://localhost:8317/management.html go to OAuth login 
 
 * info
 ```
@@ -77,14 +77,14 @@ curl -X POST http://localhost:8317/v1/chat/completions \
 
 * sample : https://help.router-for.me/configuration/basic.html
 
-## Gemini OAuth and special case when using remote SSH in vscode 
+## Gemini OAuth and special case when using VS Code Remote SSH
 
 You will have to use the web browser of your current host to auth to gemini. And launch a local port forwarding with ssh to establish a tunnel
 
 On your current host, where run your vscode desktop, use a ssh client and launch `ssh -L 127.0.0.1:8085:127.0.0.1:8085 root@xxx.xxx.xxx.xxx -p 22`.
 
 - Launch `ssh -L 127.0.0.1:8085:127.0.0.1:8085 remote_ssh_user@remote_ssh_host -p remote_ssh_port`
-- Then `./aistack cpa login gemini-oauth`
+- Then `./aistack cpa login antigravity-oauth`
 - Then open the browser by following the link to auth
 
 Instead ssh command you can use the "forward port" functionnality in vscode :

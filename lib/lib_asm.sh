@@ -6,33 +6,51 @@ asm_init() {
 	# aistack path for asm
 	export AISTACK_ASM_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/asm"
 	mkdir -p "${AISTACK_ASM_LAUNCHER_HOME}"
+
+	#export AISTACK_ASM_RUNTIME_REQUIRED="bun"
+	export AISTACK_ASM_RUNTIME_REQUIRED="nodejs"
+
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 asm_is_installed() {
+	local r
 	export AISTACK_ASM_TOOL_AVAILABLE="false"
-	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
-	[ -x "$AISTACK_NODEJS_BIN_PATH/asm" ] || return 1
-	export AISTACK_ASM_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/asm"
+	for r in $AISTACK_ASM_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm" ] || return 1
+	export AISTACK_ASM_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm"
 	export AISTACK_ASM_TOOL_AVAILABLE="true"
 	return 0
 }
 
 asm_install() {
+	local r
 	local version="$1"
 	[ -z "${version}" ] && version="@latest"
 
+	for r in $AISTACK_ASM_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
+
 	echo "Installing Agent Skill Manager ${version}"
-	PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g agent-skill-manager${version}
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g agent-skill-manager${version}
 	# using bun package manager
-	# PATH="${AISTACK_BUN_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g agent-skill-manager${version}
+	# PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g agent-skill-manager${version}
 	asm_is_installed
 }
 
 asm_uninstall() {
-	PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g agent-skill-manager
-	# using bun package manager
-	# PATH="${AISTACK_BUN_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g agent-skill-manager
-	asm_is_installed
+	if asm_is_installed; then
+		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g agent-skill-manager
+		# using bun package manager
+		# PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g agent-skill-manager
+		asm_is_installed
+	else
+		echo "WARN : not installed or missing a required managed runtime $AISTACK_ASM_RUNTIME_REQUIRED"
+	fi
 }
 
 asm_path_register_for_shell() {
@@ -55,15 +73,15 @@ asm_path_unregister_for_vs_terminal() {
 }
 
 
-asm_launch_export_variables="AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
+asm_launch_export_variables="AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 asm_launch() {
 	(
-		. "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
+		. "${AISTACK_RUN_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
-			"$AISTACK_NODEJS_BIN_PATH/asm" "$@"
+			"$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm" "$@"
 		else
-			"$AISTACK_NODEJS_BIN_PATH/asm"
+			"$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm"
 		fi
 	)
 }

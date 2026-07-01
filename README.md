@@ -3,7 +3,7 @@
 
 # AIStack CLI
 
-AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `antigravity-cli`, `opencode`, `asm`, `kilo code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `bmad-method` cli, `get-shit-done-cc` cli or `ADK`, and so on. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `antigravity-cli`, `opencode`, `asm`, `kilo code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `bmad-method`, `get-shit-done-cc` or `ADK`, and so on. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
 
 ## Key Features of AIStack
 
@@ -25,7 +25,7 @@ AIStack CLI is an experimental swiss-knife command-line application designed to 
 
 To see complete commands use `aistack help`.
 
-| Command | Description |
+| Core Commands | Description |
 | - | - |
 | **init** | Install/Reinstall dependencies |
 | **uninstall** | Remove any tools and dependencies managed by AIStack |
@@ -34,30 +34,25 @@ To see complete commands use `aistack help`.
 | **shell** | Enter a sub-shell with the `aistack` environment and paths configured |
 
 
-### How-To
+## How-To and Quick Usage
 
+_"I want to install antigravity CLI from scratch and make it accessible from all my bash session"_
 
-**Install and configure gemini-cli from scratch**
-
+**_antigravity CLI installation, register and launch_** :
 ```
-git clone https://github.com/StudioEtrange/aistack
-cd aistack
+git clone https://github.com/StudioEtrange/aistack-cli.git
+cd aistack-cli
 ./aistack init
-./aistack gc install
-./aistack gc register bash
+./aistack agy install
+./aistack agy info
+./aistack agy register bash
+```
+**_in another bash session, launch_** :
+```
+agy
 ```
 
-**Register local MCP server calculator**
-```
-cd aistack
-./aistack mcp calculator install
-```
-
-**Configure the underlying nodejs to add a local npm registry**
-```
-cd aistack
-./aistack npm config set registry https://registry.local.org/ -g
-```
+**SEE OTHER [Quick Usage](./doc/quickusage.md)**
 
 ## Directory Structure
 
@@ -106,11 +101,11 @@ See [BMAD](doc/bmad.md)
 
 ### Agent Development Kit (ADK)
 
-See [VS Code](doc/adk.md) 
+See [Agent Development Kit](doc/adk.md)
 
 ### VS Code
 
-See [VS Code](doc/vscode.md) 
+See [VS Code](doc/vscode.md)
 
 ### MCP Servers
 
@@ -126,15 +121,45 @@ AIStack simplifies connecting to MCP (Model Context Protocol) servers, allowing 
 
 
 
-
 ## Design Notes
+
+### Notes on concept
+
+AIStack defines 
+
+* component : 
+  * A component is any installable piece of software managed by AIStack.
+  * A core component defines a piece of software mandatory for AIStack and always installed when initializing AIStack.
+  * Each component has a `kind`, which defines its role in AIStack:
+    - `module`
+    - `runtime`
+    - `tool`
+
+* module :
+  * A module is a kind of component used internally by AIStack.
+  * The PATH of each module is always injected into AIStack run context and may be injected into each tool run context. 
+    * Exception : when a module requires a runtime : the module PATH is not injected into AIStack run context and may be injected into each tool run context. 
+
+* runtime : 
+  * A runtime is a kind of component used to execute code (Python, Nodejs, and so on...). 
+  * Runtimes are fully managed by AIStack and internally installed. 
+  * A core runtime is mandatory and is always installed when initializing AIStack.
+  * A runtime managed and installed by AIStack takes precedence over existing system runtimes.
+  * The PATH of each runtime is not injected into AIStack run context but may be injected into each tool run context.
+
+* tool :
+  * Tools are the main purpose of AIStack : managing tools exposed for direct use by AIStack, agents, or users.
+  * The PATH of each tool is not injected into AIStack run context but may be injected into each tool run context.
+  * A launcher for each tool is generated and its PATH may be injected into shell context so that the tool can be used directly and autonomously.
+
+
 
 ### Notes on underlying framework: Stella
 
 AIStack leverages the **[Stella](https://github.com/StudioEtrange/stella)** framework for its core functionality.
 Stella provides the infrastructure for application structure, environment isolation, and package management. 
 
-About *Package Management*: Stella uses a concept of "Features" (software packages) which are defined by "Recipes" (Bash scripts). `aistack` uses this system to provide all the tools it manages or use. Stella features recipes are located in `pool/stella/nix/pool/feature-recipe/`.
+About *Package Management*: Stella uses a concept of "Features" (software packages) which are defined by "Recipes" (Bash scripts). `AIStack` uses this system to provide some of the components it manages or use. Stella features recipes are located in `pool/stella/nix/pool/feature-recipe/`.
 
 ## Contributors
 

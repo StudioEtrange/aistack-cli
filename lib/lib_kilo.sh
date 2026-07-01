@@ -14,15 +14,20 @@ kilo_init() {
     export AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE="${AISTACK_KILO_CONFIG_HOME}/cpa_key_for_kc"
     [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_KILO="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE")"
 
+	export AISTACK_KILO_RUNTIME_REQUIRED="nodejs"
+
 }
 
-
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 kilo_is_installed() {
+	local r
 	export AISTACK_KILO_TOOL_AVAILABLE="false"
-	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
-	[ -x "$AISTACK_NODEJS_BIN_PATH/kilo" ] || return 1
+	for r in $AISTACK_KILO_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo" ] || return 1
 	export AISTACK_KILO_TOOL_AVAILABLE="true"
-	export AISTACK_KILO_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/kilo"
+	export AISTACK_KILO_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo"
 	return 0
 }
 
@@ -30,12 +35,18 @@ kilo_install() {
     local type="${1:-cli}"
     local version="$2"
     [ -z "${version}" ] && version="@latest"
+	local r
 
     case "$type" in
         "cli")
+			for r in $AISTACK_KILO_RUNTIME_REQUIRED; do 
+				echo "Require needed ${r} rmanaged untime"
+				aistack_runtime_require "${r}"
+			done
+			
             echo "Installing Kilo Code CLI ${version}"
             # available versions : https://www.npmjs.com/package/@kilocode/cli
-            PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
+            PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
             kilo_is_installed
 			;;
         "extension")
@@ -50,11 +61,13 @@ kilo_uninstall() {
 
     case "$type" in
         "cli")
-            echo "Uninstalling Kilo Code CLI"
-            PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
-            kilo_path_unregister_for_shell "all"
-            kilo_path_unregister_for_vs_terminal
-			kilo_is_installed
+			if kilo_is_installed; then
+				echo "Uninstalling Kilo Code CLI"
+				PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
+				kilo_is_installed
+			else
+				echo "WARN : not installed or missing a required managed runtime $AISTACK_KILO_RUNTIME_REQUIRED"
+			fi
             ;;
         "extension")
             vscode_extension_manage "kilocode.Kilo-Code" "uninstall"
@@ -84,15 +97,15 @@ kilo_path_unregister_for_vs_terminal() {
 }
 
 
-kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
+kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 kilo_launch() {
     (
-        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
+        . "${AISTACK_RUN_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
-            "$AISTACK_NODEJS_BIN_PATH/kilo" "$@"
+            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo" "$@"
         else
-            "$AISTACK_NODEJS_BIN_PATH/kilo"
+            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo"
         fi
     )
 }
@@ -137,6 +150,7 @@ kilo_info() {
 	echo
 	echo "KILO available : $AISTACK_KILO_TOOL_AVAILABLE"
 	echo "KILO path : $AISTACK_KILO_TOOL_PATH"
+	echo "KILO needed managed runtime : $AISTACK_KILO_RUNTIME_REQUIRED"
 	echo
     [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)" || \
         echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)"

@@ -1,7 +1,6 @@
-if ! check_requirements "yq"; then echo " -- ERROR : yq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
     install)
 
         cpa_install "latest"
@@ -14,10 +13,10 @@ case "$sub_command" in
     uninstall)
         # clean running process
         local port="8317"
-        if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+        if [ -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ]; then
             port="$(cpa_get_config ".port")"
         fi
-        process_kill_by_port "$port" 1>/dev/null 2>&1
+        process_kill_by_port "${port}" 1>/dev/null 2>&1
         
         echo "Uninstalling CLIProxyAPI (keeping all configuration unchanged. to remove configuration use reset command)"
         cpa_uninstall
@@ -83,12 +82,12 @@ case "$sub_command" in
 			local folder=
 			if [ -n "$1" ] && [ "$1" != "--" ]; then
 				folder="$1"
-				if [ -d "$folder" ]; then
-					echo "change to context folder : $folder"
-					cd "$folder" || exit 1
+				if [ -d "${folder}" ]; then
+					echo "change to context folder : ${folder}"
+					cd "${folder}" || exit 1
 					shift
 				else
-					echo "ERROR: Directory '$folder' not found"
+					echo "ERROR: Directory '${folder}' not found"
 					exit 1
 				fi
 			fi
@@ -114,17 +113,21 @@ case "$sub_command" in
         ;;
     login)
         case "$1" in
-            gemini-oauth)
+            agy-oauth)
                 shift
-                cpa_login_gemini_oauth "${@}"
+                cpa_login_agy_oauth "${@}"
                 ;; 
-            openai-oauth)
+            codex-oauth)
                 shift
-                cpa_login_openai_oauth "${@}"
+                cpa_login_codex_oauth "${@}"
                 ;;
-            qwen-oauth)
+            kimi-oauth)
                 shift
                 cpa_login_qwen_oauth "${@}"
+                ;;
+			claude-oauth)
+                shift
+                cpa_login_claude_oauth "${@}"
                 ;;
             *)
                 echo "ERROR: not supported $1"
@@ -135,7 +138,7 @@ case "$sub_command" in
         ;;
     
     *)
-        echo "ERROR: Unknown command $sub_command for CLIProxyAPI"
+        echo "ERROR: Unknown command ${sub_command} for CLIProxyAPI"
         usage
         exit 1
         ;;

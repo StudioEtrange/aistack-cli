@@ -1,7 +1,6 @@
-if ! check_requirements "python"; then echo " -- ERROR : python missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
     install)
         adk_install
 
@@ -56,7 +55,7 @@ case "$sub_command" in
 		fi
         ;;
     *)
-        echo "ERROR: Unknown command $sub_command for adk"
+        echo "ERROR: Unknown command ${sub_command} for adk"
         usage
         exit 1
         ;;

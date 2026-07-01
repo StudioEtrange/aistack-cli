@@ -1,30 +1,47 @@
 bmad_init() {
     export AISTACK_BMAD_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/bmad"
     mkdir -p "${AISTACK_BMAD_LAUNCHER_HOME}"
+
+	export AISTACK_BMAD_RUNTIME_REQUIRED="nodejs"
+
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 bmad_is_installed() {
+	local r
 	export AISTACK_BMAD_TOOL_AVAILABLE="false"
-	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
-	[ -x "$AISTACK_NODEJS_BIN_PATH/bmad-method" ] || return 1
-	export AISTACK_BMAD_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/bmad-method"
+	for r in $AISTACK_BMAD_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/bmad-method" ] || return 1
+	export AISTACK_BMAD_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/bmad-method"
 	export AISTACK_BMAD_TOOL_AVAILABLE="true"
 	return 0
 }
 
 bmad_install() {
+	local r
     local version="$1"
     [ -z "${version}" ] && version="@latest"
 
+	for r in $AISTACK_BMAD_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
+
     echo "Installing bmad-method ${version}"
     # available versions : https://www.npmjs.com/package/bmad-method
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g bmad-method${version}
+    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g bmad-method${version}
     bmad_is_installed
 }
 
 bmad_uninstall() {
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g bmad-method
-    bmad_is_installed
+	if bmad_is_installed; then
+		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g bmad-method
+		bmad_is_installed
+	else
+		echo "WARN : not installed or missing a required managed runtime $AISTACK_BMAD_RUNTIME_REQUIRED"
+	fi
 }
 
 
@@ -48,16 +65,16 @@ bmad_path_unregister_for_vs_terminal() {
 }
 
 
-bmad_launch_export_variables="AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
+bmad_launch_export_variables="AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 bmad_launch() {
     (
-        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
+        . "${AISTACK_RUN_CONTEXT_FILE}"
 
-        # NOTE : we could call "${AISTACK_NODEJS_BIN_PATH}/bmad" instead of bmad-method. Both are link to the same binary
+        # NOTE : we could call "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/bmad" instead of bmad-method. Both are link to the same binary
         if [ "$#" -gt 0 ]; then
-            "${AISTACK_NODEJS_BIN_PATH}/bmad-method" "$@"
+            "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/bmad-method" "$@"
         else
-            "${AISTACK_NODEJS_BIN_PATH}/bmad-method"
+            "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/bmad-method"
         fi
     )
 }

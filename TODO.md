@@ -44,3 +44,18 @@
   # Connect to your AI agent (Claude Code example)
   claude mcp add context -- context serve
   ```
+* agent hermes-agent https://github.com/nousresearch/hermes-agent
+* ghostdesk
+  * MCP server over a linux desktop
+  * https://korben.info/ghostdesk-agent-ia-bureau-linux-docker.html
+  * https://github.com/YV17labs/GhostDesk
+* Pi
+  * agent tookkit
+  * https://github.com/earendil-works/pi
+  * https://pi.dev/
+* OSD - Osmantic Deployment System (a.k.a Dream Server)
+  * https://github.com/Light-Heart-Labs/ODS
+  * https://korben.info/dream-server-ia-locale-auto-hebergee.html
+  * complete local stack installer
+  * Open WebUI, llama-server, Whisper, Kokoro, ComfyUI, Qdrant, SearXNG, n8n, ...
+  * install.sh genere des conf avec des virgules au lieu de points . à contourner en relançant l'installeur avec LC_ALL=C : `LC_ALL=C ./install.sh`

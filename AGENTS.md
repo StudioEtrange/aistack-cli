@@ -33,6 +33,11 @@ All commands are defined in:
 ./aistack
 ```
 
+### Required reading
+
+Use `./doc/quickusage.md` for task-oriented usage examples.
+Use `./README.md` for complete functional documentation.
+
 ---
 
 ## 3. Architecture & Design Principles
@@ -47,6 +52,11 @@ All commands are defined in:
   ```
   lib/main_<domain>.sh
   ```
+
+### Module Responsibilities
+- `lib/lib_<domain>.sh`: domain logic and reusable functions
+- `lib/main_<domain>.sh`: CLI wiring, argument routing, subcommands
+- `./aistack`: top-level entrypoint and menu only
 
 ### Feature Addition Workflow
 When adding a new feature:
@@ -68,21 +78,32 @@ When adding a new feature:
 
 ## 4. Coding Standards
 
-### Shell Compatibility
+### Shell Bash 3.2 Compatibility
 - MUST support **bash 3.2** (Linux + macOS)
-- Avoid modern bash features (`mapfile`, associative arrays, etc.)
+- Avoid modern bash features:
+  - associative arrays
+  - `mapfile` / `readarray`
+  - `local -n`
+  - `coproc`
+  - bash 4+ parameter expansion features when avoidable
 
 ### Style Rules
-- Always quote variables:
+- Always quote and brace variables:
   ```bash
-  "$VAR"
+  "${VAR}"
   ```
 - Use **tabs** for indentation
+
+### Shell Function Style
+- Use `function_name() { ... }`
+- Keep functions short and domain-focused
+- Use `local` for function-scoped variables
 - Prefer:
   ```bash
   local var="value"
   ```
-
+- Return non-zero from library functions instead of calling `exit`
+  
 ### Error Handling
 - Inside functions:
   ```bash
@@ -118,6 +139,15 @@ INFO: ...
 - Validate CLI behavior
 - Update documentation if needed
 
+### Definition of Done
+
+A task is considered complete when:
+- code changes are minimal and targeted
+- relevant tests were run, or limitations were clearly stated
+- CLI help/output remains coherent
+- README/doc updates are included when behavior changed
+- no unrelated refactoring was introduced
+
 ---
 
 ## 6. Testing
@@ -141,6 +171,12 @@ INFO: ...
   - invalid inputs
 - Avoid reliance on network when possible
 
+### Test Strategy
+- For bug fixes: add or update a regression test when feasible
+- For new CLI options: add a functional Bats test
+- For parser/input validation: test valid and invalid cases
+- Prefer the smallest test covering the changed behavior
+
 ### Notes
 Tests may depend on:
 - network
@@ -152,6 +188,14 @@ If tests cannot run → document clearly.
 ---
 
 ## 7. Agent Behavior Rules
+
+### Priority of instructions
+
+In case of conflict, follow this order:
+1. System / developer instructions from the runtime
+2. This AGENTS.md
+3. Existing project conventions in code
+4. Documentation examples
 
 ### General Behavior
 - **Proactivity**: HIGH

@@ -9,12 +9,19 @@ agy_init() {
 	export AISTACK_ANTIGRAVITY_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/antigravity"
 	mkdir -p "${AISTACK_ANTIGRAVITY_LAUNCHER_HOME}"
 
-	export AGY_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_DEPENDENCIES_ROOT/antigravity"
+	export AGY_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_ROOT/antigravity"
 	mkdir -p "${AGY_FEAT_INSTALL_ROOT}"
+
+	export AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED=""
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 agy_is_installed() {
+	local r
 	export AISTACK_ANTIGRAVITY_TOOL_AVAILABLE="false"
+	for r in $AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
 	[ -x "$AGY_FEAT_INSTALL_ROOT/agy" ] || return 1
 	export AISTACK_ANTIGRAVITY_TOOL_AVAILABLE="true"
 	export AISTACK_ANTIGRAVITY_TOOL_PATH="$AGY_FEAT_INSTALL_ROOT/agy"
@@ -25,6 +32,12 @@ agy_is_installed() {
 
 # https://antigravity.google/download
 agy_install() {
+	local r
+
+	for r in $AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
 
 	# use a temporary HOME to avoid rc file modification in HOME
 	local tmp_home="$(mktemp -d)"
@@ -37,11 +50,15 @@ agy_install() {
 
 
 agy_uninstall() {
-	echo "Uninstalling Antigravity CLI from ${AGY_FEAT_INSTALL_ROOT}..."
-	rm -Rf "${AGY_FEAT_INSTALL_ROOT}"
-	echo "Antigravity CLI uninstalled successfully."
+	if agy_is_installed; then
+		echo "Uninstalling Antigravity CLI from ${AGY_FEAT_INSTALL_ROOT}..."
+		rm -Rf "${AGY_FEAT_INSTALL_ROOT}"
+		echo "Antigravity CLI uninstalled successfully."
 
-	agy_is_installed
+		agy_is_installed
+	else
+		echo "WARN : not installed or missing a required managed runtime $AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED"
+	fi
 }
 
 agy_path_register_for_shell() {
@@ -66,12 +83,12 @@ agy_path_unregister_for_vs_terminal() {
 	vscode_path_unregister_for_vs_terminal "antigravity" "${AISTACK_ANTIGRAVITY_LAUNCHER_HOME}"
 }
 
-agy_launch_export_variables="AISTACK_RUNTIME_BOOTSTRAP_FILE AGY_FEAT_INSTALL_ROOT"
+agy_launch_export_variables="AISTACK_RUN_CONTEXT_FILE AGY_FEAT_INSTALL_ROOT"
 agy_launch() {
 	(
 		# antigravity does not need any runtime to be run
 		# but we give runtime to it can run some code
-        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
+        . "${AISTACK_RUN_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
 			"$AGY_FEAT_INSTALL_ROOT/agy" "$@"
@@ -119,6 +136,7 @@ agy_info() {
 	echo
 	echo "Antigravity CLI available : $AISTACK_ANTIGRAVITY_TOOL_AVAILABLE"
 	echo "Antigravity CLI path : $AISTACK_ANTIGRAVITY_TOOL_PATH"
+	echo "Antigravity CLI needed managed runtime : $AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED"
 	echo "Antigravity CLI install root : $AGY_FEAT_INSTALL_ROOT"
 	echo "Antigravity CLI launcher home : $AISTACK_ANTIGRAVITY_LAUNCHER_HOME"
 }

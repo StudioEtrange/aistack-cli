@@ -1,10 +1,7 @@
-if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
     install)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-
         gsd_install "$1"
 
         echo "Configuring gsd"
@@ -17,8 +14,6 @@ case "$sub_command" in
         echo "$0 gsd register vs"
         ;;
     uninstall)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-
         echo "Uninstalling gsd and unregister gsd PATH (keep all configuration unchanged, to remove configuration use reset command)"
         gsd_uninstall
 
@@ -62,7 +57,7 @@ case "$sub_command" in
 		fi
         ;;
     *)
-        echo "ERROR: Unknown command $sub_command for gsd"
+        echo "ERROR: Unknown command ${sub_command} for gsd"
         usage
         exit 1
         ;;

@@ -9,33 +9,48 @@ gemini_init() {
     export AISTACK_GEMINI_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/gemini-cli"
     mkdir -p "${AISTACK_GEMINI_LAUNCHER_HOME}"
 
+	export AISTACK_GEMINI_RUNTIME_REQUIRED="nodejs"
+
 }
 
-
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 gemini_is_installed() {
+	local r
 	export AISTACK_GEMINI_TOOL_AVAILABLE="false"
-	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
-	[ -x "$AISTACK_NODEJS_BIN_PATH/gemini" ] || return 1
-	export AISTACK_GEMINI_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/gemini"
+	for r in $AISTACK_GEMINI_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/gemini" ] || return 1
+	export AISTACK_GEMINI_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/gemini"
 	export AISTACK_GEMINI_TOOL_AVAILABLE="true"
 	return 0
 }
 
 gemini_install() {
+	local r
     local version="$1"
     [ -z "${version}" ] && version="@latest"
+
+	for r in $AISTACK_GEMINI_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
 
     echo "Installing Gemini CLI ${version}"
     # available versions : https://www.npmjs.com/package/@google/gemini-cli-core
     # latest is stable version
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
+    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
 	
 	gemini_is_installed
 }
 
 gemini_uninstall() {
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
-	gemini_is_installed
+	if gemini_is_installed; then
+		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
+		gemini_is_installed
+	else
+		echo "WARN : not installed or missing a required managed runtime $AISTACK_GEMINI_RUNTIME_REQUIRED"
+	fi
 }
 
 
@@ -58,15 +73,15 @@ gemini_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}"
 }
 
-gemini_launch_export_variables="AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
+gemini_launch_export_variables="AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 gemini_launch() {
     (
-        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
+        . "${AISTACK_RUN_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
-            "$AISTACK_NODEJS_BIN_PATH/gemini" "$@"
+            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/gemini" "$@"
         else
-            "$AISTACK_NODEJS_BIN_PATH/gemini"
+            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/gemini"
         fi
     )
 }
@@ -77,19 +92,19 @@ gemini_launcher_manage() {
     case $action in
         create)
             # echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-            # echo ". ${AISTACK_RUNTIME_BOOTSTRAP_FILE}" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+            # echo ". ${AISTACK_RUN_CONTEXT_FILE}" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
             # echo "gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
             # chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
 
             # launcher based on a wrapper
             # echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-            # echo "${AISTACK_NODEJS_BIN_PATH}node ${AISTACK_NODEJS_BIN_PATH}/gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+            # echo "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}node ${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
             # chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
 
             # launcher based on a symbolic link - test link does not exist OR is not valid
             # if [ ! -L "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini" ] || [ ! -e "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini" ]; then
             #     echo "Create a gemini launcher"
-            #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}/gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+            #     ln -fsv "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
             # fi
 
 			if gemini_is_installed; then
@@ -126,6 +141,7 @@ gemini_info() {
 	echo
 	echo "GEMINI CLI available : $AISTACK_GEMINI_TOOL_AVAILABLE"
 	echo "GEMINI CLI path : $AISTACK_GEMINI_TOOL_PATH"
+	echo "GEMINI CLI needed managed runtime : $AISTACK_GEMINI_RUNTIME_REQUIRED"
 	echo
 }
 

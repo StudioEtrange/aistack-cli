@@ -1,7 +1,6 @@
-if ! check_requirements "yq"; then echo " -- ERROR : yq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
     install)
 
         orla_install "latest"
@@ -127,10 +126,10 @@ case "$sub_command" in
         esac
         ;;
     agent|serve)
-        orla_launch "$sub_command" "$@"
+        orla_launch "${sub_command}" "$@"
         ;;
     *)
-        echo "ERROR: Unknown command $sub_command for Orla"
+        echo "ERROR: Unknown command ${sub_command} for Orla"
         usage
         exit 1
         ;;

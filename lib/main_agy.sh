@@ -1,13 +1,12 @@
-if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
 	install)
 		agy_install "$1"
 
 		echo "Configuring Antigravity CLI"
 		agy_settings_configure
-		vscode_settings_configure "antigraviy"
+		vscode_settings_configure "antigravity"
 
 		agy_launcher_manage
 
@@ -27,7 +26,7 @@ case "$sub_command" in
 	configure)
         echo "Configuring Antigravity CLI"
         agy_settings_configure
-		vscode_settings_configure "antigraviy"
+		vscode_settings_configure "antigravity"
 
         #antigravity_launcher_manage
         ;;
@@ -94,7 +93,7 @@ case "$sub_command" in
 		fi
 		;;
 	*)
-		echo "ERROR: Unknown command $sub_command for Antigravity CLI"
+		echo "ERROR: Unknown command ${sub_command} for Antigravity CLI"
 		usage
 		exit 1
 		;;

@@ -11,7 +11,7 @@ mcp_server_manage() {
     case "$mcp_server_name" in
         data-commons)
             echo " -- data-commons"
-            if ! check_requirements "python"; then echo " -- ERROR : python missing, launch aistack init"; exit 1; fi;             
+			aistack_runtime_require "python"
             case "$action" in
                 "install")
                     echo "    Configuring"
@@ -43,7 +43,7 @@ mcp_server_manage() {
         # https://github.com/jparkerweb/mcp-sqlite    
         # mcp-sqlite)
         #     echo " -- mcp-sqlite"
-        #     if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;             
+		#	  aistack_runtime_require "nodejs"
         #     case "$action" in
         #         "install")
         #             echo "    Installing and Configuring"
@@ -69,17 +69,17 @@ mcp_server_manage() {
         #                 *)echo " -- ERROR : missing or unknown target $agent_name";exit 1;;
         #             esac
         #             echo "     Uninstalling"
-        #             PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm -y uninstall mcp-sqlite -g
+        #             PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm -y uninstall mcp-sqlite -g
         #             ;;
         #     esac
         #     ;;
         desktop-commander)
             echo " -- mcp-desktop-commander"
-            if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;             
+			aistack_runtime_require "nodejs"
             case "$action" in
                 "install")
                     echo "    Installing"
-                    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx -y @wonderwhy-er/desktop-commander@latest setup
+                    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx -y @wonderwhy-er/desktop-commander@latest setup
                     echo "    Configuring"
                     case "$agent_name" in
                         "gc")gemini_merge_config "${AISTACK_POOL}/mcp-servers/desktop-commander/gemini-cli/settings.json";;
@@ -96,17 +96,17 @@ mcp_server_manage() {
                         *)echo " -- ERROR : missing or unknown target $agent_name";exit 1;;
                     esac
                     echo "     Uninstalling"
-                    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @wonderwhy-er/desktop-commander remove
+                    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @wonderwhy-er/desktop-commander remove
                     ;;
             esac
             ;;
         calculator)
             echo " -- mcp-calculator"
-            if ! check_requirements "python"; then echo " -- ERROR : python missing, launch aistack init"; exit 1; fi;
+			aistack_runtime_require "python"
             case "$action" in
                 "install")
                     echo "    Installing"
-                    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install mcp-server-calculator --system
+                    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install mcp-server-calculator --system
                     echo "    Configuring"
                     case "$agent_name" in
                         "gc")gemini_merge_config "${AISTACK_POOL}/mcp-servers/calculator/gemini-cli/settings.json";;
@@ -123,19 +123,19 @@ mcp_server_manage() {
                         *)echo " -- ERROR : missing or unknown target $agent_name";exit 1;;
                     esac
                     echo "    Uninstalling"
-                    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip uninstall -y mcp-server-calculator
+                    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip uninstall -y mcp-server-calculator
                     ;;
             esac
             ;;
         context7)
             # launch mcp server alternative way : using aan indirect launcher script
             echo " -- mcp-context7"
-            if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
+			aistack_runtime_require "nodejs"
             case "$action" in
                 "install")
                     echo "    Configuring"
                     #echo '#!/bin/sh' > "${AISTACK_MCP_LAUNCHER_HOME}/context7"
-                    #echo "export PATH=\"${AISTACK_NODEJS_BIN_PATH}:\${PATH}\"" >> "${AISTACK_MCP_LAUNCHER_HOME}/context7"
+                    #echo "export PATH=\"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:\${PATH}\"" >> "${AISTACK_MCP_LAUNCHER_HOME}/context7"
                     #echo "exec \"npx\" -y @upstash/context7-mcp --api-key \"\${CONTEXT7_API_KEY}\"" >> "${AISTACK_MCP_LAUNCHER_HOME}/context7"
                     #chmod +x "${AISTACK_MCP_LAUNCHER_HOME}/context7"
 
@@ -161,7 +161,7 @@ mcp_server_manage() {
             ;;
         github)
             echo " -- mcp-github"
-            if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
+			aistack_runtime_require "nodejs"
             case "$action" in
                 "install")
                     echo "    Configuring"

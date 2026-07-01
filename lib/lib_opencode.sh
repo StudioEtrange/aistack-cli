@@ -12,30 +12,46 @@ opencode_init() {
     # aistack path for oc
     export AISTACK_OPENCODE_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/opencode"
     mkdir -p "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+
+	export AISTACK_OPENCODE_RUNTIME_REQUIRED="nodejs"
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 opencode_is_installed() {
+	local r
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="false"
-	[ "$AISTACK_INTERNAL_NODEJS_RUNTIME_AVAILABLE" = "true" ] || return 1
-	[ -x "$AISTACK_NODEJS_BIN_PATH/opencode" ] || return 1
-	export AISTACK_OPENCODE_TOOL_PATH="$AISTACK_NODEJS_BIN_PATH/opencode"
+	for r in $AISTACK_OPENCODE_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode" ] || return 1
+	export AISTACK_OPENCODE_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode"
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="true"
 	return 0
 }
 
 opencode_install() {
+	local r
     local version="$1"
     [ -z "${version}" ] && version="@latest"
 
+	for r in $AISTACK_OPENCODE_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} rmanaged untime"
+		aistack_runtime_require "${r}"
+	done
+
     echo "Installing Opencode CLI"
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
+    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
 
 	opencode_is_installed
 }
 
 opencode_uninstall() {
-    PATH="${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
-	opencode_is_installed
+	if opencode_is_installed; then
+		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
+		opencode_is_installed
+	else
+		echo "WARN : not installed or missing a required managed runtime $AISTACK_OPENCODE_RUNTIME_REQUIRED"
+	fi
 }
 
 
@@ -59,15 +75,15 @@ opencode_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
 }
 
-opencode_launch_variables="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_NODEJS_BIN_PATH"
+opencode_launch_variables="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 opencode_launch() {
     (
-        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
+        . "${AISTACK_RUN_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
-            "$AISTACK_NODEJS_BIN_PATH/opencode" "$@"
+            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode" "$@"
         else
-            "$AISTACK_NODEJS_BIN_PATH/opencode"
+            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode"
         fi
     )
 }
@@ -78,14 +94,14 @@ opencode_launcher_manage() {
     case $action in
         create)
             # echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-            # echo ". ${AISTACK_RUNTIME_BOOTSTRAP_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            # echo ". ${AISTACK_RUN_CONTEXT_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
 
             # launcher based on a symbolic link - test link does not exist OR is not valid
             # if [ ! -L "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ] || [ ! -e "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ]; then
             #     echo "Create an opencode launcher"
-            #     ln -fsv "${AISTACK_NODEJS_BIN_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            #     ln -fsv "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # fi
 
 			if opencode_is_installed; then
@@ -128,6 +144,7 @@ opencode_info() {
 	echo
 	echo "OPENCODE available : $ISTACK_OPENCODE_TOOL_AVAILABLE"
 	echo "OPENCODE path : $ISTACK_OPENCODE_TOOL_PATH"
+	echo "OPENCODE needed managed runtime : $AISTACK_OPENCODE_RUNTIME_REQUIRED"
 	echo
     [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE)" || \
         echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE)"

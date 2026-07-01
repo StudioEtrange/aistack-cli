@@ -1,8 +1,6 @@
-if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-if ! check_requirements "bun"; then echo " -- ERROR : bun missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
 	install)
 		asm_install "$1"
 
@@ -80,7 +78,7 @@ case "$sub_command" in
 		fi
 		;;
 	*)
-		echo "ERROR: Unknown command $sub_command for asm"
+		echo "ERROR: Unknown command ${sub_command} for asm"
 		usage
 		exit 1
 		;;

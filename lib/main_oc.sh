@@ -1,10 +1,7 @@
-if ! check_requirements "jq"; then echo " -- ERROR : jq missing, launch aistack init"; exit 1; fi;
 local sub_command="$1"
 shift
-case "$sub_command" in
+case "${sub_command}" in
     install)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
-
         opencode_install "$1"
 
         echo "Configuring Opencode CLI"
@@ -18,7 +15,6 @@ case "$sub_command" in
         echo "$0 oc register vs"
         ;;
     uninstall)
-        if ! check_requirements "nodejs"; then echo " -- ERROR : nodejs missing, launch aistack init"; exit 1; fi;
 
         echo "Uninstalling Opencode CLI and unregister Opencode CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
         opencode_uninstall
@@ -39,7 +35,7 @@ case "$sub_command" in
         vscode_settings_remove "opencode"
         ;;
     register)
-        echo "Registering Gemini CLI launcher in PATH for $1"
+        echo "Registering Opencode launcher in PATH for $1"
         case "$1" in
             "vs")
                 opencode_path_register_for_vs_terminal
@@ -103,7 +99,7 @@ case "$sub_command" in
         mcp_server_manage "$1" "$2" "$command" "$3"
         ;;
     *)
-        echo "ERROR: Unknown command $sub_command for oc"
+        echo "ERROR: Unknown command ${sub_command} for oc"
         usage
         exit 1
         ;;

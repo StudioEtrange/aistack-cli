@@ -18,7 +18,7 @@
           "@wonderwhy-er/desktop-commander"
         ],
         "env": {
-            "PATH": "${AISTACK_NODEJS_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}"
+            "PATH": "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}"
         }
       }
     }

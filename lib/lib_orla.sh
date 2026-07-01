@@ -14,16 +14,23 @@ orla_init() {
     export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE="${AISTACK_ORLA_CONFIG_HOME}/cpa_key_for_orla"
     [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE")"
 
-    export ORLA_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_DEPENDENCIES_ROOT/orla"
+    export ORLA_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_ROOT/orla"
     mkdir -p "${ORLA_FEAT_INSTALL_ROOT}"
+
+	export AISTACK_ORLA_RUNTIME_REQUIRED=""
     
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 orla_is_installed() {
+	local r
 	export AISTACK_ORLA_TOOL_AVAILABLE="false"
+	for r in $AISTACK_ORLA_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
 	[ -x "$ORLA_FEAT_INSTALL_ROOT/orla" ] || return 1
 	export AISTACK_ORLA_TOOL_AVAILABLE="true"
-	export AISTACK_ORLA_TOOL_PATH="$CPA_FEAT_INSTALL_ROOT/orla"
+	export AISTACK_ORLA_TOOL_PATH="$CLIPROXYAPI_FEAT_INSTALL_ROOT/orla"
 	return 0
 }
 
@@ -34,6 +41,7 @@ orla_is_installed() {
 # This function relies on the following environment variables to be set:
 # - ORLA_FEAT_INSTALL_ROOT: The directory where cliproxyapi will be installed.
 orla_install() {
+	local r
     local version="$1"
     
     if [ -z "$version" ] || [ "$version" = "latest" ]; then
@@ -41,6 +49,11 @@ orla_install() {
         version=$(github_get_latest_release "dorcha-inc/orla")
         echo "latest version is ${version}"
     fi
+
+	for r in $AISTACK_ORLA_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
 
     local os_arch
     case "$STELLA_CURRENT_PLATFORM" in
@@ -64,11 +77,14 @@ orla_install() {
 }
  
 orla_uninstall() {
-    echo "Uninstalling Orla from ${ORLA_FEAT_INSTALL_ROOT}..."
-    rm -Rf "${ORLA_FEAT_INSTALL_ROOT}"
-    echo "Orla uninstalled successfully."
-
-	orla_is_installed
+	if orla_is_installed; then
+		echo "Uninstalling Orla from ${ORLA_FEAT_INSTALL_ROOT}..."
+		rm -Rf "${ORLA_FEAT_INSTALL_ROOT}"
+		echo "Orla uninstalled successfully."
+		orla_is_installed
+	else
+		echo "WARN : not installed or missing a required managed runtime $AISTACK_ORLA_RUNTIME_REQUIRED"
+	fi
 }
 
 
@@ -94,7 +110,7 @@ orla_path_unregister_for_vs_terminal() {
 }
 
 
-orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
+orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_RUN_CONTEXT_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
 orla_launch() {
     set -- "$@"
 
@@ -103,7 +119,7 @@ orla_launch() {
     fi
 
     (
-        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
+        . "${AISTACK_RUN_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "${ORLA_FEAT_INSTALL_ROOT}/orla" "$@"
@@ -170,6 +186,8 @@ orla_info() {
 	echo
 	echo "Orla available : $AISTACK_ORLA_TOOL_AVAILABLE"
 	echo "Orla path : $AISTACK_ORLA_TOOL_PATH"
+	echo "Orla needed managed runtime : $AISTACK_ORLA_RUNTIME_REQUIRED"
+
 	echo
 }
 

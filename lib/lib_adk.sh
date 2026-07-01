@@ -2,28 +2,44 @@ adk_init() {
 
     export AISTACK_ADK_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/adk"
     mkdir -p "${AISTACK_ADK_LAUNCHER_HOME}"
+
+	export AISTACK_ADK_RUNTIME_REQUIRED="python"
     
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 adk_is_installed() {
+	local r
 	export AISTACK_ADK_TOOL_AVAILABLE="false"
-	[ "$AISTACK_INTERNAL_PYTHON_RUNTIME_AVAILABLE" = "true" ] || return 1
-	[ -x "${AISTACK_PYTHON_BIN_PATH}/adk" ] || return 1
-	export AISTACK_ADK_TOOL_PATH="${AISTACK_PYTHON_BIN_PATH}/adk"
+	for r in $AISTACK_ADK_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk" ] || return 1
+	export AISTACK_ADK_TOOL_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk"
 	export AISTACK_ADK_TOOL_AVAILABLE="true"
 	return 0
 }
 
 adk_install() {
+	local r
+
+	for r in $AISTACK_ADK_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} rmanaged untime"
+		aistack_runtime_require "${r}"
+	done
 
     echo "Installing adk for python"
-    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --verbose google-adk
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --verbose google-adk
 	adk_is_installed
 }
 
 adk_uninstall() {
-    PATH="${AISTACK_PYTHON_BIN_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose google-adk
-	adk_is_installed
+	if adk_is_installed; then
+		PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose google-adk
+		adk_is_installed
+	else
+		echo "WARN : not installed or missing a required managed runtime $AISTACK_ADK_RUNTIME_REQUIRED"
+	fi
 }
  
 
@@ -49,15 +65,15 @@ adk_path_unregister_for_vs_terminal() {
 
 
 
-adk_launch_export_variables="AISTACK_RUNTIME_BOOTSTRAP_FILE AISTACK_PYTHON_BIN_PATH"
+adk_launch_export_variables="AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
 adk_launch() {
     (
-        . "${AISTACK_RUNTIME_BOOTSTRAP_FILE}"
+        . "${AISTACK_RUN_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
-            "${AISTACK_PYTHON_BIN_PATH}/adk" "$@"
+            "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk" "$@"
         else
-            "${AISTACK_PYTHON_BIN_PATH}/adk"
+            "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk"
         fi
     )
 }
