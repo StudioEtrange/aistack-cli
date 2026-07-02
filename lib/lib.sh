@@ -25,7 +25,7 @@ aistack_initialize() {
 
     # paths ---
     export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
-    
+
     export AISTACK_LAUNCHER_HOME="${STELLA_APP_WORK_ROOT}/launcher"
     mkdir -p "${AISTACK_LAUNCHER_HOME}"
 
@@ -72,6 +72,7 @@ aistack_info() {
     echo "AISTACK_MODULE_NVM_AVAILABLE : $AISTACK_MODULE_NVM_AVAILABLE"
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
     echo "NVM_DIR : $NVM_DIR"
+    echo "AISTACK_NVM_CACHE (npm/npx): $AISTACK_NVM_CACHE"
 
     echo "AISTACK_RUNTIME_NODEJS_AVAILABLE : $AISTACK_RUNTIME_NODEJS_AVAILABLE"
     if [ "$AISTACK_RUNTIME_NODEJS_AVAILABLE" = "true" ]; then
@@ -195,6 +196,8 @@ aistack_uninstall() {
     rm -Rf "${AISTACK_LAUNCHER_HOME}"
 
     rm -Rf "${STELLA_APP_WORK_ROOT}"
+    rm -Rf "${AISTACK_NVM_CACHE}"
+    
 }
 
 # create files that centralize components and runtime PATH
@@ -697,6 +700,8 @@ aistack_component_remove_all() {
     rm -Rf "${AISTACK_ISOLATED_ROOT}"
     # remove component from stella framework
     rm -Rf "${STELLA_APP_FEATURE_ROOT}"
+
+    # NOTE : we keep cache folder
 }
 
 

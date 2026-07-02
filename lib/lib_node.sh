@@ -4,6 +4,11 @@ node_init() {
     mkdir -p "${AISTACK_NVM_HOME}"
     export NVM_DIR="${AISTACK_NVM_HOME}"
 
+    # cache folder for NVM
+    export AISTACK_NVM_CACHE="${STELLA_APP_CACHE_DIR}/nvm-cache"
+    mkdir -p "${AISTACK_NVM_CACHE}"
+
+
 	# those functions are invoqued before runtime_detect
 	# so we cannot use variable AISTACK_MODULE_NVM_AVAILABLE inside them
     nvm_load
@@ -60,6 +65,12 @@ nvm_install() {
         git checkout "${version}"
     ) >/dev/null
 
+    # special case to manage NVM cache outside of NVM install dir
+    mkdir -p "${NVM_DIR}"
+    if [ -d "${AISTACK_NVM_CACHE}" ]; then
+        ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache"
+    fi
+    
 }
 
 nvm_uninstall() {
