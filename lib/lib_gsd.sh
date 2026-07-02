@@ -12,8 +12,8 @@ gsd_is_installed() {
 	local r
 	export AISTACK_GSD_TOOL_AVAILABLE="false"
 	for r in $AISTACK_GSD_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
-	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/get-shit-done-cc" ] || return 1
-	export AISTACK_GSD_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/get-shit-done-cc"
+	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/gsd-core" ] || return 1
+	export AISTACK_GSD_TOOL_PATH=""
 	export AISTACK_GSD_TOOL_AVAILABLE="true"
 	return 0
 }
@@ -21,7 +21,7 @@ gsd_is_installed() {
 
 gsd_install() {
 	local r
-    local version="$1"
+    #local version="$1"
     [ -z "${version}" ] && version="@latest"
 
 	for r in $AISTACK_GSD_RUNTIME_REQUIRED; do 
@@ -29,92 +29,51 @@ gsd_install() {
 		aistack_runtime_require "${r}"
 	done
 
-    echo "Installing gsd ${version}"
-    # available versions : https://www.npmjs.com/package/get-shit-done-cc
-    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g get-shit-done-cc${version}
+    echo "Installing gsd"
+    # available versions : https://www.npmjs.com/package/@opengsd/gsd-core
+    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @opengsd/gsd-core -y
 
 	gsd_is_installed
 }
 
 gsd_uninstall() {
-	if gsd_is_installed; then
-		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g get-shit-done-cc
+	if aistack_runtime_is_detected "nodejs"; then
+		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @opengsd/gsd-core -y --uninstall --global
 		gsd_is_installed
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_GSD_RUNTIME_REQUIRED"
 	fi
 }
 
-gsd_path_register_for_shell() {
-    local shell_name="$1"
-	if gsd_is_installed; then
-    	path_register_for_shell "gsd" "${AISTACK_GSD_LAUNCHER_HOME}" "$shell_name"
-	fi
-}
-gsd_path_unregister_for_shell() {
-    local shell_name="${1:-all}"
-    path_unregister_for_shell "gsd" "$shell_name"
-}
-gsd_path_register_for_vs_terminal() {
-	if gsd_is_installed; then
-    	vscode_path_register_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
-	fi
-}
-gsd_path_unregister_for_vs_terminal() {
-    vscode_path_unregister_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
-}
+# gsd_path_register_for_shell() {
+#     local shell_name="$1"
+# 	if gsd_is_installed; then
+#     	path_register_for_shell "gsd" "${AISTACK_GSD_LAUNCHER_HOME}" "$shell_name"
+# 	fi
+# }
+# gsd_path_unregister_for_shell() {
+#     local shell_name="${1:-all}"
+#     path_unregister_for_shell "gsd" "$shell_name"
+# }
+# gsd_path_register_for_vs_terminal() {
+# 	if gsd_is_installed; then
+#     	vscode_path_register_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
+# 	fi
+# }
+# gsd_path_unregister_for_vs_terminal() {
+#     vscode_path_unregister_for_vs_terminal "gsd" "${AISTACK_GSD_LAUNCHER_HOME}"
+# }
 
 
 
 
-gsd_launch_export_variables="AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
+gsd_launch_export_variables=""
 gsd_launch() {
-    (
-        . "${AISTACK_RUN_CONTEXT_FILE}"
-
-        if [ "$#" -gt 0 ]; then
-            "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/get-shit-done-cc" "$@"
-        else
-            "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/get-shit-done-cc"
-        fi
-    )
+ 	:
 }
-
-
 
 gsd_launcher_manage() {
-    local action="${1:-create}"
-
-    case $action in
-
-        create)
-			if gsd_is_installed; then
-				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-				# and executed by the default /bin/sh on the current system
-				{
-					echo '#!/bin/sh'
-					for v in $gsd_launch_export_variables; do
-						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
-					done
-
-					declare -f gsd_launch
-
-					echo gsd_launch \"\$@\"
-				} > "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc"
-
-				chmod +x "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc"
-            fi
-			;;
-
-        delete)
-            rm -f "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc"
-            ;;
-
-		refresh_if_exists)
-			[ -f "${AISTACK_GSD_LAUNCHER_HOME}/get-shit-done-cc" ] && ( gsd_launcher_manage "delete"; gsd_launcher_manage "create" )
-			;;
-    esac
-    
+    :
 }
 
 

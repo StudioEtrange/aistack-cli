@@ -5,22 +5,22 @@ case "${sub_command}" in
         gsd_install "$1"
 
         echo "Configuring gsd"
-        gsd_settings_configure
+        #gsd_settings_configure
 
-        gsd_launcher_manage
+        #gsd_launcher_manage
 
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "$0 gsd register all|bash|zsh|fish"
-        echo "$0 gsd register vs"
+        # echo "You should register it's path into a spacific supported shell OR vscode terminal"
+        # echo "$0 gsd register all|bash|zsh|fish"
+        # echo "$0 gsd register vs"
         ;;
     uninstall)
         echo "Uninstalling gsd and unregister gsd PATH (keep all configuration unchanged, to remove configuration use reset command)"
         gsd_uninstall
 
-        gsd_path_unregister_for_shell "all"
-        gsd_path_unregister_for_vs_terminal
+        # gsd_path_unregister_for_shell "all"
+        # gsd_path_unregister_for_vs_terminal
 
-        gsd_launcher_manage "delete"
+        # gsd_launcher_manage "delete"
         ;;
     register)
         echo "Registering gsd launcher in PATH for $1"
@@ -45,16 +45,23 @@ case "${sub_command}" in
         esac
         ;;
     launch)
-        #gsd_launcher_manage
-		if gsd_is_installed; then
-
-			[ "$1" = "--" ] && shift
-
-			gsd_launch "$@"
-		else
-			echo "ERROR: gsd is not installed"
-			exit 1
-		fi
+        if gsd_is_installed; then
+            case "$1" in
+                gsd-core)
+                    #gsd_launcher_manage
+                    [ "$2" = "--" ] && shift
+                    gsd_launch_core "$@"
+                    ;;
+                gsd-tools)
+                    #gsd_launcher_manage
+                    [ "$2" = "--" ] && shift
+                    gsd_launch_tools "$@"
+                    ;;
+            esac
+        else
+            echo "ERROR: gsd is not installed"
+            exit 1
+        fi
         ;;
     *)
         echo "ERROR: Unknown command ${sub_command} for gsd"
