@@ -8,7 +8,9 @@ case "${sub_command}" in
         echo "Uninstalling GSD"
         gsd_uninstall "--uninstall $@"
         ;;
-
+    help)
+        gsd_help
+        ;;
     *)
         echo "ERROR: Unknown command ${sub_command} for gsd"
         usage

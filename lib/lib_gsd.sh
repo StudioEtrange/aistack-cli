@@ -47,3 +47,15 @@ gsd_uninstall() {
 	fi
 }
 
+
+gsd_help() {
+    local version="@latest"
+
+	for r in ${AISTACK_GSD_RUNTIME_REQUIRED}; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
+
+    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @opengsd/gsd-core${version} -h
+
+}
