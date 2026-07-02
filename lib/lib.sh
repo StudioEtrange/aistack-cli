@@ -474,7 +474,8 @@ aistack_tool_launcher_regenerate() (
 	bmad_launcher_manage "refresh_if_exists"
 	cpa_launcher_manage "refresh_if_exists"
 	gemini_launcher_manage "refresh_if_exists"
-	gsd_launcher_manage "refresh_if_exists"
+    # GSD do not have a launcher
+	#gsd_launcher_manage "refresh_if_exists"
 	kilo_launcher_manage "refresh_if_exists"
 	opencode_launcher_manage "refresh_if_exists"
 	orla_launcher_manage "refresh_if_exists"

@@ -164,6 +164,10 @@ Options:
                                         Instead use 'bmad' or 'bmad-method' command if ${AISTACK_BMAD_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack bmad register <shell>' to set it in your PATH.
     ----
+	gsd - Git. Shio. Done. - https://opengsd.net/ https://github.com/open-gsd/gsd-core
+	gsd install [<any gsd option>]        Install GSD ('aistack gsd install --local')
+    gsd uninstall [<any gsd option>]              Uinstall GSD ('aistack gsd uninstall --local')
+    ----
     Agent Development Kit (ADK) - (https://adk.dev/)
     adk <install|uninstall>             Install/Uninstall the adk for python.
     adk register <all|shell|vs>         Register adk PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
