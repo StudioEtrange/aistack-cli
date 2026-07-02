@@ -1053,3 +1053,20 @@ path_unregister_for_shell() {
     done
 }
 
+
+# see https://github.com/StudioEtrange/glibc-binary-compat.git
+glibc_binary_compat() {
+    local binary="${1}"
+    local search_folder="${2}"
+    local custom_glibc="${3}"
+
+    export GBC_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/glibc-binay-compat"
+    rm -Rf "${GBC_FEAT_INSTALL_ROOT}"
+    git clone "https://github.com/StudioEtrange/glibc-binary-compat.git" "${GBC_FEAT_INSTALL_ROOT}" 2>/dev/null
+    echo "INFO: link Node.js binary with custom glibc in ${custom_glibc} built with GBC (https://github.com/StudioEtrange/glibc-binary-compat)"
+
+    export CUSTOM_GLIBC_LINKER="${custom_glibc}/lib/ld-linux-x86-64.so.2"
+    export CUSTOM_GLIBC_PATH="${custom_glibc}/lib:${custom_glibc}/rtlib"
+
+    "${GBC_FEAT_INSTALL_ROOT}/patch-with-custom-glibc.sh" "${binary}" "${search_folder}/"
+}

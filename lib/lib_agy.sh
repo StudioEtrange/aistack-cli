@@ -34,7 +34,7 @@ agy_is_installed() {
 agy_install() {
 	local r
 
-	for r in $AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED; do 
+	for r in ${AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED}; do 
 		echo "Require needed ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
@@ -42,7 +42,9 @@ agy_install() {
 	# use a temporary HOME to avoid rc file modification in HOME
 	local tmp_home="$(mktemp -d)"
 	curl -fsSL https://antigravity.google/cli/install.sh | HOME="${tmp_home}" bash -s -- --dir "${AGY_FEAT_INSTALL_ROOT}"
-	rm -rf "$tmp_home"
+	rm -rf "${tmp_home}"
+
+	[ -n "${AISTACK_INIT_FORCE_AGY_GBC}" ] && glibc_binary_compat "agy" "${AGY_FEAT_INSTALL_ROOT}" "${AISTACK_INIT_FORCE_AGY_GBC}"
 
 	agy_is_installed
 }

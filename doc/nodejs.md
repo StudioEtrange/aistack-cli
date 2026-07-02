@@ -74,7 +74,7 @@ cd aistack-cli
 
 ## Using AIStack on old linux system with GBC
 
-AIStack can support old glibc Node.js installation using https://github.com/StudioEtrange/glibc-binary-compat.git
+AIStack can support Node.js installation on old glibc system using https://github.com/StudioEtrange/glibc-binary-compat.git
 
 1. Build a supported recent custom glibc for your system. Change target parameters in script. Default parameters will build a glibc 2.28 to be used on RedHat/Centos 7 OS which have by default a 2.17 glibc.
 

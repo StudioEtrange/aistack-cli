@@ -19,7 +19,7 @@ node_install() {
     nvm install --lts
     nvm alias default lts/*
 
-    [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] && node_glibc_binary_compat
+    [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] && glibc_binary_compat "node" "${AISTACK_NVM_HOME}" "${AISTACK_INIT_FORCE_NODE_GBC}"
 }
 
 node_uninstall() {
@@ -91,16 +91,4 @@ nvm_unload() {
     unset -f nvm
 }
 
-# see https://github.com/StudioEtrange/glibc-binary-compat.git
-node_glibc_binary_compat() {
-    export GBC_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/glibc-binay-compat"
-    mkdir -p "${GBC_FEAT_INSTALL_ROOT}"
-    git clone "https://github.com/StudioEtrange/glibc-binary-compat.git" "${GBC_FEAT_INSTALL_ROOT}" 2>/dev/null
-    echo "INFO: link Node.js binary with custom glibc in ${AISTACK_INIT_FORCE_NODE_GBC} built with GBC (https://github.com/StudioEtrange/glibc-binary-compat)"
-
-    export CUSTOM_GLIBC_LINKER="${AISTACK_INIT_FORCE_NODE_GBC}/lib/ld-linux-x86-64.so.2"
-    export CUSTOM_GLIBC_PATH="${AISTACK_INIT_FORCE_NODE_GBC}/lib:${AISTACK_INIT_FORCE_NODE_GBC}/rtlib"
-
-    "${GBC_FEAT_INSTALL_ROOT}/patch-with-custom-glibc.sh" "node" "${AISTACK_NVM_HOME}/" ${AISTACK_INIT_FORCE_NODE_GLIBC}
-}
 
