@@ -39,12 +39,21 @@ agy_install() {
 		aistack_runtime_require "${r}"
 	done
 
+
+	if [ -n "${AISTACK_INIT_FORCE_AGY_GBC}" ]; then
+		echo "WARN: at install you may have an error about GLIBC, ignore it. antigravity will be patched after installation"
+	fi
 	# use a temporary HOME to avoid rc file modification in HOME
 	local tmp_home="$(mktemp -d)"
 	curl -fsSL https://antigravity.google/cli/install.sh | HOME="${tmp_home}" bash -s -- --dir "${AGY_FEAT_INSTALL_ROOT}"
 	rm -rf "${tmp_home}"
 
-	[ -n "${AISTACK_INIT_FORCE_AGY_GBC}" ] && glibc_binary_compat "agy" "${AGY_FEAT_INSTALL_ROOT}" "${AISTACK_INIT_FORCE_AGY_GBC}"
+	if [ -f "${AGY_FEAT_INSTALL_ROOT}/agy" ]; then
+		if [ -n "${AISTACK_INIT_FORCE_AGY_GBC}" ]; then
+			glibc_binary_compat "agy" "${AGY_FEAT_INSTALL_ROOT}" "${AISTACK_INIT_FORCE_AGY_GBC}"
+			"${AGY_FEAT_INSTALL_ROOT}/agy" install --dir "${AGY_FEAT_INSTALL_ROOT}"
+		fi
+	fi
 
 	agy_is_installed
 }
