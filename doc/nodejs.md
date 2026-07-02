@@ -71,8 +71,6 @@ cd aistack-cli
 ./aistack npm config set registry https://registry.local.org/ -g
 ```
 
-_"When I init AIStack, which will install Node.js runtime and some npm packages, I want to set the registry for npm packages for the internal Node.js runtime."_
-
 
 ## Using AIStack on old linux system with GBC
 
