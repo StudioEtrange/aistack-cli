@@ -10,8 +10,9 @@ case "${sub_command}" in
         bmad_launcher_manage
 
         echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "$0 bmad register all|bash|zsh|fish"
-        echo "$0 bmad register vs"
+        echo "aistack bmad register all|bash|zsh|fish"
+        echo "aistack bmad register vs"
+		echo "note: do not register path into shells AND vs"
         ;;
     uninstall)
         echo "Uninstalling bmad and unregister bmad PATH (keep all configuration unchanged, to remove configuration use reset command)"

@@ -8,8 +8,9 @@ case "${sub_command}" in
         adk_launcher_manage
 
         echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "$0 adk register all|bash|zsh|fish"
-        echo "$0 adk register vs"
+        echo "aistack adk register all|bash|zsh|fish"
+        echo "aistack adk register vs"
+		echo "note: do not register path into shells AND vs"
         ;;
     uninstall)
 

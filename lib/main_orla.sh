@@ -11,8 +11,9 @@ case "${sub_command}" in
         orla_launcher_manage
 
         echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "$0 orla register all|bash|zsh|fish"
-        echo "$0 orla register vs"
+        echo "aistack orla register all|bash|zsh|fish"
+        echo "aistack orla register vs"
+		echo "note: do not register path into shells AND vs"
         ;;
     uninstall)
         # clean running process

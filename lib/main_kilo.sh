@@ -11,8 +11,9 @@ case "${sub_command}" in
         kilo_launcher_manage
 
         echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "$0 kc register all|bash|zsh|fish"
-        echo "$0 kc register vs"
+        echo "aistack kc register all|bash|zsh|fish"
+        echo "aistack kc register vs"
+		echo "note: do not register path into shells AND vs"
         ;;
     uninstall)
         echo "Uninstalling Kilo Code CLI and unregister Kilo Code CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"

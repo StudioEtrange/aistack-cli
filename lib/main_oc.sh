@@ -11,8 +11,9 @@ case "${sub_command}" in
         opencode_launcher_manage
 
         echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "$0 oc register all|bash|zsh|fish"
-        echo "$0 oc register vs"
+        echo "aistack oc register all|bash|zsh|fish"
+        echo "aistack oc register vs"
+		echo "note: do not register path into shells AND vs"
         ;;
     uninstall)
 

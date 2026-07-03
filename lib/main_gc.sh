@@ -11,8 +11,9 @@ case "${sub_command}" in
         gemini_launcher_manage
 
         echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "$0 gc register all|bash|zsh|fish"
-        echo "$0 gc register vs"
+        echo "aistack gc register all|bash|zsh|fish"
+        echo "aistack gc register vs"
+		echo "note: do not register path into shells AND vs"
         ;;
     uninstall)
         echo "Uninstalling Gemini CLI and unregister Gemini CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"

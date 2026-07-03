@@ -11,8 +11,9 @@ case "${sub_command}" in
 		agy_launcher_manage
 
 		echo "You should register its path into a specific supported shell OR vscode terminal"
-		echo "$0 agy register all|bash|zsh|fish"
-		echo "$0 agy register vs"
+		echo "aistack agy register all|bash|zsh|fish"
+		echo "aistack agy register vs"
+		echo "note: do not register path into shells AND vs"
 		;;
 	uninstall)
 		echo "Uninstalling Antigravity CLI and unregister Antigravity CLI PATH"

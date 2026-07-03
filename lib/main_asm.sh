@@ -10,8 +10,9 @@ case "${sub_command}" in
 		asm_launcher_manage
 
         echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "$0 asm register all|bash|zsh|fish"
-        echo "$0 asm register vs"
+        echo "aistack asm register all|bash|zsh|fish"
+        echo "aistack asm register vs"
+		echo "note: do not register path into shells AND vs"
 		;;
 	uninstall)
 		echo "Uninstalling asm and unregister asm PATH"
