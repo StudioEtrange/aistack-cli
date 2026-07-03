@@ -128,7 +128,7 @@ gemini_launcher_manage() {
             ;;
 
         delete)
-            rm -f "${AISTACK_GEMINI_LAUNCHER_HOME}"
+            rm -Rf "${AISTACK_GEMINI_LAUNCHER_HOME}"
             mkdir -p "${AISTACK_GEMINI_LAUNCHER_HOME}"
             ;;
 		

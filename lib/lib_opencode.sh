@@ -126,7 +126,7 @@ opencode_launcher_manage() {
 
         delete)
             rm -Rf "${AISTACK_OPENCODE_LAUNCHER_HOME}"
-            mkdir -p "${AISTACK_KILO_LAUNCHER_HOME}"
+            mkdir -p "${AISTACK_OPENCODE_LAUNCHER_HOME}"
             ;;
 	
 		refresh_if_exists)
