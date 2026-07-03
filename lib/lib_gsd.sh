@@ -47,6 +47,11 @@ gsd_uninstall() {
 	fi
 }
 
+# GSD do not have a launcher
+gsd_launcher_manage() {
+	:
+}
+
 
 gsd_help() {
     local version="@latest"

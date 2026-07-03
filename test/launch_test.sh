@@ -29,6 +29,7 @@ function init_aistack_test_env() {
 	. "$STELLA_APP_ROOT/../lib/lib_adk.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_asm.sh"
 	. "$STELLA_APP_ROOT/../lib/lib_mcp.sh"
+	. "${_CURRENT_FILE_DIR}/lib/lib_llmfit.sh"
 
 	# initialize aistack paths (see in file aistack)
 	aistack_initialize 1>/dev/null 2>&1

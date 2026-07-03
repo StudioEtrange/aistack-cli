@@ -40,14 +40,16 @@ opencode_install() {
 	done
 
     echo "Installing Opencode CLI"
-    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
+	node_package_install "opencode-ai${version}"
+    #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
 
 	opencode_is_installed
 }
 
 opencode_uninstall() {
 	if opencode_is_installed; then
-		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
+		node_package_uninstall "opencode-ai"
+		#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
 		opencode_is_installed
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_OPENCODE_RUNTIME_REQUIRED"
@@ -123,7 +125,8 @@ opencode_launcher_manage() {
             ;;
 
         delete)
-            rm -f "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            rm -Rf "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+            mkdir -p "${AISTACK_KILO_LAUNCHER_HOME}"
             ;;
 	
 		refresh_if_exists)

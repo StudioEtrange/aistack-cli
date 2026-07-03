@@ -57,6 +57,7 @@ aistack_initialize() {
 	gsd_init
     adk_init
     asm_init
+	llmfit_init
 }
 
 aistack_info() {
@@ -171,6 +172,7 @@ aistack_uninstall() {
 	asm_path_unregister_for_shell "all"
 	kilo_path_unregister_for_shell "all"
 	agy_path_unregister_for_shell "all"
+	llmfit_path_unregister_for_shell "all"
     
     # NOTE : because need lib_json which use json5 which needs nodesjs
 	if aistack_module_is_detected "json5"; then 
@@ -183,6 +185,7 @@ aistack_uninstall() {
 		asm_path_unregister_for_vs_terminal
 		kilo_path_unregister_for_vs_terminal
 		agy_path_unregister_for_vs_terminal
+		llmfit_path_unregister_for_vs_terminal
 	else
 		echo "INFO : registred PATHs from vscode will not be cleaned because nodejs ecosystem is not available "
 	fi
@@ -477,11 +480,11 @@ aistack_tool_launcher_regenerate() (
 	bmad_launcher_manage "refresh_if_exists"
 	cpa_launcher_manage "refresh_if_exists"
 	gemini_launcher_manage "refresh_if_exists"
-    # GSD do not have a launcher
-	#gsd_launcher_manage "refresh_if_exists"
+	gsd_launcher_manage "refresh_if_exists"
 	kilo_launcher_manage "refresh_if_exists"
 	opencode_launcher_manage "refresh_if_exists"
 	orla_launcher_manage "refresh_if_exists"
+	llmfit_launcher_manage "refresh_if_exists"
 
 )
 
@@ -498,6 +501,7 @@ aistack_tool_detect() {
 	kilo_is_installed
 	opencode_is_installed
 	orla_is_installed
+	llmfit_is_installed
 }
 
 
@@ -590,7 +594,7 @@ aistack_component_is_installed() {
         # components LOADED IN_PATH -----------
         # module --
         jq|yq)
-            stella_feature_installed "${c}"
+            stella_feature_installed "${c}" "LOADED_IN_PATH"
             return $?
             ;;
         nvm)
@@ -607,6 +611,10 @@ aistack_component_is_installed() {
         # runtime --
         miniforge3)
             [ -f "${AISTACK_ISOLATED_ROOT}/miniforge3/bin/python" ]
+            return $?
+            ;;
+		llmfit)
+            [ -f "${AISTACK_ISOLATED_ROOT}/llmfit/llmfit" ]
             return $?
             ;;
         nodejs)
@@ -644,31 +652,21 @@ aistack_component_is_installed() {
 aistack_component_install() {
     local c="$1"
     
-    echo "INFO : install component ${c}"
+    echo "INFO: install component ${c}"
 
     case ${c} in
         # components LOADED IN_PATH -----------
         # module --
         jq|yq)
-            stella_feature_install "${c}"
+            stella_feature_install "${c}" "LOADED_IN_PATH"
             ;;
         # components NOT_LOADED_IN_PATH -----------
         # runtime --
         miniforge3)
-            stella_feature_install "miniforge3" "NOT_LOADED_IN_PATH"
+            stella_feature_install "${c}" "NOT_LOADED_IN_PATH"
             ;;
         nodejs)
             node_install
-            # TODO : change install nvm for glibc 2.17
-            # if [ "$STELLA_CURRENT_PLATFORM" = "linux" ]; then
-            #     if [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ]; then
-            #         _ldd_version="$(ldd --version 2>/dev/null | awk '/ldd/{print $NF}')"
-            #         if [ "${_ldd_version}" = "2.17" ]; then
-            #             f="nodejs#23_7_0_glibc_217"
-            #             echo "-- detected glibc 2.17 switch to nodejs special build for it"
-            #         fi
-            #     fi
-            # fi
             ;;
         bun)
             bun_install
@@ -708,7 +706,36 @@ aistack_component_remove_all() {
 
 
 
-# --------------- VARIOUS -----------------------------
+# --------------- SPECIFIC INSTALLER -----------------------------
+# note : install or reinstall/complete package
+node_package_install() {
+	local p="${1}"
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g "${p}"
+}
+node_package_uninstall() {
+	local p="${1}"
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g "${p}"
+}
+
+
+bun_package_install() {
+	local p="${1}"
+	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g "${p}"
+}
+bun_package_uninstall() {
+	local p="${1}"
+	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g "${p}"
+}
+
+python_uv_package_install() {
+	local p="${1}"
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --reinstall --verbose "${p}"
+}
+python_uv_package_uninstall() {
+	local p="${1}"
+	PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose "${p}"
+}
+
 
 stella_feature_install() {
     local f="$1"
@@ -776,6 +803,9 @@ stella_feature_installed() {
         return 2
     fi
 }
+
+
+# --------------- VARIOUS -----------------------------
 
 # return 0 if list contains items, else 1
 # list_contains "aa bb xx" "bb"
@@ -1069,7 +1099,11 @@ glibc_binary_compat() {
     export GBC_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/glibc-binay-compat"
     rm -Rf "${GBC_FEAT_INSTALL_ROOT}"
     git clone "https://github.com/StudioEtrange/glibc-binary-compat.git" "${GBC_FEAT_INSTALL_ROOT}" 2>/dev/null
-    echo "INFO: link Node.js binary with custom glibc in ${custom_glibc} built with GBC (https://github.com/StudioEtrange/glibc-binary-compat)"
+    
+	local _ldd_version="$(ldd --version 2>/dev/null | awk '/ldd/{print $NF}')"
+	
+	echo "INFO: Current system glibc version: ${_ldd_version}"
+	echo "INFO: Link ${binary} with custom glibc in ${custom_glibc} built with GBC (https://github.com/StudioEtrange/glibc-binary-compat)"
 
     export CUSTOM_GLIBC_LINKER="${custom_glibc}/lib/ld-linux-x86-64.so.2"
     export CUSTOM_GLIBC_PATH="${custom_glibc}/lib:${custom_glibc}/rtlib"

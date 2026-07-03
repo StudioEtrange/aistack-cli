@@ -55,7 +55,8 @@ bun_install() {
     local download_url="https://github.com/oven-sh/bun/releases/download/${version}/${filename}"
 
     echo "Downloading and installing bun ${version} from ${download_url} to ${BUN_FEAT_INSTALL_ROOT}..."
-    $STELLA_API get_resource "Bun" "${download_url}" "HTTP_ZIP" "$BUN_FEAT_INSTALL_ROOT" "DEST_ERASE STRIP"
+	# DEST_ERASE allow to uninstall before install
+	$STELLA_API get_resource "Bun" "${download_url}" "HTTP_ZIP" "$BUN_FEAT_INSTALL_ROOT" "DEST_ERASE STRIP"
     echo "Bun installed successfully."
 }
  

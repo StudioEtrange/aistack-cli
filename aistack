@@ -25,6 +25,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_adk.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_asm.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_llmfit.sh"
 
 # --- USAGE ---
 usage() {
@@ -177,6 +178,14 @@ Options:
                                         Instead use 'adk' command if ${AISTACK_ADK_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack adk register <shell>' to set it in your PATH.
     ----
+	llmfit - (https://github.com/AlexsJones/llmfit)
+    llmfit <install|uninstall>             Install/Uninstall llmfit.
+    llmfit register <all|shell|vs>         Register llmfit PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    llmfit unregister [<all|shell|vs>]     Unregister llmfit PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
+    llmfit launch -- <llmfit command>         Launch llmfit. (i.e: aistack llmfit launch -- --help)
+                                        Instead use 'llmfit' command if ${AISTACK_LLMFIT_LAUNCHER_HOME} is in your PATH.
+                                        Use 'aistack llmfit register <shell>' to set it in your PATH.
+	----									
     vs info                             Print VS Code informations.
     vs show-config                      Show current VS Code configuration.
     vs install|uninstall <extension id> Install/uninstall a VS Code extension from marketplace into current VS Code session.
@@ -347,6 +356,9 @@ main() {
             ;;
         asm)
             . "${_CURRENT_FILE_DIR}/lib/main_asm.sh"
+            ;;
+		llmfit)
+            . "${_CURRENT_FILE_DIR}/lib/main_llmfit.sh"
             ;;
         *)
             echo "ERROR: Unknown command $command"

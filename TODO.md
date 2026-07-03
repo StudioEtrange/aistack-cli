@@ -58,3 +58,15 @@
   * complete local stack installer
   * Open WebUI, llama-server, Whisper, Kokoro, ComfyUI, Qdrant, SearXNG, n8n, ...
   * install.sh genere des conf avec des virgules au lieu de points . à contourner en relançant l'installeur avec LC_ALL=C : `LC_ALL=C ./install.sh`
+* skillspector
+  * https://github.com/nvidia/skillspector
+  * security scan
+  * can use LLM
+    * with Local Ollama or any OpenAI-compatible endpoint
+    ```
+    export SKILLSPECTOR_PROVIDER=openai
+    export OPENAI_API_KEY=ollama
+    export OPENAI_BASE_URL=http://localhost:11434/v1
+    export SKILLSPECTOR_MODEL=llama3.1:8b
+    skillspector scan ./my-skill/
+    ```

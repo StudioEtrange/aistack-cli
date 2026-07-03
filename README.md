@@ -33,6 +33,7 @@ To see complete commands use `aistack help`.
 | **info** | Display various AIStack information and configuration |
 | **shell** | Enter a sub-shell with the `aistack` environment and paths configured |
 
+NOTE : each item install command include uninstall before or means re-install the item.
 
 ## How-To and Quick Usage
 

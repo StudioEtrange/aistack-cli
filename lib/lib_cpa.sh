@@ -26,10 +26,10 @@ cpa_init() {
 cpa_is_installed() {
 	local r
 	export AISTACK_CLIPROXYAPI_TOOL_AVAILABLE="false"
-	for r in $AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
-	[ -x "$CLIPROXYAPI_FEAT_INSTALL_ROOT/cli-proxy-api" ] || return 1
+	for r in ${AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "${CLIPROXYAPI_FEAT_INSTALL_ROOT}/cli-proxy-api" ] || return 1
 	export AISTACK_CLIPROXYAPI_TOOL_AVAILABLE="true"
-	export AISTACK_CLIPROXYAPI_TOOL_PATH="$CLIPROXYAPI_FEAT_INSTALL_ROOT/cli-proxy-api"
+	export AISTACK_CLIPROXYAPI_TOOL_PATH="${CLIPROXYAPI_FEAT_INSTALL_ROOT}/cli-proxy-api"
 	return 0
 }
 
@@ -38,40 +38,38 @@ cpa_is_installed() {
 # Download and install cliproxyapi from GitHub releases.
 # @param {string} $1 - Optional version to install (e.g., "v0.1.0").
 #                      If not provided, the latest version will be fetched.
-#
-# This function relies on the following environment variables to be set:
-# - CLIPROXYAPI_FEAT_INSTALL_ROOT: The directory where cliproxyapi will be installed.
 cpa_install() {
 	local r
     local version="$1"
     
-    if [ -z "$version" ] || [ "$version" = "latest" ]; then
+    if [ -z "${version}" ] || [ "${version}" = "latest" ]; then
         echo "No version provided, fetching the latest version..."
         version=$(github_get_latest_release "router-for-me/CLIProxyAPI")
         echo "latest version is ${version}"
     fi
 
-	for r in $AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED; do 
+	for r in ${AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED}; do 
 		echo "Require needed ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
 
     local os_arch
-    case "$STELLA_CURRENT_PLATFORM" in
+    case "${STELLA_CURRENT_PLATFORM}" in
         linux)
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="linux_amd64"
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="linux_arm64"
+            [ "${STELLA_CURRENT_CPU_FAMILY}" = "intel" ] && os_arch="linux_amd64"
+            [ "${STELLA_CURRENT_CPU_FAMILY}" = "arm" ] && os_arch="linux_arm64"
             ;;
         darwin)
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="darwin_amd64"
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="darwin_arm64"
+            [ "${STELLA_CURRENT_CPU_FAMILY}" = "intel" ] && os_arch="darwin_amd64"
+            [ "${STELLA_CURRENT_CPU_FAMILY}" = "arm" ] && os_arch="darwin_arm64"
             ;;
     esac
     local filename="CLIProxyAPI_${version#v}_${os_arch}.tar.gz"
     local download_url="https://github.com/router-for-me/CLIProxyAPI/releases/download/${version}/${filename}"
 
     echo "Downloading and installing CLIProxyAPI ${version} from ${download_url} to ${CLIPROXYAPI_FEAT_INSTALL_ROOT}..."
-    $STELLA_API get_resource "CLIProxyAPI" "${download_url}" "HTTP_ZIP" "$CLIPROXYAPI_FEAT_INSTALL_ROOT" "DEST_ERASE"
+	# DEST_ERASE allow to uninstall before install
+    ${STELLA_API} get_resource "CLIProxyAPI" "${download_url}" "HTTP_ZIP" "${CLIPROXYAPI_FEAT_INSTALL_ROOT}" "DEST_ERASE"
     echo "CLIProxyAPI installed successfully."
 
 	cpa_is_installed
@@ -85,34 +83,34 @@ cpa_uninstall() {
 
 		cpa_is_installed
 	else
-		echo "WARN : not installed or missing a required managed runtime $AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED"
+		echo "WARN : not installed or missing a required managed runtime ${AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED}"
 	fi
 }
 
 cpa_launch_export_variables="AISTACK_CLIPROXYAPI_CONFIG_FILE CLIPROXYAPI_FEAT_INSTALL_ROOT"
 cpa_launch() {
-    if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
-        set -- --config "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$@"
+    if [ -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ]; then
+        set -- --config "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" "$@"
     fi
 
     if [ "$#" -gt 0 ]; then
-        "$CLIPROXYAPI_FEAT_INSTALL_ROOT/cli-proxy-api" "$@"
+        "${CLIPROXYAPI_FEAT_INSTALL_ROOT}/cli-proxy-api" "$@"
     else
-        "$CLIPROXYAPI_FEAT_INSTALL_ROOT/cli-proxy-api"
+        "${CLIPROXYAPI_FEAT_INSTALL_ROOT}/cli-proxy-api"
     fi
 }
 
 cpa_launcher_manage() {
     local action="${1:-create}"
 
-    case $action in
+    case ${action} in
         create)
 			if cpa_is_installed; then
 				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
 				# and executed by the default /bin/sh on the current system
 				{
 					echo '#!/bin/sh'
-					for v in $cpa_launch_export_variables; do
+					for v in ${cpa_launch_export_variables}; do
 						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
 					done
 
@@ -126,7 +124,8 @@ cpa_launcher_manage() {
             ;;
 
         delete)
-            rm -f "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}/cli-proxy-api"
+            rm -Rf "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}"
+			mkdir -p "${AISTACK_CLIPROXYAPI_LAUNCHER_HOME}"
             ;;
 
 		refresh_if_exists)
@@ -137,7 +136,7 @@ cpa_launcher_manage() {
 
 
 cpa_info() {
-    if [ -f "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ]; then
+    if [ -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ]; then
         echo "CLIProxyAPI configuration file : $AISTACK_CLIPROXYAPI_CONFIG_FILE"
 
         local address="$(cpa_settings_get_address)"
@@ -152,9 +151,9 @@ cpa_info() {
         echo "No CLIProxyAPI configuration file found. ($AISTACK_CLIPROXYAPI_CONFIG_FILE)"
     fi
 	echo
-	echo "CLIProxyAPI available : $AISTACK_CLIPROXYAPI_TOOL_AVAILABLE"
-	echo "CLIProxyAPI path : $AISTACK_CLIPROXYAPI_TOOL_PATH"
-	echo "CLIProxyAPI needed managed runtime : $AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED"
+	echo "CLIProxyAPI available : ${AISTACK_CLIPROXYAPI_TOOL_AVAILABLE}"
+	echo "CLIProxyAPI path : ${AISTACK_CLIPROXYAPI_TOOL_PATH}"
+	echo "CLIProxyAPI needed managed runtime : ${AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED}"
 	echo
 }
 
@@ -185,7 +184,7 @@ cpa_settings_configure() {
 }
 
 cpa_settings_remove() {
-    rm -Rf "$AISTACK_CLIPROXYAPI_CONFIG_HOME"
+    rm -Rf "${AISTACK_CLIPROXYAPI_CONFIG_HOME}"
 }
 
 

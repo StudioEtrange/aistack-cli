@@ -28,6 +28,7 @@ gemini_is_installed() {
 
 gemini_install() {
 	local r
+    # latest is stable version
     local version="$1"
     [ -z "${version}" ] && version="@latest"
 
@@ -38,15 +39,16 @@ gemini_install() {
 
     echo "Installing Gemini CLI ${version}"
     # available versions : https://www.npmjs.com/package/@google/gemini-cli-core
-    # latest is stable version
-    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
+    node_package_install "@google/gemini-cli${version}"
+	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
 	
 	gemini_is_installed
 }
 
 gemini_uninstall() {
 	if gemini_is_installed; then
-		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
+		node_package_uninstall "@google/gemini-cli"
+		#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
 		gemini_is_installed
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_GEMINI_RUNTIME_REQUIRED"
@@ -126,7 +128,8 @@ gemini_launcher_manage() {
             ;;
 
         delete)
-            rm -f "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+            rm -f "${AISTACK_GEMINI_LAUNCHER_HOME}"
+            mkdir -p "${AISTACK_GEMINI_LAUNCHER_HOME}"
             ;;
 		
 		refresh_if_exists)

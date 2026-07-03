@@ -29,13 +29,15 @@ adk_install() {
 	done
 
     echo "Installing adk for python"
-    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --verbose google-adk
+	python_uv_package_install "google-adk"
+    #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --reinstall --verbose google-adk
 	adk_is_installed
 }
 
 adk_uninstall() {
 	if adk_is_installed; then
-		PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose google-adk
+		python_uv_package_uninstall "google-adk"
+		#PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose google-adk
 		adk_is_installed
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_ADK_RUNTIME_REQUIRED"
@@ -104,7 +106,8 @@ adk_launcher_manage() {
             ;;
 
         delete)
-            rm -f "${AISTACK_ADK_LAUNCHER_HOME}/adk"
+            rm -Rf "${AISTACK_ADK_LAUNCHER_HOME}/adk"
+			mkdir -p "${AISTACK_ADK_LAUNCHER_HOME}/adk"
             ;;
 		
 		refresh_if_exists)

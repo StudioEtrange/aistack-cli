@@ -25,14 +25,15 @@ kilo_is_installed() {
 	local r
 	export AISTACK_KILO_TOOL_AVAILABLE="false"
 	for r in $AISTACK_KILO_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
-	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo" ] || return 1
+	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/kilo" ] || return 1
 	export AISTACK_KILO_TOOL_AVAILABLE="true"
-	export AISTACK_KILO_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo"
+	export AISTACK_KILO_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/kilo"
 	return 0
 }
 
 kilo_install() {
     local type="${1:-cli}"
+    # available versions : https://www.npmjs.com/package/@kilocode/cli
     local version="$2"
     [ -z "${version}" ] && version="@latest"
 	local r
@@ -45,8 +46,8 @@ kilo_install() {
 			done
 			
             echo "Installing Kilo Code CLI ${version}"
-            # available versions : https://www.npmjs.com/package/@kilocode/cli
-            PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
+			node_package_install "@kilocode/cli${version}"
+            #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
             kilo_is_installed
 			;;
         "extension")
@@ -63,7 +64,8 @@ kilo_uninstall() {
         "cli")
 			if kilo_is_installed; then
 				echo "Uninstalling Kilo Code CLI"
-				PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
+				node_package_uninstall "@kilocode/cli"
+				#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
 				kilo_is_installed
 			else
 				echo "WARN : not installed or missing a required managed runtime $AISTACK_KILO_RUNTIME_REQUIRED"
@@ -134,7 +136,8 @@ kilo_launcher_manage() {
             ;;
 
         delete)
-            rm -f "${AISTACK_KILO_LAUNCHER_HOME}/kilo"
+            rm -Rf "${AISTACK_KILO_LAUNCHER_HOME}"
+            mkdir -p "${AISTACK_KILO_LAUNCHER_HOME}"
             ;;
 
 		refresh_if_exists)

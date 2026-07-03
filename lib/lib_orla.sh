@@ -14,7 +14,7 @@ orla_init() {
     export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE="${AISTACK_ORLA_CONFIG_HOME}/cpa_key_for_orla"
     [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE")"
 
-    export ORLA_FEAT_INSTALL_ROOT="$AISTACK_ISOLATED_ROOT/orla"
+    export ORLA_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/orla"
     mkdir -p "${ORLA_FEAT_INSTALL_ROOT}"
 
 	export AISTACK_ORLA_RUNTIME_REQUIRED=""
@@ -27,10 +27,10 @@ orla_init() {
 orla_is_installed() {
 	local r
 	export AISTACK_ORLA_TOOL_AVAILABLE="false"
-	for r in $AISTACK_ORLA_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
-	[ -x "$ORLA_FEAT_INSTALL_ROOT/orla" ] || return 1
+	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	[ -x "${ORLA_FEAT_INSTALL_ROOT}/orla" ] || return 1
 	export AISTACK_ORLA_TOOL_AVAILABLE="true"
-	export AISTACK_ORLA_TOOL_PATH="$CLIPROXYAPI_FEAT_INSTALL_ROOT/orla"
+	export AISTACK_ORLA_TOOL_PATH="${CLIPROXYAPI_FEAT_INSTALL_ROOT}/orla"
 	return 0
 }
 
@@ -70,7 +70,8 @@ orla_install() {
     local download_url="https://github.com/dorcha-inc/orla/releases/download/${version}/${filename}"
 
     echo "Downloading and installing Orla ${version} from ${download_url} to ${ORLA_FEAT_INSTALL_ROOT}..."
-    $STELLA_API get_resource "Orla" "${download_url}" "HTTP_ZIP" "$ORLA_FEAT_INSTALL_ROOT" "DEST_ERASE"
+	# DEST_ERASE allow to uninstall before install
+	$STELLA_API get_resource "Orla" "${download_url}" "HTTP_ZIP" "$ORLA_FEAT_INSTALL_ROOT" "DEST_ERASE"
     echo "Orla installed successfully."
 
 	orla_is_installed
@@ -159,7 +160,8 @@ orla_launcher_manage() {
             ;;
 
         delete)
-            rm -f "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+            rm -Rf "${AISTACK_ORLA_LAUNCHER_HOME}"
+            mkdir -p "${AISTACK_ORLA_LAUNCHER_HOME}"
             ;;
 
 		refresh_if_exists)

@@ -21,6 +21,7 @@ bmad_is_installed() {
 
 bmad_install() {
 	local r
+    # available versions : https://www.npmjs.com/package/bmad-method
     local version="$1"
     [ -z "${version}" ] && version="@latest"
 
@@ -30,14 +31,15 @@ bmad_install() {
 	done
 
     echo "Installing bmad-method ${version}"
-    # available versions : https://www.npmjs.com/package/bmad-method
-    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g bmad-method${version}
+	node_package_install "bmad-method${version}"
+    #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g bmad-method${version}
     bmad_is_installed
 }
 
 bmad_uninstall() {
 	if bmad_is_installed; then
-		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g bmad-method
+		node_package_uninstall "bmad-method"
+		#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g bmad-method
 		bmad_is_installed
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_BMAD_RUNTIME_REQUIRED"
@@ -105,8 +107,8 @@ bmad_launcher_manage() {
             ;;
 
         delete)
-            rm -f "${AISTACK_BMAD_LAUNCHER_HOME}/bmad"
-            rm -f "${AISTACK_BMAD_LAUNCHER_HOME}/bmad-method"
+            rm -Rf "${AISTACK_BMAD_LAUNCHER_HOME}"
+			mkdir -p "${AISTACK_BMAD_LAUNCHER_HOME}"
             ;;
 
         refresh_if_exists)
