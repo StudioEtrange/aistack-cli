@@ -192,7 +192,7 @@ Options:
     vs set <key> <value>                Set a VS Code configuration in settings file.
     vs del <key>                        Delete a VS Code configuration in settings file.
    	----
-	nvm|npm|npx|bun|pip|pipx|uv [<command>]           Execute nvm, npm, npx, bun, pip, pipx, or uv command using the internal nodejs or python runtime from aistack. (i.e: aistack npm install -g typescript)
+    nvm|npm|npx|bun|pip|pipx|uv [<command>]           Execute nvm, npm, npx, bun, pip, pipx, or uv command using the internal nodejs or python runtime from aistack. (i.e: aistack npm install -g typescript)
     ----
     app killport <port>                  Kill process running on a specific port.
     ----
@@ -241,6 +241,12 @@ main() {
 			exit 0
             ;;
         uninstall)
+            if [ -n "${1}" ]; then
+                usage
+                echo
+                echo "ERROR: uninstall command do not have any argument"
+                exit 1
+            fi
             aistack_uninstall
 
             aistack_initialize

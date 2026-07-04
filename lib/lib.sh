@@ -167,7 +167,7 @@ aistack_uninstall() {
 	opencode_path_unregister_for_shell "all"
 	orla_path_unregister_for_shell "all"
 	bmad_path_unregister_for_shell "all"
-	gsd_path_unregister_for_shell "all"
+	#gsd_path_unregister_for_shell "all"
 	adk_path_unregister_for_shell "all"
 	asm_path_unregister_for_shell "all"
 	kilo_path_unregister_for_shell "all"
@@ -180,7 +180,7 @@ aistack_uninstall() {
 		opencode_path_unregister_for_vs_terminal
 		orla_path_unregister_for_vs_terminal
 		bmad_path_unregister_for_vs_terminal
-		gsd_path_unregister_for_vs_terminal
+		#gsd_path_unregister_for_vs_terminal
 		adk_path_unregister_for_vs_terminal
 		asm_path_unregister_for_vs_terminal
 		kilo_path_unregister_for_vs_terminal
@@ -1094,19 +1094,8 @@ path_unregister_for_shell() {
 glibc_binary_compat() {
     local binary="${1}"
     local search_folder="${2}"
-    local custom_glibc="${3}"
-
-    export GBC_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/glibc-binay-compat"
-    rm -Rf "${GBC_FEAT_INSTALL_ROOT}"
-    git clone "https://github.com/StudioEtrange/glibc-binary-compat.git" "${GBC_FEAT_INSTALL_ROOT}" 2>/dev/null
+    local custom_glibc_runtime_path="${3}"
     
-	local _ldd_version="$(ldd --version 2>/dev/null | awk '/ldd/{print $NF}')"
-	
-	echo "INFO: Current system glibc version: ${_ldd_version}"
-	echo "INFO: Link ${binary} with custom glibc in ${custom_glibc} built with GBC (https://github.com/StudioEtrange/glibc-binary-compat)"
+	"$STELLA_API" link_to_glibc_binary_compat "${binary}" "${search_folder}" "${custom_glibc_runtime_path}"
 
-    export CUSTOM_GLIBC_LINKER="${custom_glibc}/lib/ld-linux-x86-64.so.2"
-    export CUSTOM_GLIBC_PATH="${custom_glibc}/lib:${custom_glibc}/rtlib"
-
-    "${GBC_FEAT_INSTALL_ROOT}/patch-with-custom-glibc.sh" "${binary}" "${search_folder}/"
 }
