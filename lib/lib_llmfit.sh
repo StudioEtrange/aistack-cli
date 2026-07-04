@@ -36,7 +36,13 @@ llmfit_install() {
 
 	echo "Installing llmfit"
 	stella_feature_install "llmfit" "NOT_LOADED_IN_PATH"
-	llmfit_is_installed
+	
+	
+	if llmfit_is_installed; then
+		if [ -n "${AISTACK_INIT_FORCE_LLMFIT_GBC}" ]; then
+			glibc_binary_compat "llmfit" "${LLMFIT_FEAT_INSTALL_ROOT}" "${AISTACK_INIT_FORCE_LLMFIT_GBC}"
+		fi
+	fi
 }
  
 llmfit_uninstall() {
