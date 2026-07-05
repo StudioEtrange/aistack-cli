@@ -5,10 +5,17 @@ CLIProxyAPI is a tool that bridges the gap between command-line interfaces and A
 
 ## Links
 
+* CLIProxyAPI
   * https://help.router-for.me/
   * https://github.com/router-for-me/CLIProxyAPI
-  * https://github.com/router-for-me/CLIProxyAPIPlus - more functionnality
-  * Installer project : https://github.com/brokechubb/cliproxyapi-installer
+* CLIProxyAPIPlus
+  * https://github.com/jc01rho/CLIProxyAPIPlus
+  * more functionnalities
+* CLIProxyAPI installer
+  * https://github.com/brokechubb/cliproxyapi-installer
+* CPA Manager Plus
+  * https://github.com/seakee/CPA-Manager-Plus
+  * Self-hosted AI gateway monitoring — track requests, cost, failures, quota, and account health for CPA / CLIProxyAPI and OpenAI-compatible gateways.
 
 ## Quickstart
 
