@@ -53,13 +53,13 @@ Use `./README.md` for complete functional documentation.
   lib/main_<domain>.sh
   ```
 
-### Module Responsibilities
+### Files Responsibilities
 - `lib/lib_<domain>.sh`: domain logic and reusable functions
 - `lib/main_<domain>.sh`: CLI wiring, argument routing, subcommands
 - `./aistack`: top-level entrypoint and menu only
 
-### Feature Addition Workflow
-When adding a new feature:
+### Tool Addition Workflow
+When adding a new tool:
 
 1. Implement logic in:
    ```
