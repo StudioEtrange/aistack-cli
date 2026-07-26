@@ -67,10 +67,10 @@ bmad_path_unregister_for_vs_terminal() {
 }
 
 
-bmad_launch_export_variables="AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
+bmad_launch_export_variables="AISTACK_TOOL_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 bmad_launch() {
     (
-        . "${AISTACK_RUN_CONTEXT_FILE}"
+        . "${AISTACK_TOOL_CONTEXT_FILE}"
 
         # NOTE : we could call "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/bmad" instead of bmad-method. Both are link to the same binary
         if [ "$#" -gt 0 ]; then

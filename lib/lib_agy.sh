@@ -98,12 +98,12 @@ agy_path_unregister_for_vs_terminal() {
 	vscode_path_unregister_for_vs_terminal "antigravity" "${AISTACK_ANTIGRAVITY_LAUNCHER_HOME}"
 }
 
-agy_launch_export_variables="AISTACK_RUN_CONTEXT_FILE AGY_FEAT_INSTALL_ROOT"
+agy_launch_export_variables="AISTACK_TOOL_CONTEXT_FILE AGY_FEAT_INSTALL_ROOT"
 agy_launch() {
 	(
 		# antigravity does not need any runtime to be run
 		# but we give runtime to it can run some code
-        . "${AISTACK_RUN_CONTEXT_FILE}"
+        . "${AISTACK_TOOL_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
 			"$AGY_FEAT_INSTALL_ROOT/agy" "$@"

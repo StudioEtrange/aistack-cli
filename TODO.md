@@ -32,24 +32,24 @@
   * The search is currently keyword-based (FTS5 + BM25). It works well for direct queries like “middleware authentication” 
   * no semantic search
   * https://medium.com/@moshesimantov/i-built-a-context7-local-first-alternative-with-claude-code-eb14c9fd654f
-  ```
-  # Install
-  npm install -g @neuledge/context
+    ```
+    # Install
+    npm install -g @neuledge/context
 
-  # Add some docs
-  context add https://github.com/vercel/next.js
-  context add https://github.com/vercel/ai
+    # Add some docs
+    context add https://github.com/vercel/next.js
+    context add https://github.com/vercel/ai
 
-  # Connect to your AI agent (Claude Code example)
-  claude mcp add context -- context serve
-  ```
+    # Connect to your AI agent (Claude Code example)
+    claude mcp add context -- context serve
+    ```
 
 * ghostdesk
   * MCP server over a linux desktop
   * https://korben.info/ghostdesk-agent-ia-bureau-linux-docker.html
   * https://github.com/YV17labs/GhostDesk
 * Pi
-  * agent tookkit
+  * agent toolkit
   * https://github.com/earendil-works/pi
   * https://pi.dev/
 * OSD - Osmantic Deployment System (a.k.a Dream Server)
@@ -58,15 +58,6 @@
   * complete local stack installer
   * Open WebUI, llama-server, Whisper, Kokoro, ComfyUI, Qdrant, SearXNG, n8n, ...
   * install.sh genere des conf avec des virgules au lieu de points . à contourner en relançant l'installeur avec LC_ALL=C : `LC_ALL=C ./install.sh`
-* skillspector
-  * https://github.com/nvidia/skillspector
-  * security scan
-  * can use LLM
-    * with Local Ollama or any OpenAI-compatible endpoint
-    ```
-    export SKILLSPECTOR_PROVIDER=openai
-    export OPENAI_API_KEY=ollama
-    export OPENAI_BASE_URL=http://localhost:11434/v1
-    export SKILLSPECTOR_MODEL=llama3.1:8b
-    skillspector scan ./my-skill/
-    ```
+* optillm
+  * Optimizing inference proxy for LLMs
+  * https://github.com/algorithmicsuperintelligence/optillm

@@ -111,7 +111,7 @@ orla_path_unregister_for_vs_terminal() {
 }
 
 
-orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_RUN_CONTEXT_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
+orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_TOOL_CONTEXT_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
 orla_launch() {
     set -- "$@"
 
@@ -120,7 +120,7 @@ orla_launch() {
     fi
 
     (
-        . "${AISTACK_RUN_CONTEXT_FILE}"
+        . "${AISTACK_TOOL_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "${ORLA_FEAT_INSTALL_ROOT}/orla" "$@"
@@ -365,8 +365,9 @@ orla_connect_cpa() {
     fi
    
     local default_model
+    local selected_model
     if [ -n "${model}" ]; then
-        default_model="$model"
+        selected_model="$model"
     else
         # request cpa to get the first model available as the default model for orla AGENT mode
         # cpa_get_model_list needs cpa to be running
@@ -374,13 +375,13 @@ orla_connect_cpa() {
             echo "ERROR: CLIProxyAPI instance is not reachable. Please make sure CLIProxyAPI is running and properly configured."
             return 1
         fi
-        default_model="$(cpa_get_model_list | head -n 1)"
+        selected_model="$(cpa_get_model_list | head -n 1)"
     fi
 
     case "$orla_mode" in
         agent)
             orla_agent_register_default_backend "cpa" "openai" "$(cpa_settings_get_api_endpoint)" "AISTACK_CLIPROXYAPI_KEY_FOR_ORLA"
-            [ -n "$default_model" ] && orla_agent_register_default_model "openai" "$default_model"
+            [ -n "$selected_model" ] && orla_agent_register_default_model "openai" "$selected_model"
             ;;
         serve)
             # register cpa as a backend for orla service mode (orla service mode do not read the default backend from configuration file))
@@ -392,7 +393,7 @@ orla_connect_cpa() {
                                 "endpoint": "'$(cpa_settings_get_api_endpoint)'",
                                 "type": "openai",
                                 "api_key_env_var": "AISTACK_CLIPROXYAPI_KEY_FOR_ORLA",
-                                "model_id": "openai:'${default_model}'"
+                                "model_id": "openai:'${selected_model}'"
                             }'
             ;;
         *)

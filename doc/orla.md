@@ -32,8 +32,12 @@ info
 
   # use the default model of the default backend
   ./aistack orla agent "tell me a short story in two sentences and 512 caracters max"
+  ```
 
-
+* Use orla in agent mode connected to Cli Proxy API - Sample with codex model
+  ```
+  ./aistack orla connect agent cpa gpt-5.6-luna
+  ./aistack orla agent "Solve: If 2x + 3 = 7, what is x?"
   ```
 
 * Use orla in service mode

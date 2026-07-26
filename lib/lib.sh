@@ -18,10 +18,10 @@ aistack_initialize() {
 
 
     # add search path of runtimes and modules to tool run context
-    #export AISTACK_TOOL_RUN_CONTEXT_ADD_RUNTIME="nodejs bun python"
-    #export AISTACK_TOOL_RUN_CONTEXT_ADD_MODULE="yq jq"
-    $STELLA_API get_app_property "AISTACK" "TOOL_RUN_CONTEXT_ADD_RUNTIME"
-    $STELLA_API get_app_property "AISTACK" "TOOL_RUN_CONTEXT_ADD_MODULE"
+    #export AISTACK_TOOL_CONTEXT_ADD_RUNTIME="nodejs bun python"
+    #export AISTACK_TOOL_CONTEXT_ADD_MODULE="yq jq"
+    $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_RUNTIME"
+    $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_MODULE"
 
     # paths ---
     export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
@@ -35,8 +35,9 @@ aistack_initialize() {
     export AISTACK_ISOLATED_ROOT="${STELLA_APP_WORK_ROOT}/isolated_dependencies"
     mkdir -p "${AISTACK_ISOLATED_ROOT}"
 
-    export AISTACK_RUN_CONTEXT_FILE="${STELLA_APP_WORK_ROOT}/context/run_context.sh"
-    mkdir -p "${STELLA_APP_WORK_ROOT}/context"
+    export AISTACK_CONTEXT_HOME="${STELLA_APP_WORK_ROOT}/context"
+    mkdir -p "${AISTACK_CONTEXT_HOME}"
+    export AISTACK_TOOL_CONTEXT_FILE="${AISTACK_CONTEXT_HOME}/tool_context.sh"
 
 
     # init variables ---
@@ -58,7 +59,7 @@ aistack_initialize() {
     adk_init
     asm_init
 	llmfit_init
-    spr_init
+    sktor_init
 }
 
 aistack_info() {
@@ -68,7 +69,7 @@ aistack_info() {
     echo "AISTACK_LAUNCHER_HOME: $AISTACK_LAUNCHER_HOME"
     echo "AISTACK_MCP_LAUNCHER_HOME: $AISTACK_MCP_LAUNCHER_HOME"
     echo "AISTACK_ISOLATED_ROOT: $AISTACK_ISOLATED_ROOT"
-    echo "AISTACK_RUN_CONTEXT_FILE: $AISTACK_RUN_CONTEXT_FILE"
+    echo "AISTACK_TOOL_CONTEXT_FILE: $AISTACK_TOOL_CONTEXT_FILE"
     echo
     echo "--JavaScript ecosystem--"
     echo "AISTACK_MODULE_NVM_AVAILABLE : $AISTACK_MODULE_NVM_AVAILABLE"
@@ -120,8 +121,8 @@ aistack_info() {
 	echo "AISTACK_MODULE_CORE : $AISTACK_MODULE_CORE"
 	echo "AISTACK_MODULE_CORE_BOOTSTRAP : $AISTACK_MODULE_CORE_BOOTSTRAP"
     echo
-    echo "AISTACK_TOOL_RUN_CONTEXT_ADD_RUNTIME : $AISTACK_TOOL_RUN_CONTEXT_ADD_RUNTIME"
-    echo "AISTACK_TOOL_RUN_CONTEXT_ADD_MODULE : $AISTACK_TOOL_RUN_CONTEXT_ADD_MODULE"
+    echo "AISTACK_TOOL_CONTEXT_ADD_RUNTIME : $AISTACK_TOOL_CONTEXT_ADD_RUNTIME"
+    echo "AISTACK_TOOL_CONTEXT_ADD_MODULE : $AISTACK_TOOL_CONTEXT_ADD_MODULE"
     echo
     echo "--module status--"
     local var name p
@@ -174,7 +175,7 @@ aistack_uninstall() {
 	kilo_path_unregister_for_shell "all"
 	agy_path_unregister_for_shell "all"
 	llmfit_path_unregister_for_shell "all"
-    spr_path_unregister_for_shell "all"
+    sktor_path_unregister_for_shell "all"
     
     # NOTE : because need lib_json which use json5 which needs nodesjs
 	if aistack_module_is_detected "json5"; then 
@@ -188,7 +189,7 @@ aistack_uninstall() {
 		kilo_path_unregister_for_vs_terminal
 		agy_path_unregister_for_vs_terminal
 		llmfit_path_unregister_for_vs_terminal
-        spr_path_unregister_for_vs_terminal
+        sktor_path_unregister_for_vs_terminal
 	else
 		echo "INFO : registred PATHs from vscode will not be cleaned because nodejs ecosystem is not available "
 	fi
@@ -207,32 +208,32 @@ aistack_uninstall() {
 }
 
 # create files that centralize components and runtime PATH
-aistack_run_context_file_generate() {
+aistack_tool_context_file_generate() {
     local m r va vp list_path
 
-    echo '#!/bin/sh' > "${AISTACK_RUN_CONTEXT_FILE}"
+    echo '#!/bin/sh' > "${AISTACK_TOOL_CONTEXT_FILE}"
 
     # add to run context runtime search path
-    for r in ${AISTACK_TOOL_RUN_CONTEXT_ADD_RUNTIME}; do
+    for r in ${AISTACK_TOOL_CONTEXT_ADD_RUNTIME}; do
         va="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
         vp="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
         [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
     done
 
     # add to run context module search path
-    for m in ${AISTACK_TOOL_RUN_CONTEXT_ADD_MODULE}; do
+    for m in ${AISTACK_TOOL_CONTEXT_ADD_MODULE}; do
         va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
         vp="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
         [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
     done
 
     
-    [ -n "${list_path}" ] && echo "export PATH=\"${list_path}:\${PATH}\"" >> "${AISTACK_RUN_CONTEXT_FILE}"
-    chmod +x "${AISTACK_RUN_CONTEXT_FILE}"
+    [ -n "${list_path}" ] && echo "export PATH=\"${list_path}:\${PATH}\"" >> "${AISTACK_TOOL_CONTEXT_FILE}"
+    chmod +x "${AISTACK_TOOL_CONTEXT_FILE}"
 }
 
-aistack_run_context_file_remove() {
-    rm -f "${AISTACK_RUN_CONTEXT_FILE}"
+aistack_tool_context_file_remove() {
+    rm -f "${AISTACK_TOOL_CONTEXT_FILE}"
 }
 
 aistack_launcher_regenerate() {
@@ -313,7 +314,7 @@ aistack_runtime_require() {
     if ! aistack_runtime_is_detected "${r}"; then
         aistack_runtime_install "${r}"
         aistack_runtime_detect
-		aistack_run_context_file_generate
+		aistack_tool_context_file_generate
     fi
 
     if ! aistack_runtime_is_detected "${r}"; then
@@ -339,7 +340,7 @@ aistack_runtime_install() {
             aistack_module_install "uv"
             #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y pipx uv
             aistack_module_detect
-            aistack_run_context_file_generate
+            aistack_tool_context_file_generate
             ;;
         "nodejs")
             aistack_component_install "nodejs"
@@ -449,7 +450,7 @@ aistack_module_require() {
     if ! aistack_module_is_detected "${m}"; then
         aistack_module_install "${m}"
         aistack_module_detect
-		aistack_run_context_file_generate
+		aistack_tool_context_file_generate
     fi
 
     if ! aistack_module_is_detected "${m}"; then
@@ -488,7 +489,7 @@ aistack_tool_launcher_regenerate() (
 	opencode_launcher_manage "refresh_if_exists"
 	orla_launcher_manage "refresh_if_exists"
 	llmfit_launcher_manage "refresh_if_exists"
-	spr_launcher_manage "refresh_if_exists"
+	sktor_launcher_manage "refresh_if_exists"
 
 )
 
@@ -506,7 +507,7 @@ aistack_tool_detect() {
 	opencode_is_installed
 	orla_is_installed
 	llmfit_is_installed
-    spr_is_installed
+    sktor_is_installed
 }
 
 
@@ -584,7 +585,7 @@ aistack_component_core_install() {
     done
     
     aistack_module_detect
-  	aistack_run_context_file_generate
+  	aistack_tool_context_file_generate
 
 }
 
@@ -620,10 +621,6 @@ aistack_component_is_installed() {
             ;;
 		llmfit)
             [ -f "${AISTACK_ISOLATED_ROOT}/llmfit/llmfit" ]
-            return $?
-            ;;
-        spr)
-            [ -f "${AISTACK_ISOLATED_ROOT}/spr/spr" ]
             return $?
             ;;
         nodejs)
@@ -701,7 +698,7 @@ aistack_component_install() {
 
 # remove tools, managed runtime and modules
 aistack_component_remove_all() {
-	aistack_run_context_file_remove
+	aistack_tool_context_file_remove
 
     # remove isolated vomponent (tuntimes, tools, component)
     rm -Rf "${AISTACK_ISOLATED_ROOT}"

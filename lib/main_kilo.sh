@@ -96,7 +96,7 @@ case "${sub_command}" in
         case "${1}" in
             cpa)
                 echo "INFO: Connecting Kilo Code to CLIProxyAPI"
-                kilo_connect_cpa "${2}"
+                kilo_connect_cpa "${2}" "${3}"
 				echo "INFO: For VS Code extension, restart VS Code or disable/reload kilo extension"
                 ;;      
         esac

@@ -13,29 +13,30 @@ function init_aistack_test_env() {
 	mkdir -p "$STELLA_APP_WORK_ROOT"
 
 	# load aistack libraries
-	. "$STELLA_APP_ROOT/../lib/lib.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_json.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_yaml.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_node.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_bun.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_cpa.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_vscode.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_gemini.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_opencode.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_kilo.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_orla.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_bmad.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_gsd.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_adk.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_asm.sh"
-	. "$STELLA_APP_ROOT/../lib/lib_mcp.sh"
-	. "${_CURRENT_FILE_DIR}/lib/lib_llmfit.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_json.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_yaml.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_node.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_bun.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_cpa.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_vscode.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_gemini.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_opencode.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_kilo.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_orla.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_bmad.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_gsd.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_adk.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_asm.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_mcp.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_llmfit.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_sktor.sh"
 
 	# initialize aistack paths (see in file aistack)
 	aistack_initialize 1>/dev/null 2>&1
 	aistack_runtime_detect 1>/dev/null 2>&1
 	aistack_module_detect 1>/dev/null 2>&1
-	aistack_run_context_file_generate 1>/dev/null 2>&1
+	aistack_tool_context_file_generate 1>/dev/null 2>&1
 
 	aistack_tool_detect 1>/dev/null 2>&1
 	aistack_mcp_detect 1>/dev/null 2>&1
@@ -44,7 +45,6 @@ function init_aistack_test_env() {
 	# install core requirements
 	# use aistack_component_core_install instead of aistack_install for speed gain
 	#( aistack_core_install 1>/dev/null 2>&1 )
-	aista
 	aistack_component_core_install
 	aistack_component_core_is_detected
 }
@@ -59,9 +59,9 @@ function test_launch_bats() {
 	declare -f >>"$_v"
 
 	if [ "$filter" = "" ]; then
-		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "$STELLA_APP_ROOT/test/test_$domain.bats"
+		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "${STELLA_APP_ROOT}/test/test_$domain.bats"
 	else
-		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "$STELLA_APP_ROOT/test/test_$domain.bats" -f ${filter}
+		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "${STELLA_APP_ROOT}/test/test_$domain.bats" -f ${filter}
 	fi
 	rm -f "$_v"
 }

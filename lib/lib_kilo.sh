@@ -99,10 +99,10 @@ kilo_path_unregister_for_vs_terminal() {
 }
 
 
-kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
+kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_TOOL_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 kilo_launch() {
     (
-        . "${AISTACK_RUN_CONTEXT_FILE}"
+        . "${AISTACK_TOOL_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo" "$@"
@@ -281,34 +281,45 @@ kilo_register_model() {
     local limit_output="$8"
 
 
-    original_provider_id="$provider_id"
+    original_provider_id="${provider_id}"
     [ -n "${provider_id}" ] && provider_id="${provider_id//./\\.}" || { echo "ERROR kilo_register_model : missing provider_id"; return 1; }
-    original_model_id="$model_id"
+    original_model_id="${model_id}"
     [ -n "${model_id}" ] && model_id="${model_id//./\\.}" || { echo "ERROR kilo_register_model : missing model_id"; return 1; }
     
     [ -z "${real_model_id}" ] && { echo "ERROR kilo_register_model : missing real_model_id"; return 1; }
 
-    [ -z "${model_display_name}" ] && model_display_name="$original_model_id"
+    [ -z "${model_display_name}" ] && model_display_name="${original_model_id}"
 
     kilo_remove_config "provider.${provider_id}.models.${model_id}"
-    kilo_set_config "provider.${provider_id}.models.${model_id}.id" "\"$real_model_id\""
-    kilo_set_config "provider.${provider_id}.models.${model_id}.name" "\"$model_display_name\""
+    kilo_set_config "provider.${provider_id}.models.${model_id}.id" "\"${real_model_id}\""
+    kilo_set_config "provider.${provider_id}.models.${model_id}.name" "\"${model_display_name}\""
     
-    [ -n "$reasoning" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.reasoning" "$reasoning"
-    [ -n "$tool_call" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.tool_call" "$tool_call"
+    [ -n "$reasoning" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.reasoning" "${reasoning}"
+    [ -n "$tool_call" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.tool_call" "${tool_call}"
     
-    [ -n "$limit_context" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.limit.context" "$limit_context"
-    [ -n "$limit_output" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.limit.output" "$limit_output"
+    [ -n "$limit_context" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.limit.context" "${limit_context}"
+    [ -n "$limit_output" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.limit.output" "${limit_output}"
 }
 
-
-kilo_register_default_model() {
+# set a default model in kilo config
+kilo_set_default_model() {
     local provider_id="$1"
-    local default_model_id="$2"
+    local model_id="$2"
 
     kilo_remove_config "model"
-    [ -n "$provider_id" ] && [ -n "$default_model" ] && kilo_set_config "model" "\"${provider_id}/${default_model_id}\""
+    [ -n "$provider_id" ] && [ -n "$model_id" ] && kilo_set_config "model" "\"${provider_id}/${model_id}\""
 }
+
+# set a small model in kilo config
+# for title generation, commit message generation, prompt enhancement, and other quick tasks
+kilo_set_small_model() {
+    local provider_id="$1"
+    local model_id="$2"
+
+    kilo_remove_config "small_model"
+    [ -n "$provider_id" ] && [ -n "$model_id" ] && kilo_set_config "small_model" "\"${provider_id}/${model_id}\""
+}
+
 
 # cliproxy api connection management ------------------------
 kilo_generate_cpa_key() {
@@ -338,9 +349,12 @@ kilo_unregister_cpa_key() {
 # needs cpa to be running if model is empty, to retrieve model list from CLIProxyAPI
 kilo_connect_cpa() {
     # empty means all available models
-    local model="${1}"
+    local wanted_default_model="${1}"
+    local wanted_small_model="${2}"
     local model_list
-
+    local default_model
+    local small_model
+    
     if ! cpa_is_configured; then
         echo "ERROR: Failed to generate and register CLIProxyAPI API key for Kilo Code : CLIProxyAPI is not configured."
         return 1
@@ -354,26 +368,39 @@ kilo_connect_cpa() {
         return 1
     fi
 
+    # register provider AIStack CLIProxyAPI
     kilo_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@ai-sdk/openai-compatible" "$(cpa_settings_get_api_endpoint)" "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ""
 
-    local default_model
-    if [ -n "${model}" ]; then
-        kilo_register_model "aistack-cpa" "${model}" "${model}" "AIStack cpa-${mmodel}"
-        default_model="${model}"
-    else
-        if ! cpa_instance_reachable; then
-            echo "ERROR: Failed to generate and register CPA API key for Kilo Code : CLIProxyAPI instance is not reachable. Please make sure CLIProxyAPI is running and properly configured."
+
+    if ! cpa_instance_reachable; then
+        if [ -z "${wanted_default_model}" ]; then
+            echo "ERROR: Failed to request CLIProxyAPI, instance is not reachable and default model id not provided, can not automaticly pick a model from CLIProxyAPI by requesting a model list. Please launch CLIProxyAPI OR provide a default model id"
             return 1
         fi
-        # cpa_get_model_list needs cpa to be running
+        echo "WARN: Failed to request CLIProxyAPI, instance is not reachable - Only the provided default model id will be registered not all models."
+    else
+        # retrieve cliproxyapi models list and register them
+        # function cpa_get_model_list needs cpa to be running
         model_list="$(cpa_get_model_list)"
-        for m in $model_list; do
+        for m in ${model_list}; do
             # the first model available will be the default model
             [ -z "${default_model}" ] && default_model="${m}"
             kilo_register_model "aistack-cpa" "${m}" "${m}" "AIStack cpa-${m}"
         done
     fi
 
-    [ -n "$default_model" ] && kilo_register_default_model "aistack-cpa" "$default_model"
+    # default model
+    [ -n "${wanted_default_model}" ] && default_model="${wanted_default_model}"
+    # NOTE : the wanted_default_model might have been already registered into kilo just before.
+    kilo_register_model "aistack-cpa" "${default_model}" "${default_model}" "AIStack cpa-${default_model}"
+    [ -n "${default_model}" ] && kilo_set_default_model "aistack-cpa" "${default_model}"
+
+    # small model
+    if [ -n "${wanted_small_model}" ]; then 
+        small_model="${wanted_small_model}"
+        # NOTE : the wanted_small_model might have been already registered into kilo just before.
+        kilo_register_model "aistack-cpa" "${small_model}" "${small_model}" "AIStack cpa-${small_model}"
+        [ -n "${small_model}" ] && kilo_set_small_model "aistack-cpa" "${small_model}"
+    fi
 
 }

@@ -77,10 +77,10 @@ opencode_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
 }
 
-opencode_launch_variables="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE AISTACK_RUN_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
+opencode_launch_variables="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE AISTACK_TOOL_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 opencode_launch() {
     (
-        . "${AISTACK_RUN_CONTEXT_FILE}"
+        . "${AISTACK_TOOL_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode" "$@"
@@ -96,7 +96,7 @@ opencode_launcher_manage() {
     case $action in
         create)
             # echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-            # echo ". ${AISTACK_RUN_CONTEXT_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+            # echo ". ${AISTACK_TOOL_CONTEXT_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
             # chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
 

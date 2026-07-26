@@ -499,3 +499,39 @@ EOF
 	assert_equal "$(cat "$tmp")" "$expected"
 
 }
+
+
+@test "yaml_set_key_into_file4" {
+
+	tmp="$(mktemp)"
+	
+	run yaml_set_key_into_file "$tmp" ".a.b.c" 'test' "double"
+	assert_success
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: "test"
+EOF
+	)
+	assert_equal "$(cat "$tmp")" "$expected"
+
+}
+
+
+
+@test "yaml_set_key_into_file5" {
+
+	tmp="$(mktemp)"
+
+	run yaml_set_key_into_file "$tmp" .a."foo\.bar".c "test"
+	assert_success
+	expected=$(cat <<'EOF'
+a:
+  foo.bar:
+    c: test
+EOF
+	)
+	assert_equal "$(cat "$tmp")" "$expected"
+
+}
+

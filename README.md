@@ -109,6 +109,10 @@ See [BMAD](doc/bmad.md)
 
 See [Agent Development Kit](doc/adk.md)
 
+### NVIDIA skillspeector
+
+See [NVIDIA skillspeector](doc/skillspector.md)
+
 ### VS Code
 
 See [VS Code](doc/vscode.md)
@@ -144,7 +148,7 @@ AIStack defines
 * module :
   * A module is a kind of component used internally by AIStack.
   * The PATH of each module is always injected into AIStack run context and may be injected into each tool run context. 
-    * Exception : when a module requires a runtime : the module PATH is not injected into AIStack run context and may be injected into each tool run context. 
+    * Exception : when a module requires a runtime : the module PATH is not injected into AIStack run context and may be injected into each tool run context. (because the module is included in the search path of the runtime)
 
 * runtime : 
   * A runtime is a kind of component used to execute code (Python, Nodejs, and so on...). 
@@ -156,7 +160,7 @@ AIStack defines
 * tool :
   * Tools are the main purpose of AIStack : managing tools exposed for direct use by AIStack, agents, or users.
   * The PATH of each tool is not injected into AIStack run context but may be injected into each tool run context.
-  * A launcher for each tool is generated and its PATH may be injected into shell context so that the tool can be used directly and autonomously.
+  * A launcher for each tool is generated and the launcher PATH may be injected into shell context so that the tool can be used directly and autonomously.
 
 
 

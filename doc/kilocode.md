@@ -24,8 +24,17 @@ Kilo is the all-in-one agentic engineering platform.
   * Kilo Code is built upon Vercel AI SDK using its unified provider architecture 
     * https://github.com/vercel/ai
     * https://ai-sdk.dev/docs/foundations/providers-and-models
+  * in config file, there is default model and small model
+    * default model is used for every thing
+    * small model is used for title generation, commit message generation, prompt enhancement, and other quick tasks
+    https://github.com/Kilo-Org/kilocode/discussions/11251
+    ```
+      "small_model": "aistack-cpa/gpt-5.4-mini",
+      "model": "aistack-cpa/gpt-5.6-terra"
+    ```
 
 ## Kilo Code connected to CPA
+
 * how to commands :
     ```
     ./aistack kc connect cpa
