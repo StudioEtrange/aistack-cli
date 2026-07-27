@@ -42,12 +42,15 @@ ciss_install() {
 	done
 
 	echo "Installing Cisco AI Skill Scanner"
+	#python_pip_package_install "cisco-ai-skill-scanner"
 	python_uv_package_install "cisco-ai-skill-scanner"
 	ciss_is_installed
 }
 
 ciss_uninstall() {
 	if ciss_is_installed; then
+		# TODO : first fix uv use mirror ?
+		#python_pip_package_uninstall "cisco-ai-skill-scanner"
 		python_uv_package_uninstall "cisco-ai-skill-scanner"
 		ciss_is_installed
 	else

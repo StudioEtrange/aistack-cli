@@ -47,16 +47,17 @@ sktor_is_installed() {
 
 sktor_install() {
 	local r
-  
+
 	for r in ${AISTACK_SKTOR_RUNTIME_REQUIRED}; do 
 		echo "Require needed ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
 
     echo "Installing skillspector"
-	python_uv_package_install 'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git'
+	python_uv_package_install  'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git'
 	
 	sktor_is_installed
+    return $?
 }
  
 sktor_uninstall() {

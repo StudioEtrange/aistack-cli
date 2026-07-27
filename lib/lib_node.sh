@@ -21,8 +21,10 @@ node_install() {
     nvm_load
 
     # install node LTS version
-    nvm install --lts
-    nvm alias default lts/*
+    if type nvm >/dev/null 2>&1; then
+        nvm install --lts
+        nvm alias default lts/*
+    fi
 
     [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] && glibc_binary_compat "node" "${AISTACK_NVM_HOME}" "${AISTACK_INIT_FORCE_NODE_GBC}"
 }

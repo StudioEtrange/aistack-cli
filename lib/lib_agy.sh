@@ -39,7 +39,6 @@ agy_install() {
 		aistack_runtime_require "${r}"
 	done
 
-
 	if [ -n "${AISTACK_INIT_FORCE_AGY_GBC}" ]; then
 		echo "WARN: at install you may have an error about GLIBC, ignore it. antigravity will be patched after installation"
 	fi

@@ -3,14 +3,16 @@ shift
 case "${sub_command}" in
     install)
 
-        sktor_install
-        
-        sktor_launcher_manage
+        if ! sktor_install; then
+            echo "ERROR: sktor not installed"
+        else
+            sktor_launcher_manage
 
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "aistack sktor register all|bash|zsh|fish"
-        echo "aistack sktor register vs"
-		echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into a spacific supported shell OR vscode terminal"
+            echo "aistack sktor register all|bash|zsh|fish"
+            echo "aistack sktor register vs"
+            echo "note: do not register path into shells AND vs"
+        fi
         ;;
     uninstall)
 

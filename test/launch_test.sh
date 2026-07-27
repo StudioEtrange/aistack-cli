@@ -18,6 +18,7 @@ function init_aistack_test_env() {
 	. "${STELLA_APP_ROOT}/../lib/lib_yaml.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_node.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_bun.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_python.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_cpa.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_vscode.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_gemini.sh"

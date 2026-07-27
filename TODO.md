@@ -8,6 +8,8 @@
   * Supports chat, interactive shell, and automation via MCP.
   * Integrates with LLMs for reasoning and tool-based workflows.
 
+* cpa : add a way to set port and host
+
 * serving LLM
   * Lemonade
     * https://github.com/lemonade-sdk/lemonade

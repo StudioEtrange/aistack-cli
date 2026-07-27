@@ -13,6 +13,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_yaml.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_node.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_bun.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_python.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_agy.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_cpa.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_vscode.sh"
@@ -226,7 +227,8 @@ Options:
     vs set <key> <value>                Set a VS Code configuration in settings file.
     vs del <key>                        Delete a VS Code configuration in settings file.
    	----
-    nvm|npm|npx|bun|pip|pipx|uv [<command>]           Execute nvm, npm, npx, bun, pip, pipx, or uv command using the internal nodejs or python runtime from aistack. (i.e: aistack npm install -g typescript)
+    nvm|npm|npx|bun|pip|pipx|uv|conda|mamba [<command>]           Execute nvm, npm, npx, bun, pip, pipx, or uv command using the internal nodejs or python runtime from aistack. (i.e: aistack npm install -g typescript)
+    runtime add|remove <runtime>        Install|remove a runtime
     ----
     app killport <port>                  Kill process running on a specific port.
     ----
@@ -271,6 +273,7 @@ main() {
 			# NOTE : aistack_install uninstall everything
             aistack_install
 
+            # after install, redo the init sequence below
             aistack_initialize
             aistack_runtime_detect
             aistack_module_detect
@@ -324,7 +327,7 @@ main() {
                 exit 1
             fi
             ;;
-        pip|pipx|uv)
+        pip|pipx|uv|conda|mamba)
             if ! aistack_runtime_is_detected "python"; then echo " -- ERROR : python managed runtime missing, use aistack runtime command"; exit 1; fi;     
             PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
@@ -334,13 +337,13 @@ main() {
             case "${sub_command}" in
                 add)
 					aistack_runtime_install "$1"
-					aistack_runtime_detect
-					aistack_tool_context_file_generate
+					#aistack_runtime_detect
+					#aistack_tool_context_file_generate
 				;;
 				remove)
 					aistack_runtime_uninstall "$1"
-					aistack_runtime_detect
-					aistack_tool_context_file_generate
+					#aistack_runtime_detect
+					#aistack_tool_context_file_generate
 				;;
 				*)
 					echo "ERROR: Unknown command ${sub_command} for runtime"

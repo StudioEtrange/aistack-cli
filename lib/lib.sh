@@ -39,10 +39,12 @@ aistack_initialize() {
     mkdir -p "${AISTACK_CONTEXT_HOME}"
     export AISTACK_TOOL_CONTEXT_FILE="${AISTACK_CONTEXT_HOME}/tool_context.sh"
 
+    export AISTACK_GLIBC_CURRENT_VERSION="$(glibc_version)"
 
     # init variables ---
 	node_init
     bun_init
+    python_init
 
     # AISTACK_INIT_FORCE_VSCODE_MODE could be "remote" : means using vscode remote extension
     # AISTACK_INIT_FORCE_VSCODE_MODE could be empty "" : try to guess
@@ -72,17 +74,20 @@ aistack_info() {
     echo "AISTACK_ISOLATED_ROOT: $AISTACK_ISOLATED_ROOT"
     echo "AISTACK_TOOL_CONTEXT_FILE: $AISTACK_TOOL_CONTEXT_FILE"
     echo
+    echo "Current glibc version AISTACK_GLIBC_CURRENT_VERSION: ${AISTACK_GLIBC_CURRENT_VERSION}"
+    echo
     echo "--JavaScript ecosystem--"
     echo "AISTACK_MODULE_NVM_AVAILABLE : $AISTACK_MODULE_NVM_AVAILABLE"
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
     echo "NVM_DIR : $NVM_DIR"
     echo "AISTACK_NVM_CACHE (npm/npx): $AISTACK_NVM_CACHE"
 
-    echo "AISTACK_RUNTIME_NODEJS_AVAILABLE : $AISTACK_RUNTIME_NODEJS_AVAILABLE"
+    echo "AISTACK_RUNTIME_NODEJS_AVAILABLE: $AISTACK_RUNTIME_NODEJS_AVAILABLE"
     if [ "$AISTACK_RUNTIME_NODEJS_AVAILABLE" = "true" ]; then
-        echo "AISTACK_RUNTIME_NODEJS_SEARCH_PATH : $AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
-        echo "AISTACK_RUNTIME_NODEJS_PATH : $AISTACK_RUNTIME_NODEJS_PATH"
-        echo "AISTACK_MODULE_NPM_AVAILABLE : $AISTACK_MODULE_NPM_AVAILABLE"
+        echo "AISTACK_RUNTIME_NODEJS_SEARCH_PATH: $AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
+        echo "AISTACK_RUNTIME_NODEJS_PATH: $AISTACK_RUNTIME_NODEJS_PATH"
+        echo "AISTACK_INTERNAL_NVM_LOADED: $AISTACK_INTERNAL_NVM_LOADED"
+        echo "AISTACK_MODULE_NPM_AVAILABLE: $AISTACK_MODULE_NPM_AVAILABLE"
         echo "NodeJS version : $($AISTACK_RUNTIME_NODEJS_PATH --version)"
         echo "NPM version : $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --version)"
         echo "NPM cache dir : $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get cache)"
@@ -98,22 +103,23 @@ aistack_info() {
         esac
     fi
     echo
-    echo "AISTACK_RUNTIME_BUN_AVAILABLE : $AISTACK_RUNTIME_BUN_AVAILABLE"
+    echo "AISTACK_RUNTIME_BUN_AVAILABLE: $AISTACK_RUNTIME_BUN_AVAILABLE"
     if [ "$AISTACK_RUNTIME_BUN_AVAILABLE" = "true" ]; then
-        echo "AISTACK_RUNTIME_BUN_SEARCH_PATH : $AISTACK_RUNTIME_BUN_SEARCH_PATH"
-        echo "AISTACK_RUNTIME_BUN_PATH : $AISTACK_RUNTIME_BUN_PATH"
-        echo "Bun version : $($AISTACK_RUNTIME_BUN_PATH --version)"
+        echo "AISTACK_RUNTIME_BUN_SEARCH_PATH: $AISTACK_RUNTIME_BUN_SEARCH_PATH"
+        echo "AISTACK_RUNTIME_BUN_PATH: $AISTACK_RUNTIME_BUN_PATH"
+        echo "Bun version: $($AISTACK_RUNTIME_BUN_PATH --version)"
     fi
 
     echo
     echo "--python ecosystem--"
-    echo "AISTACK_RUNTIME_PYTHON_AVAILABLE : $AISTACK_RUNTIME_PYTHON_AVAILABLE"
+    echo "AISTACK_RUNTIME_PYTHON_AVAILABLE: $AISTACK_RUNTIME_PYTHON_AVAILABLE"
     if [ "$AISTACK_RUNTIME_PYTHON_AVAILABLE" = "true" ]; then
-        echo "AISTACK_RUNTIME_PYTHON_SEARCH_PATH : $AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
-        echo "AISTACK_RUNTIME_PYTHON_PATH : $AISTACK_RUNTIME_PYTHON_PATH"
-        echo "Python version : $($AISTACK_RUNTIME_PYTHON_PATH --version)"
+        echo "AISTACK_RUNTIME_PYTHON_SEARCH_PATH: $AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
+        echo "AISTACK_RUNTIME_PYTHON_PATH: $AISTACK_RUNTIME_PYTHON_PATH"
+        echo "Python version: $($AISTACK_RUNTIME_PYTHON_PATH --version)"
     fi
-    echo "AISTACK_MODULE_MAMBA_AVAILABLE : $AISTACK_MODULE_MAMBA_AVAILABLE"
+    echo "AISTACK_MODULE_MAMBA_AVAILABLE: $AISTACK_MODULE_MAMBA_AVAILABLE"
+    echo "Python packages constraints files - PIP_CONSTRAINT and UV_CONSTRAINT : $UV_CONSTRAINT"
     echo
     echo "--components management--"
 	echo "AISTACK_RUNTIME_TO_DETECT : $AISTACK_RUNTIME_TO_DETECT"
@@ -254,7 +260,7 @@ aistack_runtime_detect() {
         
         case "${r}" in
             "python")
-                if aistack_component_is_installed "miniforge3"; then
+                if aistack_component_is_installed "python"; then
                     export AISTACK_RUNTIME_PYTHON_AVAILABLE="true"
                     export AISTACK_RUNTIME_PYTHON_PATH="${AISTACK_ISOLATED_ROOT}/miniforge3/bin/python"
                     # bin folder which contains python
@@ -263,7 +269,7 @@ aistack_runtime_detect() {
                     export AISTACK_MODULE_MAMBA_AVAILABLE="true"
                     export AISTACK_MODULE_MAMBA_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/mamba"
                     export AISTACK_MODULE_MAMBA_SEARCH_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}"
-                    # # modules that is installed at the same time as python runtuime
+                    # # modules that are installed at the same time as python runtime
                     # for ingredient in "uv pipx"; do
                     #     va="AISTACK_MODULE_${ingredient}_AVAILABLE"; vp="AISTACK_MODULE_${ingredient}_PATH";
                     #     if aistack_component_is_installed "${ingredient}"; then
@@ -274,7 +280,7 @@ aistack_runtime_detect() {
                 fi
                 ;;
             "nodejs")
-                if aistack_component_is_installed "nvm"; then
+                if aistack_component_is_installed "nodejs"; then
                     export AISTACK_MODULE_NVM_AVAILABLE="true"
                     if aistack_component_is_installed "${r}"; then
                         export AISTACK_RUNTIME_NODEJS_AVAILABLE="true"
@@ -289,7 +295,7 @@ aistack_runtime_detect() {
                 fi
                 ;;
             "bun")
-                if aistack_component_is_installed "${r}"; then
+                if aistack_component_is_installed "bun"; then
                     export AISTACK_RUNTIME_BUN_AVAILABLE="true"
                     export AISTACK_RUNTIME_BUN_PATH="${AISTACK_ISOLATED_ROOT}/bun/bun"
                     # bin folder which contains bun
@@ -316,8 +322,8 @@ aistack_runtime_require() {
 
     if ! aistack_runtime_is_detected "${r}"; then
         aistack_runtime_install "${r}"
-        aistack_runtime_detect
-		aistack_tool_context_file_generate
+        #aistack_runtime_detect
+		#aistack_tool_context_file_generate
     fi
 
     if ! aistack_runtime_is_detected "${r}"; then
@@ -333,23 +339,19 @@ aistack_runtime_install() {
 
     case "${r}" in
         "python")
-            aistack_component_install "miniforge3"
-            echo "-- install python pipx and uv package/project manager"
-            # NOTE : Here $AISTACK_RUNTIME_PYTHON_SEARCH_PATH is empty so we launch aistack_runtime_detect
-            # to set it to be able to install pipx and uv with manba
+            aistack_component_install "python"
             aistack_runtime_detect
-
-            aistack_module_install "pipx"
-            aistack_module_install "uv"
-            #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y pipx uv
-            aistack_module_detect
             aistack_tool_context_file_generate
             ;;
         "nodejs")
             aistack_component_install "nodejs"
+            aistack_runtime_detect
+			aistack_tool_context_file_generate
             ;;
         "bun")
             aistack_component_install "bun"
+            aistack_runtime_detect
+			aistack_tool_context_file_generate
             ;;
         *)
 			echo "ERROR: Unknown runtime $r"
@@ -362,13 +364,19 @@ aistack_runtime_uninstall() {
     local r="$1"
     case "${r}" in
         "python")
-            rm -Rf "${AISTACK_ISOLATED_ROOT}/miniforge3"
+            python_uninstall
+            aistack_runtime_detect
+			aistack_tool_context_file_generate
             ;;
         "nodejs")
             node_uninstall
+            aistack_runtime_detect
+			aistack_tool_context_file_generate
             ;;
         "bun")
             bun_uninstall
+            aistack_runtime_detect
+			aistack_tool_context_file_generate
             ;;
     esac
 }
@@ -452,8 +460,8 @@ aistack_module_require() {
 
     if ! aistack_module_is_detected "${m}"; then
         aistack_module_install "${m}"
-        aistack_module_detect
-		aistack_tool_context_file_generate
+        #aistack_module_detect
+		#aistack_tool_context_file_generate
     fi
 
     if ! aistack_module_is_detected "${m}"; then
@@ -462,16 +470,18 @@ aistack_module_require() {
     fi
 }
 
-# NOTE : we do not need to implements this function
-# use aistack_component_install instead
 aistack_module_install() {
     aistack_component_install "$@"
+    aistack_module_detect
+    aistack_tool_context_file_generate
 }
 
 # NOTE : we do not need to implements this function
 # we never need to uninstall a specific module because all are mandatories and should not be removed
 aistack_module_uninstall() {
     :
+    # aistack_module_detect
+    # aistack_tool_context_file_generate
 }
 
 
@@ -582,14 +592,15 @@ aistack_component_core_install() {
         fi
     done
 
-    aistack_runtime_detect
+    #aistack_runtime_detect
 	
 	echo "- Install internal core mandatories modules for AIStack"
     for m in ${AISTACK_MODULE_CORE}; do
         aistack_component_install "${m}"
     done
     
-    aistack_module_detect
+    #aistack_module_detect
+
   	aistack_tool_context_file_generate
 
 }
@@ -619,7 +630,6 @@ aistack_component_is_installed() {
             return 1
             ;;
         # components NOT_LOADED_IN_PATH -----------
-        # runtime --
         miniforge3)
             [ -f "${AISTACK_ISOLATED_ROOT}/miniforge3/bin/python" ]
             return $?
@@ -627,6 +637,13 @@ aistack_component_is_installed() {
 		llmfit)
             [ -f "${AISTACK_ISOLATED_ROOT}/llmfit/llmfit" ]
             return $?
+            ;;
+        # runtime --
+        python)
+            if aistack_component_is_installed "miniforge3"; then
+                return 0
+            fi
+            return 1
             ;;
         nodejs)
             if aistack_component_is_installed "nvm"; then
@@ -641,7 +658,7 @@ aistack_component_is_installed() {
             [ -f "${AISTACK_ISOLATED_ROOT}/bun/bun" ]
             return $?
             ;;
-        # module -- runtime variable are available
+        # module -- runtime variables are available
         mamba|pipx|uv)
             [ -f "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/${c}" ]
             return $?
@@ -672,9 +689,12 @@ aistack_component_install() {
             stella_feature_install "${c}" "LOADED_IN_PATH"
             ;;
         # components NOT_LOADED_IN_PATH -----------
-        # runtime --
         miniforge3)
-            stella_feature_install "${c}" "NOT_LOADED_IN_PATH"
+            stella_feature_install "miniforge3" "NOT_LOADED_IN_PATH"
+            ;;
+        # runtimes --
+        python)
+            python_install
             ;;
         nodejs)
             node_install
@@ -682,7 +702,7 @@ aistack_component_install() {
         bun)
             bun_install
             ;;
-        # module --
+        # modules --
         pipx|uv)
             aistack_runtime_require "python"
             PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y "${c}"
@@ -720,33 +740,41 @@ aistack_component_remove_all() {
 # --------------- SPECIFIC INSTALLER -----------------------------
 # note : install or reinstall/complete package
 node_package_install() {
-	local p="${1}"
-	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g "${p}"
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g "${@}"
 }
 node_package_uninstall() {
-	local p="${1}"
-	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g "${p}"
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g "${@}"
 }
 
 
 bun_package_install() {
-	local p="${1}"
-	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g "${p}"
+	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g "${@}"
 }
 bun_package_uninstall() {
-	local p="${1}"
-	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g "${p}"
+	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g "${@}"
 }
 
 python_uv_package_install() {
-	local p="${1}"
-    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --reinstall --verbose "${p}"
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --reinstall --verbose "${@}"
 }
 python_uv_package_uninstall() {
-	local p="${1}"
-	PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose "${p}"
+	PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose "${@}"
 }
 
+python_pip_package_install() {
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip install --force-reinstall --verbose "${@}"
+}
+python_pip_package_uninstall() {
+	PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip uninstall --yes --verbose "${@}"
+}
+
+python_mamba_package_install() {
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y "${@}"
+}
+
+python_mamba_package_uninstall() {
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba remove -y "${@}"
+}
 
 stella_feature_install() {
     local f="$1"
@@ -1100,6 +1128,70 @@ path_unregister_for_shell() {
     done
 }
 
+glibc_version() {
+    ldd --version 2>/dev/null | awk '/ldd/{print $NF}' 2>/dev/null
+}
+
+# test if a minimal version is available on current system
+# glibc_version_require "2.17"
+# return 0 or 1
+glibc_version_require() {
+    local _ver="$1"
+    local _current_ver
+    local _comparison
+    
+    [ -n "${_ver}" ] || return 1
+
+    _current_ver="$(glibc_version)" || return 1
+    [ -n "${_current_ver}" ] || return 1
+
+    _comparison="$(glibc_version_compare "${_current_ver}" "${_ver}")"
+    case "${_comparison}" in
+        0|1) return 0;;
+        *) return 1;;
+    esac
+}
+
+# Usage :
+#   glibc_version_compare "2.17" "2.28"
+#
+# print :
+#   -1 if version1 < version2
+#    0 if version1 = version2
+#    1 if version1 > version2
+glibc_version_compare() {
+    local _version1="$1"
+    local _version2="$2"
+    local _part1
+    local _part2
+
+    while [ -n "$_version1" ] || [ -n "$_version2" ]; do
+        _part1="${_version1%%.*}"
+        _part2="${_version2%%.*}"
+
+        [ "$_version1" = "$_part1" ] && _version1="" || _version1="${_version1#*.}"
+        [ "$_version2" = "$_part2" ] && _version2="" || _version2="${_version2#*.}"
+
+        [ -z "$_part1" ] && _part1=0
+        [ -z "$_part2" ] && _part2=0
+
+        # Le préfixe 10# évite l'interprétation octale, par exemple pour "08".
+        _part1=$((10#$_part1))
+        _part2=$((10#$_part2))
+
+        if [ "$_part1" -lt "$_part2" ]; then
+            printf '%s\n' '-1'
+            return 0
+        fi
+
+        if [ "$_part1" -gt "$_part2" ]; then
+            printf '%s\n' '1'
+            return 0
+        fi
+    done
+
+    printf '%s\n' '0'
+}
 
 # see https://github.com/StudioEtrange/glibc-binary-compat.git
 glibc_binary_compat() {
