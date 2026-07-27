@@ -27,6 +27,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_llmfit.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_sktor.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_ciss.sh"
 
 # --- USAGE ---
 usage() {
@@ -202,6 +203,18 @@ Options:
     sktor connect <provider> <model> <api key> [<base url>] [<context_length>] [<max_output_tokens>]
                                         Connect skillspector to a model of a provider. i.e sktor connect "openai" "gemma" "AZERTY12345" "http://localhost:11434/v1"
     sktor disconnect                    Disconnect skillspector from any LLM.
+	----
+	ciss : Cisco AI Skill Scanner - (https://github.com/cisco-ai-defense/skill-scanner)
+    ciss <install|uninstall>             Install/Uninstall Cisco AI Skill Scanner.
+    ciss register <all|shell|vs>          Register skill-scanner PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    ciss unregister [<all|shell|vs>]      Unregister skill-scanner PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
+    ciss launch -- <ciss command>         Launch Cisco AI Skill Scanner. (i.e: aistack ciss launch -- --help)
+                                         Instead use 'skill-scanner' command if ${AISTACK_CISS_LAUNCHER_HOME} is in your PATH.
+                                         Use 'aistack ciss register <shell>' to set it in your PATH.
+    ciss connect cpa [<model>]            Connect Cisco AI Skill Scanner to CLIProxyAPI using OpenAI-compatible provider. By default use the first available model.
+    ciss connect <provider> <model> <api key> [<base url>]
+                                         Connect Cisco AI Skill Scanner to an LLM. i.e ciss connect "openai" "gpt-4o" "AZERTY12345" "http://localhost:11434/v1"
+    ciss disconnect                       Disconnect Cisco AI Skill Scanner from any LLM.
     ----									
     vs info                             Print VS Code informations.
     vs show-config                      Show current VS Code configuration.
@@ -391,6 +404,9 @@ main() {
             ;;
         sktor)
             . "${_CURRENT_FILE_DIR}/lib/main_sktor.sh"
+            ;;
+        ciss)
+            . "${_CURRENT_FILE_DIR}/lib/main_ciss.sh"
             ;;
         *)
             echo "ERROR: Unknown command $command"

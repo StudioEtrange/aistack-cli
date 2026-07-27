@@ -160,7 +160,7 @@ sktor_info() {
     echo "  AISTACK_MODEL_KEY_FOR_SKTOR (exported as OPENAI_API_KEY in sktor context) : ${AISTACK_MODEL_KEY_FOR_SKTOR}"
     echo "-"
     echo "Model registry file:"
-    ecgi "  AISTACK_SKILLSPECTOR_MODEL_REGISTRY exported as SKILLSPECTOR_MODEL_REGISTRY in sktor context) : ${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}"
+    echo "  AISTACK_SKILLSPECTOR_MODEL_REGISTRY exported as SKILLSPECTOR_MODEL_REGISTRY in sktor context) : ${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}"
     [ -f "${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}" ] && echo "   Model registry file exists" || echo "   Model registry file do not exists" 
 
 }
@@ -279,7 +279,7 @@ sktor_unregister_model() {
     esac
 }
 
-# use "CPA" as providerif it is a model from CLIProxyAPI
+# use "CPA" as provider if it is a model from CLIProxyAPI
 sktor_register_model() {
     local provider="${1}"
     local id_model="${2}"

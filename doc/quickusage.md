@@ -11,6 +11,7 @@ Right to the point how-to
   - [Case 5 : Orla + OpenAI](#case-5--orla--openai)
   - [Case 6 : scan skills with killspector + OpenAI](#case-6--scan-skills-with-killspector--openai)
   - [Case 7 : scan skills with asm](#case-7--scan-skills-with-asm)
+  - [Case 8 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-8--scan-skills-with-cisco-ai-skill-scanner--openai)
 
 ## Case 0 : AIStack install and init
 
@@ -189,6 +190,43 @@ asm audit security https://github.com/anthropics/skills/tree/main/skills/docx
 git clone https://github.com/anthropics/skills /tmp/skills
 
 asm eval /tmp/skills/skills/docx
+
+rm -Rf /tmp/skills
+```
+
+## Case 8 : scan skills with Cisco AI Skill Scanner + OpenAI
+
+_"I want to install Cisco AI Skill Scanner and use it connected to my OpenAI subscription to scan skills."_
+
+**_CPA installation, launch and Codex login_** :
+```
+cd aistack-cli
+./aistack cpa install
+./aistack cpa launch
+```
+
+**_in another terminal, Codex (OpenAI) login_** :
+```
+./aistack cpa login codex-oauth
+./aistack cpa model list
+```
+
+**_Cisco AI Skill Scanner installation and connection_** :
+```
+./aistack ciss install
+./aistack ciss register bash
+
+./aistack ciss connect cpa gpt-5.4-mini
+```
+
+**_in another bash session, scan a skill_** :
+```
+skill-scanner --help
+
+git clone https://github.com/anthropics/skills /tmp/skills
+
+skill-scanner scan /tmp/skills/skills/algorithmic-art --use-behavioral
+skill-scanner scan /tmp/skills/skills/algorithmic-art --use-behavioral --use-llm --format markdown
 
 rm -Rf /tmp/skills
 ```

@@ -60,6 +60,7 @@ aistack_initialize() {
     asm_init
 	llmfit_init
     sktor_init
+	ciss_init
 }
 
 aistack_info() {
@@ -176,6 +177,7 @@ aistack_uninstall() {
 	agy_path_unregister_for_shell "all"
 	llmfit_path_unregister_for_shell "all"
     sktor_path_unregister_for_shell "all"
+	ciss_path_unregister_for_shell "all"
     
     # NOTE : because need lib_json which use json5 which needs nodesjs
 	if aistack_module_is_detected "json5"; then 
@@ -190,6 +192,7 @@ aistack_uninstall() {
 		agy_path_unregister_for_vs_terminal
 		llmfit_path_unregister_for_vs_terminal
         sktor_path_unregister_for_vs_terminal
+		ciss_path_unregister_for_vs_terminal
 	else
 		echo "INFO : registred PATHs from vscode will not be cleaned because nodejs ecosystem is not available "
 	fi
@@ -490,6 +493,7 @@ aistack_tool_launcher_regenerate() (
 	orla_launcher_manage "refresh_if_exists"
 	llmfit_launcher_manage "refresh_if_exists"
 	sktor_launcher_manage "refresh_if_exists"
+	ciss_launcher_manage "refresh_if_exists"
 
 )
 
@@ -508,6 +512,7 @@ aistack_tool_detect() {
 	orla_is_installed
 	llmfit_is_installed
     sktor_is_installed
+	ciss_is_installed
 }
 
 

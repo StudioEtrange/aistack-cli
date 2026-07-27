@@ -31,6 +31,7 @@ function init_aistack_test_env() {
 	. "${STELLA_APP_ROOT}/../lib/lib_mcp.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_llmfit.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_sktor.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_ciss.sh"
 
 	# initialize aistack paths (see in file aistack)
 	aistack_initialize 1>/dev/null 2>&1

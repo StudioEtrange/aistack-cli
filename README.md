@@ -113,6 +113,10 @@ See [Agent Development Kit](doc/adk.md)
 
 See [NVIDIA skillspeector](doc/skillspector.md)
 
+### Cisco AI Skill Scanner
+
+See [Cisco AI Skill Scanner](doc/ciss.md)
+
 ### VS Code
 
 See [VS Code](doc/vscode.md)
