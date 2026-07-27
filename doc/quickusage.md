@@ -28,14 +28,17 @@ cd aistack-cli
 
 _"I want to install Kilo Code VS Code extension and use it connected to my OpenAI subscription."_
 
-**_CPA installation and launch_** :
+**_CPA installation and daemon start_** :
 ```
 cd aistack-cli
 ./aistack cpa install
-./aistack cpa launch
+./aistack cpa up
 ```
 
-**_in another terminal, Codex (OpenAI) login_** :
+Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to follow its logs, and `./aistack cpa down` to stop it.
+
+
+**_Codex (OpenAI) login_** :
 ```
 ./aistack cpa login codex-oauth
 ./aistack cpa model list
@@ -51,8 +54,9 @@ cd aistack-cli
 ```
 ./aistack kc connect cpa
 ```
-**_kilocode extension test_** :
-* in kilocode extension, in the model selector choose a model from provider `AIStack CLIProxyAPI`
+
+
+
 
 ## Case 2 : Configure Node.js internal runtime
 
@@ -103,14 +107,15 @@ cd aistack
 
 _"I want to install Orla agent and use it connected to my OpenAI subscription."_
 
-**_CPA installation and launch_** :
+**_CPA installation and daemon start_** :
 ```
 cd aistack-cli
 ./aistack cpa install
-./aistack cpa launch
+./aistack cpa up
 ```
+Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to follow its logs, and `./aistack cpa down` to stop it.
 
-**_in another terminal, Codex (OpenAI) login_** :
+**_Codex (OpenAI) login_** :
 ```
 ./aistack cpa login codex-oauth
 ./aistack cpa model list
@@ -202,10 +207,11 @@ _"I want to install Cisco AI Skill Scanner and use it connected to my OpenAI sub
 ```
 cd aistack-cli
 ./aistack cpa install
-./aistack cpa launch
+./aistack cpa up
 ```
+Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to follow its logs, and `./aistack cpa down` to stop it.
 
-**_in another terminal, Codex (OpenAI) login_** :
+**_Codex (OpenAI) login_** :
 ```
 ./aistack cpa login codex-oauth
 ./aistack cpa model list

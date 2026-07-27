@@ -24,9 +24,29 @@ CLIProxyAPI is a tool that bridges the gap between command-line interfaces and A
 ./aistack cpa install
 ```
 
-* launch
+* start as a daemon
 ```
-./aistack cpa launch
+./aistack cpa up [<context folder>] -- <cpa options>
+```
+
+* check daemon status
+```
+./aistack cpa status
+```
+
+* follow daemon logs (`Ctrl+C` stops following logs without stopping CLIProxyAPI)
+```
+./aistack cpa logs
+```
+
+* stop the daemon
+```
+./aistack cpa down
+```
+
+* launch in the foreground
+```
+./aistack cpa launch [<context folder>] -- <cpa options>
 ```
 
 * authenticate to antigravity oauth

@@ -94,7 +94,7 @@ Options:
                                         Launch Kilo Code. Instead use 'kilo' command if ${AISTACK_KILO_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack kc register <shell>' to set it in your PATH.
     kc connect cpa [<default model>] [<small model>]            Connect Kilo Code CLI and VS Code extension to CLIProxyAPI. Create a CLIProxyAPI provider.
-                                                                If CLIProxyAPI is running ('aistack cpa launch') will register all models.
+                                                                When CLIProxyAPI is running it will register all models.
                                                                 Set a 'default' and 'small' model else pick the first CLIProxyAPI model as default.
                                                                 NOTE: small model is for generation of title, commit message, prompt enhancement, and other quick tasks.
     ----
@@ -124,6 +124,10 @@ Options:
     cpa show-config                      Show current CLIProxyAPI configuration.
     cpa reset                            Reset all CLIProxyAPI configuration.
     cpa launch [context folder] -- <CLIProxyAPI command>                   Launch CLIProxyAPI.
+    cpa up [context folder] -- <CLIProxyAPI command>      Start CLIProxyAPI as a daemon.
+    cpa down                             Stop the CLIProxyAPI daemon.
+    cpa status                           Show CLIProxyAPI daemon status.
+    cpa logs                             Follow CLIProxyAPI daemon logs. Use Ctrl+C to stop following logs without stopping CLIProxyAPI.
     cpa login agy-oauth [--project_id <your_project_id>]                     Login to Antigravity OAuth.
     cpa login codex-oauth                Login to Codex OAuth (OpenAI).
     cpa login kimi-oauth                 Login to Kimi OAuth.

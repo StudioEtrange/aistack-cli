@@ -100,6 +100,40 @@ cpa_launch() {
     fi
 }
 
+cpa_daemon_up() {
+	local daemon_name="cpa"
+	local log_file="${AISTACK_CLIPROXYAPI_CONFIG_HOME}/cli-proxy-api.log"
+
+	# if ! cpa_is_installed; then
+	# 	echo "ERROR: CLIProxyAPI is not installed"
+	# 	return 1
+	# fi
+    #cpa_daemon_down
+
+    if [ -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ]; then
+        set -- --config "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" "$@"
+    fi
+
+	if [ "$#" -gt 0 ]; then
+		STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_start "${daemon_name}" "${AISTACK_CLIPROXYAPI_TOOL_PATH}" "${log_file}" "$@"
+	else
+		STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_start "${daemon_name}" "${AISTACK_CLIPROXYAPI_TOOL_PATH}" "${log_file}"
+	fi
+
+}
+
+cpa_daemon_down() {
+    STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_stop "cpa"
+}
+
+cpa_daemon_status() {
+	STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_status "cpa"
+}
+
+cpa_daemon_logs() {
+    STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_logs "cpa"
+}
+
 cpa_launcher_manage() {
     local action="${1:-create}"
 

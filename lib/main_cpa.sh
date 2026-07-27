@@ -99,6 +99,37 @@ case "${sub_command}" in
 			exit 1
 		fi
         ;;
+	up)
+		if cpa_is_installed; then
+			local folder=
+			if [ -n "$1" ] && [ "$1" != "--" ]; then
+				folder="$1"
+				if [ -d "${folder}" ]; then
+					echo "change to context folder : ${folder}"
+					cd "${folder}" || exit 1
+					shift
+				else
+					echo "ERROR: Directory '${folder}' not found"
+					exit 1
+				fi
+			fi
+			[ "$1" = "--" ] && shift
+
+			cpa_daemon_up "$@"
+		else
+			echo "ERROR: CLIProxyAPI is not installed"
+			exit 1
+		fi
+		;;
+	down)
+		cpa_daemon_down
+		;;
+	status)
+		cpa_daemon_status
+		;;
+	logs)
+		cpa_daemon_logs
+		;;
     model|models)
         case "$1" in
             list)
