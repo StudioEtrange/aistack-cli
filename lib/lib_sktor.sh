@@ -54,7 +54,7 @@ sktor_install() {
 	done
 
     echo "Installing skillspector"
-	UV_NO_BINARY_PACKAGE="tiktoken" python_uv_package_install  'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git'
+	python_uv_package_install  'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git'
 	
 	sktor_is_installed
     return $?
