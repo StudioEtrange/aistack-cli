@@ -33,6 +33,15 @@ To see complete commands use `aistack help`.
 | **info** | Display various AIStack information and configuration |
 | **shell** | Enter a sub-shell with the `aistack` environment and paths configured |
 
+Managed runtimes can be installed or removed independently. Rust uses the official standalone `tar.xz` installers and remains isolated from any system Rust installation:
+
+```bash
+./aistack runtime add rust
+./aistack rustc --version
+./aistack cargo --version
+./aistack runtime remove rust
+```
+
 NOTE : each item install command include uninstall before or means re-install the item.
 
 ## How-To and Quick Usage

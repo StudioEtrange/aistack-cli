@@ -28,8 +28,8 @@ gsd_install() {
 	done
 
     echo "Installing GSD"
-	echo "Launching command : npx @opengsd/gsd-core${version} ${@}"
-    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @opengsd/gsd-core${version} ${@}
+	echo "Launching command : npx --yes @opengsd/gsd-core${version} --install ${@}"
+    PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx --yes @opengsd/gsd-core${version} --install "${@}"
 
 	gsd_is_installed
 	return $?
@@ -41,7 +41,7 @@ gsd_uninstall() {
 	if aistack_runtime_is_detected "nodejs"; then
 	    echo "Uinstalling GSD"
 		echo "Launching command : npx @opengsd/gsd-core${version} ${@}"
-		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @opengsd/gsd-core${version} ${@}
+		PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @opengsd/gsd-core${version} --uninstall  "${@}"
 		gsd_is_installed
 	else
 		echo "WARN : missing a required managed runtime ${AISTACK_GSD_RUNTIME_REQUIRED}"

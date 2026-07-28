@@ -13,6 +13,7 @@ STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/lib/lib_yaml.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_node.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_bun.sh"
+. "${_CURRENT_FILE_DIR}/lib/lib_rust.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_python.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_agy.sh"
 . "${_CURRENT_FILE_DIR}/lib/lib_cpa.sh"
@@ -43,7 +44,7 @@ Options:
     help                    Display this help message.
     info                    Display various aistack information and configuration.
     shell                   Enter aistack AIStack and path.
-	runtime add|remove <runtime> Install/remove an AIStack managed runtime to be used in any tool run context (Available: $AISTACK_RUNTIME). Core runtimes are always preinstalled ($AISTACK_RUNTIME_CORE)
+	runtime add|remove <runtime> Install/remove an AIStack managed runtime to be used in any tool run context (Available: python, nodejs, bun, rust). Core runtimes are always preinstalled ($AISTACK_RUNTIME_CORE)
     ----
     gc : gemini-cli - https://google-gemini.github.io/gemini-cli
     gc install [@version]           Install and configure Gemini CLI. (main versions are latest, nightly, preview) (when asked to relaunch gemini cli, use 'aistack gc launch' command)
@@ -227,8 +228,9 @@ Options:
     vs set <key> <value>                Set a VS Code configuration in settings file.
     vs del <key>                        Delete a VS Code configuration in settings file.
    	----
-    nvm|npm|npx|bun|pip|pipx|uv|conda|mamba [<command>]           Execute nvm, npm, npx, bun, pip, pipx, or uv command using the internal nodejs or python runtime from aistack. (i.e: aistack npm install -g typescript)
-    runtime add|remove <runtime>        Install|remove a runtime
+    nvm|npm|npx|bun|pip|pipx|uv|conda|mamba|rustc|cargo|rustdoc [<command>]
+                                      Execute a command using the matching internal runtime from AIStack. (i.e: aistack cargo --version)
+    runtime add|remove <runtime>        Install|remove a runtime ($AISTACK_RUNTIME_TO_DETECT)
     ----
     app killport <port>                  Kill process running on a specific port.
     ----
@@ -248,7 +250,7 @@ main() {
         exit 1
     fi
 
-    while getopts “:h” OPTNAME; do {
+    while getopts ":h" OPTNAME; do {
         case $OPTNAME in
             h) usage; exit 0;;
         esac
@@ -314,6 +316,10 @@ main() {
             if ! aistack_runtime_is_detected "bun"; then echo " -- ERROR : bun managed runtime missing, use aistack runtime command"; exit 1; fi;     
 			PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
+        rustc|cargo|rustdoc)
+            if ! aistack_runtime_is_detected "rust"; then echo " -- ERROR : rust managed runtime missing, use aistack runtime command"; exit 1; fi;
+			PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
+            ;;
         npm|npx)
             if ! aistack_runtime_is_detected "nodejs"; then echo " -- ERROR : nodejs managed runtime missing, use aistack runtime command"; exit 1; fi;     
 			PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
@@ -336,7 +342,12 @@ main() {
 			shift
             case "${sub_command}" in
                 add)
-					aistack_runtime_install "$1"
+                    if ! aistack_runtime_is_detected "${1}"; then
+                        aistack_runtime_require "$1"
+                    else
+                        echo "runtime $1 already installed"
+                    fi
+					#aistack_runtime_install "$1"
 					#aistack_runtime_detect
 					#aistack_tool_context_file_generate
 				;;

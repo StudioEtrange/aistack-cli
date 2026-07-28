@@ -5,12 +5,12 @@ aistack_initialize() {
 
     # components ---
     # runtime lists
-    export AISTACK_RUNTIME_TO_DETECT="python nodejs bun"
+    export AISTACK_RUNTIME_TO_DETECT="python nodejs bun rust"
 	# runtimes required for AIStack
     export AISTACK_RUNTIME_CORE="nodejs"
 
     # modules lists
-    export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm"
+    export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm cargo"
 	# modules required for AIStack - installed before everything else at init - MUST not depends on any runtimes
     export AISTACK_MODULE_CORE_BOOTSTRAP="yq"
 	# modules required for AIStack - installed after required runtime
@@ -44,6 +44,7 @@ aistack_initialize() {
     # init variables ---
 	node_init
     bun_init
+	rust_init
     python_init
 
     # AISTACK_INIT_FORCE_VSCODE_MODE could be "remote" : means using vscode remote extension
@@ -81,7 +82,6 @@ aistack_info() {
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
     echo "NVM_DIR : $NVM_DIR"
     echo "AISTACK_NVM_CACHE (npm/npx): $AISTACK_NVM_CACHE"
-
     echo "AISTACK_RUNTIME_NODEJS_AVAILABLE: $AISTACK_RUNTIME_NODEJS_AVAILABLE"
     if [ "$AISTACK_RUNTIME_NODEJS_AVAILABLE" = "true" ]; then
         echo "AISTACK_RUNTIME_NODEJS_SEARCH_PATH: $AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
@@ -121,6 +121,19 @@ aistack_info() {
     echo "AISTACK_MODULE_MAMBA_AVAILABLE: $AISTACK_MODULE_MAMBA_AVAILABLE"
     echo "Python packages constraints files - PIP_CONSTRAINT and UV_CONSTRAINT : $UV_CONSTRAINT"
     echo
+    echo "--rust ecosystem--"
+    echo "AISTACK_RUNTIME_RUST_AVAILABLE: $AISTACK_RUNTIME_RUST_AVAILABLE"
+    if [ "$AISTACK_RUNTIME_RUST_AVAILABLE" = "true" ]; then
+        echo "AISTACK_RUNTIME_RUST_SEARCH_PATH: $AISTACK_RUNTIME_RUST_SEARCH_PATH"
+        echo "AISTACK_RUNTIME_RUST_PATH: $AISTACK_RUNTIME_RUST_PATH"
+        echo "Rust version: $($AISTACK_RUNTIME_RUST_PATH --version)"
+    fi
+    echo "AISTACK_MODULE_CARGO_AVAILABLE: $AISTACK_MODULE_CARGO_AVAILABLE"
+    if [ "${AISTACK_MODULE_CARGO_AVAILABLE}" = "true" ]; then
+		echo "Cargo version: $($AISTACK_MODULE_CARGO_PATH --version)"
+    fi
+    echo
+
     echo "--components management--"
 	echo "AISTACK_RUNTIME_TO_DETECT : $AISTACK_RUNTIME_TO_DETECT"
 	echo "AISTACK_RUNTIME_CORE : $AISTACK_RUNTIME_CORE"
@@ -165,6 +178,12 @@ aistack_info() {
 aistack_install() {
     # TODO : do we need to remove all ?
     aistack_component_remove_all
+
+    aistack_runtime_detect
+    aistack_module_detect
+    aistack_tool_detect
+    aistack_mcp_detect
+    
     aistack_component_core_install
 }
 
@@ -306,6 +325,9 @@ aistack_runtime_detect() {
                 #     export AISTACK_RUNTIME_BUN_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_BUN_PATH})"
                 # fi
                 ;;
+			"rust")
+				rust_is_installed
+				;;
         esac
     done
 
@@ -318,6 +340,7 @@ aistack_runtime_is_detected() {
     local _var="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
 
     [ "${!_var}" = "true" ] || return 1
+    return 0
 }
 
 # check if a managed runtime is installed else install it
@@ -325,15 +348,18 @@ aistack_runtime_require() {
     local r="${1}"
 
     if ! aistack_runtime_is_detected "${r}"; then
-        aistack_runtime_install "${r}"
+        if ! aistack_runtime_install "${r}"; then
+            echo "ERROR : error while requiring runtime ${r}"
+            exit 1
+        fi
         #aistack_runtime_detect
 		#aistack_tool_context_file_generate
     fi
 
-    if ! aistack_runtime_is_detected "${r}"; then
-        echo "ERROR : error while requiring runtime ${r}"
-        exit 1
-    fi
+    # if ! aistack_runtime_is_detected "${r}"; then
+    #     echo "ERROR : error while requiring runtime ${r}"
+    #     exit 1
+    # fi
 }
 
 
@@ -346,17 +372,30 @@ aistack_runtime_install() {
             aistack_component_install "python"
             aistack_runtime_detect
             aistack_tool_context_file_generate
+            aistack_runtime_is_detected "python"
+            return $?
             ;;
         "nodejs")
             aistack_component_install "nodejs"
             aistack_runtime_detect
 			aistack_tool_context_file_generate
+            aistack_runtime_is_detected "nodejs"
+            return $?
             ;;
         "bun")
             aistack_component_install "bun"
             aistack_runtime_detect
 			aistack_tool_context_file_generate
+            aistack_runtime_is_detected "bun"
+            return $?
             ;;
+		"rust")
+			aistack_component_install "rust"
+			aistack_runtime_detect
+			aistack_tool_context_file_generate
+            aistack_runtime_is_detected "rust"
+            return $?
+			;;
         *)
 			echo "ERROR: Unknown runtime $r"
             return 1
@@ -381,6 +420,15 @@ aistack_runtime_uninstall() {
             bun_uninstall
             aistack_runtime_detect
 			aistack_tool_context_file_generate
+            ;;
+		"rust")
+			rust_uninstall
+			aistack_runtime_detect
+			aistack_tool_context_file_generate
+			;;
+         *)
+			echo "ERROR: Unknown runtime $r"
+            return 1
             ;;
     esac
 }
@@ -446,8 +494,8 @@ aistack_module_detect() {
                 fi
                 ;;
             # various modules -------
-            mamba|npm)
-                # already detected at python/nodejs runtime install
+            mamba|npm|cargo)
+                # already detected at python/nodejs/rust runtime install
                 ;;
         esac
     done
@@ -591,7 +639,8 @@ aistack_component_core_install() {
 
     echo "- Install core mandatories runtimes managed by AIStack"
     for r in ${AISTACK_RUNTIME_CORE}; do
-        aistack_runtime_install "${r}"
+        #aistack_runtime_install "${r}"
+        aistack_runtime_require "${r}"
         if [ "${r}" = "nodejs" ]; then
             if [ -n "${AISTACK_INIT_FORCE_NPM_REGISTRY}" ]; then
                 if check_binary "npm"; then
@@ -606,9 +655,9 @@ aistack_component_core_install() {
 	echo "- Install internal core mandatories modules for AIStack"
     for m in ${AISTACK_MODULE_CORE}; do
         aistack_component_install "${m}"
+        aistack_module_detect
     done
     
-    #aistack_module_detect
 
   	aistack_tool_context_file_generate
 
@@ -667,6 +716,10 @@ aistack_component_is_installed() {
             [ -f "${AISTACK_ISOLATED_ROOT}/bun/bun" ]
             return $?
             ;;
+		rust)
+			[ -x "${RUST_FEAT_INSTALL_ROOT}/bin/rustc" ] && [ -x "${RUST_FEAT_INSTALL_ROOT}/bin/cargo" ]
+			return $?
+			;;
         # module -- runtime variables are available
         mamba|pipx|uv)
             [ -f "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/${c}" ]
@@ -711,6 +764,9 @@ aistack_component_install() {
         bun)
             bun_install
             ;;
+		rust)
+			rust_install
+			;;
         # modules --
         pipx|uv)
             aistack_runtime_require "python"
@@ -738,6 +794,8 @@ aistack_component_remove_all() {
     rm -Rf "${AISTACK_ISOLATED_ROOT}"
     # remove component from stella framework
     rm -Rf "${STELLA_APP_FEATURE_ROOT}"
+
+
 
     # NOTE : we keep cache folder
 }

@@ -12,6 +12,7 @@ Right to the point how-to
   - [Case 6 : scan skills with killspector + OpenAI](#case-6--scan-skills-with-killspector--openai)
   - [Case 7 : scan skills with asm](#case-7--scan-skills-with-asm)
   - [Case 8 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-8--scan-skills-with-cisco-ai-skill-scanner--openai)
+  - [Case 9 : install the Rust runtime](#case-9--install-the-rust-runtime)
 
 ## Case 0 : AIStack install and init
 
@@ -162,8 +163,6 @@ skillspector scan /tmp/skills/skills/docx --format markdown
 rm -Rf /tmp/skills
 ```
 
-
-
 ## Case 7 : scan skills with asm
 
 _"I want to install agent skill manager (asm) and use it to scan skills security and quality."_
@@ -235,4 +234,21 @@ skill-scanner scan /tmp/skills/skills/algorithmic-art --use-behavioral
 skill-scanner scan /tmp/skills/skills/algorithmic-art --use-behavioral --use-llm --format markdown
 
 rm -Rf /tmp/skills
+```
+
+## Case 9 : install the Rust runtime
+
+_"I want to use an isolated Rust toolchain without changing my system installation."_
+
+```bash
+cd aistack-cli
+./aistack runtime add rust
+./aistack rustc --version
+./aistack cargo --version
+```
+
+Remove the managed Rust runtime with:
+
+```bash
+./aistack runtime remove rust
 ```

@@ -20,6 +20,8 @@ python_init() {
 # return 1 : tool is not installed
 # return 2 : missing runtime
 python_is_installed() {
+    local r
+
     export AISTACK_RUNTIME_PYTHON_AVAILABLE="false"
     export AISTACK_MODULE_MAMBA_AVAILABLE="false"
 

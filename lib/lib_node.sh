@@ -19,6 +19,8 @@ node_init() {
 # return 1 : tool is not installed
 # return 2 : missing runtime
 node_is_installed() {
+    local r
+    
     export AISTACK_RUNTIME_NODEJS_AVAILABLE="false"
     export AISTACK_MODULE_NPM_AVAILABLE="false"
     export AISTACK_MODULE_NVM_AVAILABLE="false"

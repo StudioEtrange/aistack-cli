@@ -11,6 +11,8 @@ bun_init() {
 # return 1 : tool is not installed
 # return 2 : missing runtime
 bun_is_installed() {
+    local r
+    
     export AISTACK_RUNTIME_BUN_AVAILABLE="false"
 	for r in ${AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 
