@@ -7,6 +7,22 @@ bun_init() {
     #export BUN_INSTALL_CACHE_DIR="${BUN_FEAT_INSTALL_ROOT}/install/cache"
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
+bun_is_installed() {
+    export AISTACK_RUNTIME_BUN_AVAILABLE="false"
+	for r in ${AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+
+    if aistack_component_is_installed "bun"; then
+        export AISTACK_RUNTIME_BUN_AVAILABLE="true"
+        export AISTACK_RUNTIME_BUN_PATH="${AISTACK_ISOLATED_ROOT}/bun/bun"
+        # bin folder which contains bun
+        export AISTACK_RUNTIME_BUN_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_BUN_PATH})"
+        return 0
+    fi
+    return 1
+}
 
 # Download and install bun from GitHub releases.
 #   on https://github.com/oven-sh/bun/releases have several flavour

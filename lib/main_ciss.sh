@@ -2,12 +2,15 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
 	install)
-		ciss_install
-		ciss_launcher_manage
-		echo "You should register its path into a supported shell or VS Code terminal"
-		echo "aistack ciss register all|bash|zsh|fish"
-		echo "aistack ciss register vs"
-		echo "Note: do not register the path into shells and VS Code at the same time"
+		if ! ciss_install; then
+            echo "ERROR: ciss not installed"
+		else
+			ciss_launcher_manage
+			echo "You should register its path into a supported shell or VS Code terminal"
+			echo "aistack ciss register all|bash|zsh|fish"
+			echo "aistack ciss register vs"
+			echo "Note: do not register the path into shells and VS Code at the same time"
+		fi
 		;;
 	uninstall)
 		echo "Uninstalling ciss"

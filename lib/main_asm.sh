@@ -2,17 +2,19 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
 	install)
-		asm_install "$1"
+		if ! asm_install "$1"; then
+            echo "ERROR: asm not installed"
+		else
+			echo "Configuring asm"
+			asm_settings_configure
 
-		echo "Configuring asm"
-		asm_settings_configure
+			asm_launcher_manage
 
-		asm_launcher_manage
-
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "aistack asm register all|bash|zsh|fish"
-        echo "aistack asm register vs"
-		echo "note: do not register path into shells AND vs"
+			echo "You should register it's path into a spacific supported shell OR vscode terminal"
+			echo "aistack asm register all|bash|zsh|fish"
+			echo "aistack asm register vs"
+			echo "note: do not register path into shells AND vs"
+		fi
 		;;
 	uninstall)
 		echo "Uninstalling asm and unregister asm PATH"

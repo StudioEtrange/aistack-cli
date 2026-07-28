@@ -41,15 +41,14 @@ opencode_install() {
 
     echo "Installing Opencode CLI"
 	node_package_install "opencode-ai${version}"
-    #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g opencode-ai${version}
 
 	opencode_is_installed
+    return $?
 }
 
 opencode_uninstall() {
 	if opencode_is_installed; then
 		node_package_uninstall "opencode-ai"
-		#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g opencode-ai
 		opencode_is_installed
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_OPENCODE_RUNTIME_REQUIRED"

@@ -45,6 +45,7 @@ ciss_install() {
 	#python_pip_package_install "cisco-ai-skill-scanner"
 	python_uv_package_install "cisco-ai-skill-scanner"
 	ciss_is_installed
+	return $?
 }
 
 ciss_uninstall() {

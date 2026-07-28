@@ -2,21 +2,24 @@ local sub_command="${1}"
 shift
 case "${sub_command}" in
     install)
-        kilo_install "${1}"
-        echo "Configuring Kilo Code CLI"
-        kilo_settings_configure
-        # TODO
-        # vscode_settings_configure "kilo"
-        
-        kilo_launcher_manage
+        if ! kilo_install "${1}"; then
+            echo "ERROR: Kilo Code not installed"
+        else
+            echo "Configuring Kilo Code"
+            kilo_settings_configure
+            # TODO
+            # vscode_settings_configure "kilo"
+            
+            kilo_launcher_manage
 
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "aistack kc register all|bash|zsh|fish"
-        echo "aistack kc register vs"
-		echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into a spacific supported shell OR vscode terminal"
+            echo "aistack kc register all|bash|zsh|fish"
+            echo "aistack kc register vs"
+            echo "note: do not register path into shells AND vs"
+        fi
         ;;
     uninstall)
-        echo "Uninstalling Kilo Code CLI and unregister Kilo Code CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
+        echo "Uninstalling Kilo Code and unregister Kilo Code CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
         kilo_uninstall
 
         kilo_path_unregister_for_shell "all"

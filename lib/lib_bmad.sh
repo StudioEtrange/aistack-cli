@@ -34,6 +34,7 @@ bmad_install() {
 	node_package_install "bmad-method${version}"
     #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g bmad-method${version}
     bmad_is_installed
+    return $?
 }
 
 bmad_uninstall() {

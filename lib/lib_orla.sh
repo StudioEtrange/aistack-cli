@@ -75,6 +75,7 @@ orla_install() {
     echo "Orla installed successfully."
 
 	orla_is_installed
+    return $?
 }
  
 orla_uninstall() {

@@ -15,6 +15,33 @@ node_init() {
     node_activate
 }
 
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
+node_is_installed() {
+    export AISTACK_RUNTIME_NODEJS_AVAILABLE="false"
+    export AISTACK_MODULE_NPM_AVAILABLE="false"
+    export AISTACK_MODULE_NVM_AVAILABLE="false"
+	for r in ${AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+
+
+    if aistack_component_is_installed "nvm"; then
+        export AISTACK_MODULE_NVM_AVAILABLE="true"
+        if aistack_component_is_installed "nodejs"; then
+            export AISTACK_RUNTIME_NODEJS_AVAILABLE="true"
+            export AISTACK_RUNTIME_NODEJS_PATH="$(nvm which default)"
+            # bin folder which contains node
+            export AISTACK_RUNTIME_NODEJS_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_NODEJS_PATH})"
+            # npm module is always included in nodejs installation
+            export AISTACK_MODULE_NPM_AVAILABLE="true"
+            export AISTACK_MODULE_NPM_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/npm"
+            export AISTACK_MODULE_NPM_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
+            return 0
+        fi
+    fi
+    return 1
+
+}
 
 node_install() {
     nvm_install

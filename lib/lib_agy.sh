@@ -59,6 +59,7 @@ agy_install() {
 	fi
 
 	agy_is_installed
+	return $?
 }
 
 

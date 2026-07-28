@@ -2,18 +2,18 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
     install)
-        adk_install
+        if ! adk_install; then
+            echo "ERROR: adk not installed"
+        else
+            adk_launcher_manage
 
-
-        adk_launcher_manage
-
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "aistack adk register all|bash|zsh|fish"
-        echo "aistack adk register vs"
-		echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into a spacific supported shell OR vscode terminal"
+            echo "aistack adk register all|bash|zsh|fish"
+            echo "aistack adk register vs"
+            echo "note: do not register path into shells AND vs"
+        fi
         ;;
     uninstall)
-
         echo "Uninstalling adk and unregister adk PATH (keep all configuration unchanged, to remove configuration use reset command)"
         adk_uninstall
 

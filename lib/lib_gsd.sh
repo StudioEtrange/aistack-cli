@@ -32,6 +32,7 @@ gsd_install() {
     PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npx @opengsd/gsd-core${version} ${@}
 
 	gsd_is_installed
+	return $?
 }
 
 gsd_uninstall() {

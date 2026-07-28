@@ -15,6 +15,37 @@ python_init() {
     esac
 }
 
+
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
+python_is_installed() {
+    export AISTACK_RUNTIME_PYTHON_AVAILABLE="false"
+	for r in ${AISTACK_RUNTIME_PYTHON_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+    
+    if aistack_component_is_installed "python"; then
+        export AISTACK_RUNTIME_PYTHON_AVAILABLE="true"
+        export AISTACK_RUNTIME_PYTHON_PATH="${AISTACK_ISOLATED_ROOT}/miniforge3/bin/python"
+        # bin folder which contains python
+        export AISTACK_RUNTIME_PYTHON_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_PYTHON_PATH})"
+        # mamba module is always included in miniforge3 installation
+        export AISTACK_MODULE_MAMBA_AVAILABLE="true"
+        export AISTACK_MODULE_MAMBA_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/mamba"
+        export AISTACK_MODULE_MAMBA_SEARCH_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}"
+        # # modules that are installed at the same time as python runtime
+        # for ingredient in "uv pipx"; do
+        #     va="AISTACK_MODULE_${ingredient}_AVAILABLE"; vp="AISTACK_MODULE_${ingredient}_PATH";
+        #     if aistack_component_is_installed "${ingredient}"; then
+        #         printf -v "${va}" '%s' "true"; export ${va};
+        #         printf -v "${vp}" '%s' "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/${ingredient}"; export ${vp};
+        #     fi
+        # fi
+        return 0
+    else
+        return 1
+    fi
+}
+
 python_install() {
     #stella_feature_install "miniforge3" "NOT_LOADED_IN_PATH"
     aistack_component_install "miniforge3"

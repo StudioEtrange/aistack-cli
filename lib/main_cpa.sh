@@ -3,12 +3,14 @@ shift
 case "${sub_command}" in
     install)
 
-        cpa_install "latest"
-        
-        echo "Configuring CLIProxyAPI"
-        cpa_settings_configure
+        if ! cpa_install "latest"; then
+            echo "ERROR: sktor not installed"
+        else
+            echo "Configuring CLIProxyAPI"
+            cpa_settings_configure
 
-        cpa_launcher_manage
+            cpa_launcher_manage
+        fi
         ;;
     uninstall)
         # clean running process

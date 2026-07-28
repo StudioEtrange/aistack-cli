@@ -3,17 +3,19 @@ shift
 case "${sub_command}" in
     install)
 
-        orla_install "latest"
-        
-        echo "Configuring Orla"
-        orla_settings_configure
+        if ! orla_install "latest"
+            echo "ERROR: orla not installed"
+        else
+            echo "Configuring Orla"
+            orla_settings_configure
 
-        orla_launcher_manage
+            orla_launcher_manage
 
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "aistack orla register all|bash|zsh|fish"
-        echo "aistack orla register vs"
-		echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into a spacific supported shell OR vscode terminal"
+            echo "aistack orla register all|bash|zsh|fish"
+            echo "aistack orla register vs"
+            echo "note: do not register path into shells AND vs"
+        fi
         ;;
     uninstall)
         # clean running process

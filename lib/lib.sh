@@ -253,6 +253,7 @@ aistack_launcher_regenerate() {
 
 # --------------- RUNTIME MANAGEMENT -----------------------------
 # detect all installed managed runtimes
+# equivalent to individual functions *_is_installed
 aistack_runtime_detect() {
     local r e va vp
 
@@ -260,47 +261,50 @@ aistack_runtime_detect() {
         
         case "${r}" in
             "python")
-                if aistack_component_is_installed "python"; then
-                    export AISTACK_RUNTIME_PYTHON_AVAILABLE="true"
-                    export AISTACK_RUNTIME_PYTHON_PATH="${AISTACK_ISOLATED_ROOT}/miniforge3/bin/python"
-                    # bin folder which contains python
-                    export AISTACK_RUNTIME_PYTHON_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_PYTHON_PATH})"
-                    # mamba module is always included in miniforge3 installation
-                    export AISTACK_MODULE_MAMBA_AVAILABLE="true"
-                    export AISTACK_MODULE_MAMBA_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/mamba"
-                    export AISTACK_MODULE_MAMBA_SEARCH_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}"
-                    # # modules that are installed at the same time as python runtime
-                    # for ingredient in "uv pipx"; do
-                    #     va="AISTACK_MODULE_${ingredient}_AVAILABLE"; vp="AISTACK_MODULE_${ingredient}_PATH";
-                    #     if aistack_component_is_installed "${ingredient}"; then
-                    #         printf -v "${va}" '%s' "true"; export ${va};
-                    #         printf -v "${vp}" '%s' "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/${ingredient}"; export ${vp};
-                    #     fi
-                    # fi
-                fi
+                python_is_installed
+                # if aistack_component_is_installed "python"; then
+                #     export AISTACK_RUNTIME_PYTHON_AVAILABLE="true"
+                #     export AISTACK_RUNTIME_PYTHON_PATH="${AISTACK_ISOLATED_ROOT}/miniforge3/bin/python"
+                #     # bin folder which contains python
+                #     export AISTACK_RUNTIME_PYTHON_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_PYTHON_PATH})"
+                #     # mamba module is always included in miniforge3 installation
+                #     export AISTACK_MODULE_MAMBA_AVAILABLE="true"
+                #     export AISTACK_MODULE_MAMBA_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/mamba"
+                #     export AISTACK_MODULE_MAMBA_SEARCH_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}"
+                #     # # modules that are installed at the same time as python runtime
+                #     # for ingredient in "uv pipx"; do
+                #     #     va="AISTACK_MODULE_${ingredient}_AVAILABLE"; vp="AISTACK_MODULE_${ingredient}_PATH";
+                #     #     if aistack_component_is_installed "${ingredient}"; then
+                #     #         printf -v "${va}" '%s' "true"; export ${va};
+                #     #         printf -v "${vp}" '%s' "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/${ingredient}"; export ${vp};
+                #     #     fi
+                #     # fi
+                # fi
                 ;;
             "nodejs")
-                if aistack_component_is_installed "nodejs"; then
-                    export AISTACK_MODULE_NVM_AVAILABLE="true"
-                    if aistack_component_is_installed "${r}"; then
-                        export AISTACK_RUNTIME_NODEJS_AVAILABLE="true"
-                        export AISTACK_RUNTIME_NODEJS_PATH="$(nvm which default)"
-                        # bin folder which contains node
-                        export AISTACK_RUNTIME_NODEJS_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_NODEJS_PATH})"
-                        # npm module is always included in nodejs installation
-                        export AISTACK_MODULE_NPM_AVAILABLE="true"
-                        export AISTACK_MODULE_NPM_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/npm"
-                        export AISTACK_MODULE_NPM_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
-                    fi
-                fi
+                node_is_installed
+                # if aistack_component_is_installed "nvm"; then
+                #     export AISTACK_MODULE_NVM_AVAILABLE="true"
+                #     if aistack_component_is_installed "nodejs"; then
+                #         export AISTACK_RUNTIME_NODEJS_AVAILABLE="true"
+                #         export AISTACK_RUNTIME_NODEJS_PATH="$(nvm which default)"
+                #         # bin folder which contains node
+                #         export AISTACK_RUNTIME_NODEJS_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_NODEJS_PATH})"
+                #         # npm module is always included in nodejs installation
+                #         export AISTACK_MODULE_NPM_AVAILABLE="true"
+                #         export AISTACK_MODULE_NPM_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/npm"
+                #         export AISTACK_MODULE_NPM_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
+                #     fi
+                # fi
                 ;;
             "bun")
-                if aistack_component_is_installed "bun"; then
-                    export AISTACK_RUNTIME_BUN_AVAILABLE="true"
-                    export AISTACK_RUNTIME_BUN_PATH="${AISTACK_ISOLATED_ROOT}/bun/bun"
-                    # bin folder which contains bun
-                    export AISTACK_RUNTIME_BUN_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_BUN_PATH})"
-                fi
+                bun_is_installed
+                # if aistack_component_is_installed "bun"; then
+                #     export AISTACK_RUNTIME_BUN_AVAILABLE="true"
+                #     export AISTACK_RUNTIME_BUN_PATH="${AISTACK_ISOLATED_ROOT}/bun/bun"
+                #     # bin folder which contains bun
+                #     export AISTACK_RUNTIME_BUN_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_BUN_PATH})"
+                # fi
                 ;;
         esac
     done

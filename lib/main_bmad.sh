@@ -2,17 +2,19 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
     install)
-        bmad_install "$1"
+        if ! bmad_install "$1"; then
+            echo "ERROR: bmad not installed"
+        else
+            echo "Configuring bmad"
+            bmad_settings_configure
 
-        echo "Configuring bmad"
-        bmad_settings_configure
+            bmad_launcher_manage
 
-        bmad_launcher_manage
-
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "aistack bmad register all|bash|zsh|fish"
-        echo "aistack bmad register vs"
-		echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into a spacific supported shell OR vscode terminal"
+            echo "aistack bmad register all|bash|zsh|fish"
+            echo "aistack bmad register vs"
+            echo "note: do not register path into shells AND vs"
+        fi
         ;;
     uninstall)
         echo "Uninstalling bmad and unregister bmad PATH (keep all configuration unchanged, to remove configuration use reset command)"

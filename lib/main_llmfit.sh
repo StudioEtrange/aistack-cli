@@ -2,15 +2,16 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
     install)
+        if ! llmfit_install; then
+            echo "ERROR: llmfit not installed"
+        else
+            llmfit_launcher_manage
 
-        llmfit_install
-        
-        llmfit_launcher_manage
-
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "aistack llmfit register all|bash|zsh|fish"
-        echo "aistack llmfit register vs"
-		echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into a spacific supported shell OR vscode terminal"
+            echo "aistack llmfit register all|bash|zsh|fish"
+            echo "aistack llmfit register vs"
+            echo "note: do not register path into shells AND vs"
+        fi
         ;;
     uninstall)
 

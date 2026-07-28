@@ -32,6 +32,7 @@ adk_install() {
 	python_uv_package_install "google-adk"
     #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --reinstall --verbose google-adk
 	adk_is_installed
+	return $?
 }
 
 adk_uninstall() {

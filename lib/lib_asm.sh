@@ -41,6 +41,7 @@ asm_install() {
 	# using bun package manager
 	# PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g agent-skill-manager${version}
 	asm_is_installed
+	return $?
 }
 
 asm_uninstall() {

@@ -2,18 +2,20 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
 	install)
-		agy_install "$1"
+		if ! agy_install "$1"; then
+            echo "ERROR: Antigravity CLI not installed"
+		else
+			echo "Configuring Antigravity CLI"
+			agy_settings_configure
+			vscode_settings_configure "antigravity"
 
-		echo "Configuring Antigravity CLI"
-		agy_settings_configure
-		vscode_settings_configure "antigravity"
+			agy_launcher_manage
 
-		agy_launcher_manage
-
-		echo "You should register its path into a specific supported shell OR vscode terminal"
-		echo "aistack agy register all|bash|zsh|fish"
-		echo "aistack agy register vs"
-		echo "note: do not register path into shells AND vs"
+			echo "You should register its path into a specific supported shell OR vscode terminal"
+			echo "aistack agy register all|bash|zsh|fish"
+			echo "aistack agy register vs"
+			echo "note: do not register path into shells AND vs"
+		fi
 		;;
 	uninstall)
 		echo "Uninstalling Antigravity CLI and unregister Antigravity CLI PATH"

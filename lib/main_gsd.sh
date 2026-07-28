@@ -2,7 +2,9 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
     install)
-        gsd_install "--install $@"
+        if ! gsd_install "--install $@"; then
+            echo "ERROR: GSD not installed"
+        fi
         ;;
     uninstall)
         echo "Uninstalling GSD"

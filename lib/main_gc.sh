@@ -2,18 +2,20 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
     install)
-        gemini_install "$1"
+        if ! gemini_install "$1"; then
+            echo "ERROR: Gemini CLI not installed"
+        else
+            echo "Configuring Gemini CLI"
+            gemini_settings_configure
+            vscode_settings_configure "gemini"
 
-        echo "Configuring Gemini CLI"
-        gemini_settings_configure
-        vscode_settings_configure "gemini"
+            gemini_launcher_manage
 
-        gemini_launcher_manage
-
-        echo "You should register it's path into a spacific supported shell OR vscode terminal"
-        echo "aistack gc register all|bash|zsh|fish"
-        echo "aistack gc register vs"
-		echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into a spacific supported shell OR vscode terminal"
+            echo "aistack gc register all|bash|zsh|fish"
+            echo "aistack gc register vs"
+            echo "note: do not register path into shells AND vs"
+        fi
         ;;
     uninstall)
         echo "Uninstalling Gemini CLI and unregister Gemini CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"

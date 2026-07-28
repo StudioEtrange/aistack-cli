@@ -2,7 +2,6 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
     install)
-
         if ! sktor_install; then
             echo "ERROR: sktor not installed"
         else
@@ -15,7 +14,6 @@ case "${sub_command}" in
         fi
         ;;
     uninstall)
-
         echo "Uninstalling sktor"
         sktor_uninstall
 

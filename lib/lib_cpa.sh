@@ -73,6 +73,7 @@ cpa_install() {
     echo "CLIProxyAPI installed successfully."
 
 	cpa_is_installed
+    return $?
 }
  
 cpa_uninstall() {

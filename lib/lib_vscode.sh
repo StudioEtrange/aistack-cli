@@ -346,9 +346,11 @@ vscode_extension_manage() {
     case "$action" in
         "install")
             "${cli}" --install-extension "${extension_id}" --force
+            return $?
             ;;
         "uninstall")
             "${cli}" --uninstall-extension "${extension_id}"
+            return $?
             ;;
         *)
             echo "ERROR: Unknown action ${action} for vscode_extension_manage"

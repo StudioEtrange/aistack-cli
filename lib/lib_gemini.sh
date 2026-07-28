@@ -43,6 +43,7 @@ gemini_install() {
 	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
 	
 	gemini_is_installed
+    return $?
 }
 
 gemini_uninstall() {

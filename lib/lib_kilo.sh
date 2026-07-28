@@ -49,9 +49,11 @@ kilo_install() {
 			node_package_install "@kilocode/cli${version}"
             #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
             kilo_is_installed
+            return $?
 			;;
         "extension")
             vscode_extension_manage "kilocode.Kilo-Code" "install"
+            return $?
             ;;
         *) echo "Invalid type '$type'. Supported types are 'cli' and 'extension'." ; return 1 ;;
     esac

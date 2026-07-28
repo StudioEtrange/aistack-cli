@@ -42,7 +42,11 @@ llmfit_install() {
 		if [ -n "${AISTACK_INIT_FORCE_LLMFIT_GBC}" ]; then
 			glibc_binary_compat "llmfit" "${LLMFIT_FEAT_INSTALL_ROOT}" "${AISTACK_INIT_FORCE_LLMFIT_GBC}"
 		fi
+		return 0
+	else
+		return 1
 	fi
+
 }
  
 llmfit_uninstall() {
