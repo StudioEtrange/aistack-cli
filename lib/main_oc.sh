@@ -4,6 +4,7 @@ case "${sub_command}" in
     install)
         if ! opencode_install "$1"; then
             echo "ERROR: Opencode CLI not installed"
+            exit 1
         else
             echo "Configuring Opencode CLI"
             opencode_settings_configure

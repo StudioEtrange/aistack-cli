@@ -4,6 +4,7 @@ case "${sub_command}" in
     install)
         if ! gemini_install "$1"; then
             echo "ERROR: Gemini CLI not installed"
+            exit 1
         else
             echo "Configuring Gemini CLI"
             gemini_settings_configure

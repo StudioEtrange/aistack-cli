@@ -4,6 +4,7 @@ case "${sub_command}" in
 	install)
 		if ! asm_install "$1"; then
             echo "ERROR: asm not installed"
+			exit 1
 		else
 			echo "Configuring asm"
 			asm_settings_configure

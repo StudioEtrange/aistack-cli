@@ -4,6 +4,7 @@ case "${sub_command}" in
     install)
         if ! adk_install; then
             echo "ERROR: adk not installed"
+            exit 1
         else
             adk_launcher_manage
 

@@ -4,6 +4,7 @@ case "${sub_command}" in
 	install)
 		if ! ciss_install; then
             echo "ERROR: ciss not installed"
+			exit 1
 		else
 			ciss_launcher_manage
 			echo "You should register its path into a supported shell or VS Code terminal"

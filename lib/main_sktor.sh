@@ -4,6 +4,7 @@ case "${sub_command}" in
     install)
         if ! sktor_install; then
             echo "ERROR: sktor not installed"
+            exit 1
         else
             sktor_launcher_manage
 

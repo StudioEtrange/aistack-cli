@@ -5,6 +5,7 @@ case "${sub_command}" in
 
         if ! orla_install "latest"; then
             echo "ERROR: orla not installed"
+            exit 1
         else
             echo "Configuring Orla"
             orla_settings_configure

@@ -4,6 +4,7 @@ case "${sub_command}" in
     install)
         if ! llmfit_install; then
             echo "ERROR: llmfit not installed"
+            exit 1
         else
             llmfit_launcher_manage
 

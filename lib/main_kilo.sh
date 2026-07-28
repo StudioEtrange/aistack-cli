@@ -4,6 +4,7 @@ case "${sub_command}" in
     install)
         if ! kilo_install "${1}"; then
             echo "ERROR: Kilo Code not installed"
+            exit 1
         else
             echo "Configuring Kilo Code"
             kilo_settings_configure

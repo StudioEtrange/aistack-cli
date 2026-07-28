@@ -5,6 +5,7 @@ case "${sub_command}" in
 
         if ! cpa_install "latest"; then
             echo "ERROR: CLIProxyAPI not installed"
+            exit 1
         else
             echo "Configuring CLIProxyAPI"
             cpa_settings_configure

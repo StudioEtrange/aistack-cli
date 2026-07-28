@@ -4,6 +4,7 @@ case "${sub_command}" in
 	install)
 		if ! agy_install "$1"; then
             echo "ERROR: Antigravity CLI not installed"
+			exit 1
 		else
 			echo "Configuring Antigravity CLI"
 			agy_settings_configure

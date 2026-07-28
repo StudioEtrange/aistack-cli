@@ -4,6 +4,7 @@ case "${sub_command}" in
     install)
         if ! bmad_install "$1"; then
             echo "ERROR: bmad not installed"
+            exit 1
         else
             echo "Configuring bmad"
             bmad_settings_configure

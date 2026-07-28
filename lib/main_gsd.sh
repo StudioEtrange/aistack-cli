@@ -4,6 +4,7 @@ case "${sub_command}" in
     install)
         if ! gsd_install "--install $@"; then
             echo "ERROR: GSD not installed"
+            exit 1
         fi
         ;;
     uninstall)
