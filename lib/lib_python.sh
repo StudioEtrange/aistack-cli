@@ -14,6 +14,10 @@ python_init() {
         ;;
     esac
 
+    export PIP_BUILD_CONSTRAINT="${PIP_CONSTRAINT}"
+    export UV_BUILD_CONSTRAINT="${UV_CONSTRAINT}"
+
+
 	export AISTACK_RUNTIME_PYTHON_RUNTIME_REQUIRED=""
 
 }

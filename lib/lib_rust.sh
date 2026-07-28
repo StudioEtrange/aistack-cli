@@ -39,6 +39,7 @@ rust_install() {
 	local version="$1"
 	local target=""
 	local filename
+	local ext
 	local download_url
 	local tmp_dir
 
@@ -75,7 +76,9 @@ rust_install() {
 			;;
 	esac
 
-	filename="rust-${version}-${target}.tar.xz"
+	#ext=".tar.xz"
+	ext=".tar.gz"
+	filename="rust-${version}-${target}${ext}"
 	download_url="https://static.rust-lang.org/dist/${filename}"
 	tmp_dir="$(mktemp -d)" || return 1
 
