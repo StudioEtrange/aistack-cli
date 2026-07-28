@@ -42,12 +42,20 @@ rust_install() {
 	local download_url
 	local tmp_dir
 
+	local r
+    for r in $AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
+
 	if [ -z "${version}" ] || [ "${version}" = "latest" ]; then
 		echo "No version provided, fetching the latest version..."
 		version="$(github_get_latest_release "rust-lang/rust")" || return 1
 		echo "latest version is ${version}"
 	fi
 
+
+	
 	case "${STELLA_CURRENT_PLATFORM}:${STELLA_CURRENT_CPU_FAMILY}" in
 		linux:intel)
 			target="x86_64-unknown-linux-gnu"

@@ -13,6 +13,9 @@ python_init() {
             export UV_CONSTRAINT="${UV_CONSTRAINT} ${AISTACK_POOL}/settings/python/constraint_glibc217.txt"
         ;;
     esac
+
+	export AISTACK_RUNTIME_PYTHON_RUNTIME_REQUIRED=""
+
 }
 
 
@@ -51,6 +54,12 @@ python_is_installed() {
 }
 
 python_install() {
+    local r
+    for r in $AISTACK_RUNTIME_PYTHON_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
+
     #stella_feature_install "miniforge3" "NOT_LOADED_IN_PATH"
     aistack_component_install "miniforge3"
 

@@ -5,6 +5,9 @@ bun_init() {
     # when using bun install script, by default bun will install itself in $HOME/.bun
     #export BUN_INSTALL="${BUN_FEAT_INSTALL_ROOT}"
     #export BUN_INSTALL_CACHE_DIR="${BUN_FEAT_INSTALL_ROOT}/install/cache"
+
+
+    export AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED=""
 }
 
 # return 0 : is installed
@@ -41,6 +44,12 @@ bun_install() {
         version=$(github_get_latest_release "oven-sh/bun")
         echo "latest version is ${version}"
     fi
+
+    local r
+    for r in $AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
 
 
     local os_arch

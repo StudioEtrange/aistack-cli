@@ -26,7 +26,7 @@ sktor_init() {
 
     export AISTACK_SKILLSPECTOR_MODEL_REGISTRY="${AISTACK_SKTOR_CONTEXT_HOME}/model_registry.yaml"
 
-	export AISTACK_SKTOR_RUNTIME_REQUIRED="python"
+	export AISTACK_SKTOR_RUNTIME_REQUIRED="python rust"
     
 }
 
@@ -54,7 +54,7 @@ sktor_install() {
 	done
 
     echo "Installing skillspector"
-	python_uv_package_install  'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git'
+	UV_NO_BINARY_PACKAGE="tiktoken" python_uv_package_install  'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git'
 	
 	sktor_is_installed
     return $?

@@ -8,6 +8,7 @@ node_init() {
     export AISTACK_NVM_CACHE="${STELLA_APP_CACHE_DIR}/nvm-cache"
     mkdir -p "${AISTACK_NVM_CACHE}"
 
+    export AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED=""
 
 	# those functions are invoqued before runtime_detect
 	# so we cannot use variable AISTACK_MODULE_NVM_AVAILABLE inside them
@@ -46,6 +47,13 @@ node_is_installed() {
 }
 
 node_install() {
+    local r
+    for r in $AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED; do 
+		echo "Require needed ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
+	
+
     nvm_install
     nvm_load
 
