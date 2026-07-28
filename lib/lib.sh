@@ -399,6 +399,7 @@ aistack_module_detect() {
             #       as a stella feature which is in enabled list
             #       command -v will always return jq path installed from stella over system path
             jq)
+                export AISTACK_MODULE_JQ_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_JQ_AVAILABLE="true"
                     export AISTACK_MODULE_JQ_PATH="$(command -v jq)"
@@ -406,6 +407,7 @@ aistack_module_detect() {
                 fi
                 ;;
             yq)
+                export AISTACK_MODULE_YQ_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_YQ_AVAILABLE="true"
                     export AISTACK_MODULE_YQ_PATH="$(command -v yq)"
@@ -415,6 +417,7 @@ aistack_module_detect() {
 
             # nodejs modules -------
             json5)
+                export AISTACK_MODULE_JSON5_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_JSON5_AVAILABLE="true"
                     #export AISTACK_MODULE_JSON5_PATH="$(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" command -v json5)"
@@ -425,6 +428,7 @@ aistack_module_detect() {
                 ;;
             # python modules -------
             pipx)
+                export AISTACK_MODULE_PIPX_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_PIPX_AVAILABLE="true"
                     #export AISTACK_MODULE_PIPX_PATH="$(PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" command -v json5)"
@@ -433,6 +437,7 @@ aistack_module_detect() {
                 fi
                 ;;
             uv)
+                export AISTACK_MODULE_UV_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_UV_AVAILABLE="true"
                     #export AISTACK_MODULE_UV_PATH="$(PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" command -v json5)"

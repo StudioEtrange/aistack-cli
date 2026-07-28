@@ -21,6 +21,8 @@ python_init() {
 # return 2 : missing runtime
 python_is_installed() {
     export AISTACK_RUNTIME_PYTHON_AVAILABLE="false"
+    export AISTACK_MODULE_MAMBA_AVAILABLE="false"
+
 	for r in ${AISTACK_RUNTIME_PYTHON_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
     
     if aistack_component_is_installed "python"; then

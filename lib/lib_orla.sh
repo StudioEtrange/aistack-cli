@@ -30,7 +30,7 @@ orla_is_installed() {
 	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	[ -x "${ORLA_FEAT_INSTALL_ROOT}/orla" ] || return 1
 	export AISTACK_ORLA_TOOL_AVAILABLE="true"
-	export AISTACK_ORLA_TOOL_PATH="${CLIPROXYAPI_FEAT_INSTALL_ROOT}/orla"
+	export AISTACK_ORLA_TOOL_PATH="${ORLA_FEAT_INSTALL_ROOT}/orla"
 	return 0
 }
 

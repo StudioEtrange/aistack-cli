@@ -3,7 +3,7 @@ shift
 case "${sub_command}" in
     install)
 
-        if ! orla_install "latest"
+        if ! orla_install "latest"; then
             echo "ERROR: orla not installed"
         else
             echo "Configuring Orla"

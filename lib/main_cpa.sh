@@ -4,7 +4,7 @@ case "${sub_command}" in
     install)
 
         if ! cpa_install "latest"; then
-            echo "ERROR: sktor not installed"
+            echo "ERROR: CLIProxyAPI not installed"
         else
             echo "Configuring CLIProxyAPI"
             cpa_settings_configure
