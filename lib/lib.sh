@@ -449,17 +449,21 @@ aistack_module_detect() {
             jq)
                 export AISTACK_MODULE_JQ_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
-                    export AISTACK_MODULE_JQ_AVAILABLE="true"
                     export AISTACK_MODULE_JQ_PATH="$(command -v jq)"
-                    export AISTACK_MODULE_JQ_SEARCH_PATH="$(dirname ${AISTACK_MODULE_JQ_PATH})"
+                    if [ -n "${AISTACK_MODULE_JQ_PATH}" ]; then
+                        export AISTACK_MODULE_JQ_SEARCH_PATH="$(dirname ${AISTACK_MODULE_JQ_PATH})"
+                        export AISTACK_MODULE_JQ_AVAILABLE="true"
+                    fi
                 fi
                 ;;
             yq)
                 export AISTACK_MODULE_YQ_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
-                    export AISTACK_MODULE_YQ_AVAILABLE="true"
                     export AISTACK_MODULE_YQ_PATH="$(command -v yq)"
-                    export AISTACK_MODULE_YQ_SEARCH_PATH="$(dirname ${AISTACK_MODULE_YQ_PATH})"
+                    if [ -n "${AISTACK_MODULE_YQ_PATH}" ]; then
+                        export AISTACK_MODULE_YQ_SEARCH_PATH="$(dirname ${AISTACK_MODULE_YQ_PATH})"
+                        export AISTACK_MODULE_YQ_AVAILABLE="true"
+                    fi
                 fi
                 ;;
 

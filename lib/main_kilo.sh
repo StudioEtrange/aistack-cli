@@ -102,6 +102,9 @@ case "${sub_command}" in
                 echo "INFO: Connecting Kilo Code to CLIProxyAPI"
                 kilo_connect_cpa "${2}" "${3}"
 				echo "INFO: For VS Code extension, restart VS Code or disable/reload kilo extension"
+                if ! kilo_is_installed; then
+				    echo "WARN:  Kilo Code cli not installed"
+                fi
                 ;;      
         esac
         ;;
