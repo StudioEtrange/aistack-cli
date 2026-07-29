@@ -283,7 +283,7 @@ vscode_set_config() {
 
 vscode_get_config() {
     local key_path="${1}"
-    json_set_key_into_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}" "${value}"
+    json_get_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}"
 }
 
 # http proxy management ------------------------
@@ -326,9 +326,13 @@ vscode_settings_tweak_path_for_vs_terminal() {
     # POSTPEND_IF_NOT_EXISTS add path at the end position only if not already present
     local mode="${2:-ALWAYS_PREPEND}" 
 
-    json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.linux.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"
+    # if PATH value become "" or null, remove it completely or vscode will set PATH env var to empty string value
 
+    json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.linux.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"
+    [ "$(vscode_get_config '.terminal\.integrated\.env\.linux.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.linux.PATH'
+    
     json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.osx.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"
+    [ "$(vscode_get_config '.terminal\.integrated\.env\.osx.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.osx.PATH'
 
 }
 

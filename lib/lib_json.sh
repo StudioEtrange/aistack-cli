@@ -229,6 +229,65 @@ json_has_path() {
   return $?
 }
 
+# get a key from json input
+# cat input.json | json_get_key <key_path>
+# json_get_key <key_path> < input.json
+# key_path : can contains index for array
+# return empty string if key does not exist or has a null value
+json_get_key() {
+    local key_path="$1"
+
+    if [ "$#" -lt 1 ]; then
+        echo "ERROR : argument missing" >&2
+        return 1
+    fi
+
+    if [ -z "$key_path" ]; then
+        echo "ERROR : json key path empty" >&2
+        return 1
+    fi
+
+    local jq_path
+    jq_path="$(build_jq_array_from_path "$key_path")" || return 1
+
+    if ! jq -cjr --argjson path "$jq_path" \
+        'getpath($path) | if . == null then empty else . end'; then
+        echo "ERROR : get key path: $key_path" >&2
+        return 1
+    fi
+}
+
+# get a key from a json file
+# json_get_key_from_file <file> <key_path>
+json_get_key_from_file() {
+    local target_file="$1"
+    local key_path="$2"
+
+    if [ "$#" -lt 2 ]; then
+        echo "ERROR : argument missing" >&2
+        return 1
+    fi
+
+    if [ -z "$key_path" ]; then
+        echo "ERROR : json key path empty" >&2
+        return 1
+    fi
+
+    if [ ! -s "$target_file" ]; then
+        echo "ERROR : file do not exist $target_file" >&2
+        return 1
+    fi
+
+    json_get_key "$key_path" < "$target_file"
+    local ret=$?
+
+    if [ $ret -ne 0 ]; then
+        echo "ERROR : processing with jq" >&2
+    fi
+
+    return $ret
+}
+
 # set a key from json input
 # cat input.json | json_set_key <key_path> <value>
 # json_set_key <key_path> <value> < input.json

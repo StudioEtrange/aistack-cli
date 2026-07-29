@@ -90,6 +90,178 @@ EOF
 
 
 
+@test "json_get_key_missing" {
+
+	run json_get_key "a.b.c" <<'EOF'
+{"a":{"b":{}}}
+EOF
+	assert_success
+	assert_output ""
+}
+
+
+@test "json_get_key_true" {
+
+	run json_get_key "a.b.c" <<'EOF'
+{"a":{"b":{"c":true}}}
+EOF
+	assert_success
+	assert_output "true"
+}
+
+
+@test "json_get_key_false" {
+
+	run json_get_key "a.b.c" <<'EOF'
+{"a":{"b":{"c":false}}}
+EOF
+	assert_success
+	assert_output "false"
+}
+
+
+@test "json_get_key_string" {
+
+	run json_get_key ".a.b.c" <<'EOF'
+{"a":{"b":{"c":"localhost"}}}
+EOF
+	assert_success
+	assert_output "localhost"
+}
+
+
+@test "json_get_key_empty_and_null" {
+
+	run json_get_key "a.b.empty" <<'EOF'
+{"a":{"b":{"empty":"","null":null}}}
+EOF
+	assert_success
+	assert_output ""
+
+	run json_get_key "a.b.null" <<'EOF'
+{"a":{"b":{"empty":"","null":null}}}
+EOF
+	assert_success
+	assert_output ""
+}
+
+
+@test "json_get_key_array_index" {
+
+	run json_get_key "a.items.1" <<'EOF'
+{"a":{"items":["first","second"]}}
+EOF
+	assert_success
+	assert_output "second"
+}
+
+
+@test "json_get_key_escaped_key" {
+
+	run json_get_key 'a.http\.proxy' <<'EOF'
+{"a":{"http.proxy":"localhost:8080"}}
+EOF
+	assert_success
+	assert_output "localhost:8080"
+}
+
+
+@test "json_get_key_from_file" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
+{"a":{"b":{"c":"value"}}}
+EOF
+
+	run json_get_key_from_file "$tmp" "a.b.c"
+	assert_success
+	assert_output "value"
+	rm -f "$tmp"
+}
+
+@test "json_get_key_from_file_empty_and_null" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
+{"a":{"b":{"empty":"","null":null}}}
+EOF
+
+	run json_get_key_from_file "$tmp" "a.b.empty"
+	assert_success
+	assert_output ""
+
+  run json_get_key_from_file "$tmp" "a.b.null"
+	assert_success
+	assert_output ""
+	rm -f "$tmp"
+}
+
+
+
+
+@test "json_get_key_from_file_missing_file" {
+
+	run json_get_key_from_file "/file/that/does/not/exist" "a.b.c"
+	assert_failure
+	assert_output --partial "ERROR : file do not exist"
+}
+
+
+@test "json_get_key_invalid_arguments" {
+
+	run json_get_key
+	assert_failure
+	assert_output --partial "ERROR : argument missing"
+
+	run json_get_key ""
+	assert_failure
+	assert_output --partial "ERROR : json key path empty"
+}
+
+
+@test "json_get_key_from_file_invalid_arguments" {
+
+	run json_get_key_from_file
+	assert_failure
+	assert_output --partial "ERROR : argument missing"
+
+	run json_get_key_from_file "/tmp/file.json" ""
+	assert_failure
+	assert_output --partial "ERROR : json key path empty"
+}
+
+@test "json_set_key0" {
+
+	run json_set_key "a.b.c" '""'
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "b": {
+      "c": ""
+    }
+  }
+}
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "json_set_key01" {
+
+	run json_set_key "a.b.c" 'null'
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "b": {
+      "c": null
+    }
+  }
+}
+EOF
+	)
+	assert_output "$expected"
+}
+
 @test "json_set_key1" {
 
 	run json_set_key "a.b.c" '"new_value"'
