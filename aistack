@@ -315,17 +315,21 @@ main() {
 	case "$command" in
         bun)
             if ! aistack_runtime_is_detected "bun"; then echo " -- ERROR : bun managed runtime missing, use aistack runtime command"; exit 1; fi;     
-			PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
+			PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${PATH}" "$command" "$@"
+			#PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
         rustc|cargo|rustdoc)
             if ! aistack_runtime_is_detected "rust"; then echo " -- ERROR : rust managed runtime missing, use aistack runtime command"; exit 1; fi;
-			PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
+			PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}:${PATH}" "$command" "$@"
+			#PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
         npm|npx)
             if ! aistack_runtime_is_detected "nodejs"; then echo " -- ERROR : nodejs managed runtime missing, use aistack runtime command"; exit 1; fi;     
-			PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
+			PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "$command" "$@"
+			#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
         nvm)
+            # note : nvm is a function not a binary
             if ! aistack_runtime_is_detected "nodejs"; then echo " -- ERROR : nodejs managed runtime missing, use aistack runtime command"; exit 1; fi;     
             if [ "${AISTACK_MODULE_NVM_AVAILABLE}" = "true" ]; then
                 "${command}" "$@"
@@ -336,7 +340,8 @@ main() {
             ;;
         pip|pipx|uv|conda|mamba)
             if ! aistack_runtime_is_detected "python"; then echo " -- ERROR : python managed runtime missing, use aistack runtime command"; exit 1; fi;     
-            PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
+            PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${PATH}" "$command" "$@"
+            #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
 		runtime)
 			local sub_command="$1"
