@@ -770,6 +770,196 @@ EOF
 }
 
 
+@test "json_tweak_value_of_list_remove_single_occurrence" {
+
+  run json_tweak_value_of_list ".PATH" "BB" ":" "REMOVE" <<'EOF'
+{"PATH":"AA:BB:CC"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "AA:CC"
+}
+EOF
+  )
+
+  assert_success
+	assert_output "$expected"
+}
+
+
+@test "json_tweak_value_of_list_remove_all_occurrences" {
+
+  run json_tweak_value_of_list ".PATH" "BB" ":" "REMOVE" <<'EOF'
+{"PATH":"BB:AA:BB:CC:BB"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "AA:CC"
+}
+EOF
+  )
+
+  assert_success
+	assert_output "$expected"
+}
+
+
+@test "json_tweak_value_of_list_remove_missing_value" {
+
+  run json_tweak_value_of_list ".PATH" "DD" ":" "REMOVE" <<'EOF'
+{"PATH":"AA:BB:CC"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "AA:BB:CC"
+}
+EOF
+  )
+
+  assert_success
+	assert_output "$expected"
+}
+
+
+@test "json_tweak_value_of_list_remove_entire_list" {
+
+  run json_tweak_value_of_list ".PATH" "AA" ":" "REMOVE" <<'EOF'
+{"PATH":"AA:AA:AA"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": ""
+}
+EOF
+  )
+
+  assert_success
+	assert_output "$expected"
+}
+
+
+@test "json_tweak_value_of_list_remove_value_containing_separator" {
+
+  run json_tweak_value_of_list ".PATH" "BB:CC" ":" "REMOVE" <<'EOF'
+{"PATH":"AA:BB:CC:DD:BB:CC"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "AA:DD"
+}
+EOF
+  )
+
+  assert_success
+	assert_output "$expected"
+}
+
+
+@test "json_tweak_value_of_list_into_file_remove_single_occurrence" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
+{"PATH":"AA:BB:CC"}
+EOF
+
+	run json_tweak_value_of_list_into_file ".PATH" "BB" ":" "$tmp" "REMOVE"
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA:CC"
+}
+EOF
+	)
+
+	assert_success
+	assert_equal "$(cat "$tmp")" "$expected"
+	rm -f "$tmp"
+}
+
+
+@test "json_tweak_value_of_list_into_file_remove_all_occurrences" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
+{"PATH":"BB:AA:BB:CC:BB"}
+EOF
+
+	run json_tweak_value_of_list_into_file ".PATH" "BB" ":" "$tmp" "REMOVE"
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA:CC"
+}
+EOF
+	)
+
+	assert_success
+	assert_equal "$(cat "$tmp")" "$expected"
+	rm -f "$tmp"
+}
+
+
+@test "json_tweak_value_of_list_into_file_remove_missing_value" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
+{"PATH":"AA:BB:CC"}
+EOF
+
+	run json_tweak_value_of_list_into_file ".PATH" "DD" ":" "$tmp" "REMOVE"
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA:BB:CC"
+}
+EOF
+	)
+
+	assert_success
+	assert_equal "$(cat "$tmp")" "$expected"
+	rm -f "$tmp"
+}
+
+
+@test "json_tweak_value_of_list_into_file_remove_entire_list" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
+{"PATH":"AA:AA:AA"}
+EOF
+
+	run json_tweak_value_of_list_into_file ".PATH" "AA" ":" "$tmp" "REMOVE"
+	expected=$(cat <<'EOF'
+{
+  "PATH": ""
+}
+EOF
+	)
+
+	assert_success
+	assert_equal "$(cat "$tmp")" "$expected"
+	rm -f "$tmp"
+}
+
+
+@test "json_tweak_value_of_list_into_file_remove_value_containing_separator" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
+{"PATH":"AA:BB:CC:DD:BB:CC"}
+EOF
+
+	run json_tweak_value_of_list_into_file ".PATH" "BB:CC" ":" "$tmp" "REMOVE"
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA:DD"
+}
+EOF
+	)
+
+	assert_success
+	assert_equal "$(cat "$tmp")" "$expected"
+	rm -f "$tmp"
+}
+
+
 # TODO : why this is commented ?
 # @test "json_tweak_value_of_list6" {
 

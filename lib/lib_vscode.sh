@@ -189,8 +189,8 @@ vscode_info() {
 
 # PATH management -----------------
 # NOTE : we need to keep at least code cli binary reacheable to launch vscode extension installation
-#   when "terminal.integrated.env.linux".PATH on remote is empty, vscode remote-cli code path is auto added to PATH variable in terminal
-#   when "terminal.integrated.env.linux".PATH on remote is defined, vscode remote-cli code path is NOT auto added to PATH variable in terminal
+#   when "terminal.integrated.env.linux".PATH on remote is empty, vscode remote-cli code path is auto added by vscode itself to PATH variable in terminal
+#   when "terminal.integrated.env.linux".PATH on remote is defined, vscode remote-cli code path is NOT auto added by vscode itself to PATH variable in terminal
 #       (the value of "terminal.integrated.inheritEnv" do not change this behavior)
 #   so we add it manually because this script always set "terminal.integrated.env.linux".PATH which will never be empty anymore
 vscode_path_register_for_vs_terminal() {
@@ -278,6 +278,11 @@ vscode_remove_config() {
 vscode_set_config() {
     local key_path="${1}"
     local value="${2}"
+    json_set_key_into_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}" "${value}"
+}
+
+vscode_get_config() {
+    local key_path="${1}"
     json_set_key_into_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}" "${value}"
 }
 

@@ -147,7 +147,7 @@ build_jq_expr_from_path() {
 sanitize_json() {
     local arg="$1"
 
-    if [ ! -t 0 ]; then
+    if { [ -z "$arg" ] || [ "$arg" = "-" ]; } && [ ! -t 0 ]; then
         # parse stream
         PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" json5 -s 2
         return $?
@@ -204,7 +204,7 @@ test_and_fix_json_file() {
 }
 
 
-# check if a path exists in jison input
+# check if a path exists in json input
 # cat input.json | json_has_path <path>
 # json_has_path <path> < input.json
 #
@@ -688,4 +688,3 @@ json_tweak_value_of_list() {
     fi
 
 }
-
