@@ -92,3 +92,17 @@ bun_uninstall() {
     rm -Rf "${BUN_FEAT_INSTALL_ROOT}"
     echo "Bun uninstalled successfully."
 }
+
+
+
+
+
+# note : install or reinstall/complete package
+bun_package_install() {
+	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${PATH}" bun add --verbose -g "${@}"
+	#PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g "${@}"
+}
+bun_package_uninstall() {
+	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${PATH}" bun remove -g "${@}"
+	#PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g "${@}"
+}

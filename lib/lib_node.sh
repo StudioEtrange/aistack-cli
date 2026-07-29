@@ -142,3 +142,17 @@ nvm_unload() {
 }
 
 
+
+
+
+
+
+# note : install or reinstall/complete package
+node_package_install() {
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" npm install --verbose -g "${@}"
+	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g "${@}"
+}
+node_package_uninstall() {
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" npm uninstall -g "${@}"
+	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g "${@}"
+}

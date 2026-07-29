@@ -87,7 +87,33 @@ python_uninstall() {
 
 
 
+# note : install or reinstall/complete package
+python_uv_package_install() {
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${PATH}" uv pip install --system --reinstall --verbose "${@}"
+    #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --reinstall --verbose "${@}"
+}
+python_uv_package_uninstall() {
+	PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${PATH}" uv pip uninstall --system --verbose "${@}"
+	#PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose "${@}"
+}
 
+python_pip_package_install() {
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${PATH}" pip install --no-cache-dir --no-binary=yara-x --force-reinstall --verbose "${@}"
+    #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip install --no-cache-dir --no-binary=yara-x --force-reinstall --verbose "${@}"
+}
+python_pip_package_uninstall() {
+	PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${PATH}" pip uninstall --yes --verbose "${@}"
+	#PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip uninstall --yes --verbose "${@}"
+}
+
+python_mamba_package_install() {
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${PATH}" mamba install -y "${@}"
+    #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y "${@}"
+}
+python_mamba_package_uninstall() {
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${PATH}" mamba remove -y "${@}"
+    #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba remove -y "${@}"
+}
 
 
 
