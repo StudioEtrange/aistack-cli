@@ -79,6 +79,9 @@ cpa_install() {
 cpa_uninstall() {
 	if cpa_is_installed; then
 		echo "Uninstalling CLIProxyAPI from ${CLIPROXYAPI_FEAT_INSTALL_ROOT}..."
+
+        cpa_daemon_down
+
 		rm -Rf "${CLIPROXYAPI_FEAT_INSTALL_ROOT}"
 		echo "CLIProxyAPI uninstalled successfully."
 
