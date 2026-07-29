@@ -26,8 +26,15 @@ sktor_init() {
 
     export AISTACK_SKILLSPECTOR_MODEL_REGISTRY="${AISTACK_SKTOR_CONTEXT_HOME}/model_registry.yaml"
 
-	export AISTACK_SKTOR_RUNTIME_REQUIRED="python rust"
-    
+    export AISTACK_SKTOR_RUNTIME_REQUIRED="python"
+    # if we are on glibc2.17 we need to build tiktoken with rust compiler
+    case $(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.17") in
+		-1|0) 
+			# yara-x is available for glibc 2.17 with yara-x<1.0.2 but cisco-ai-skill-scanner 2.x needs yara-x=>1.10
+			# need to build it and install it before cisco-ai-skill-scanner
+			export AISTACK_SKTOR_RUNTIME_REQUIRED="python rust"
+			;;
+	esac
 }
 
 # return 0 : is installed

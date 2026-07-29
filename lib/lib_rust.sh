@@ -42,8 +42,9 @@ rust_install() {
 	local ext
 	local download_url
 	local tmp_dir
-
+	local install_status
 	local r
+
     for r in $AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED; do 
 		echo "Require needed ${r} managed runtime"
 		aistack_runtime_require "${r}"
@@ -93,12 +94,23 @@ rust_install() {
 
 	rm -Rf "${RUST_FEAT_INSTALL_ROOT}"
 	mkdir -p "${RUST_FEAT_INSTALL_ROOT}"
-	if ! "${tmp_dir}/install.sh" --prefix="${RUST_FEAT_INSTALL_ROOT}" --disable-ldconfig; then
-		rm -Rf "${tmp_dir}"
-		return 1
-	fi
+
+	# Exécution dans un sous-shell et depuis un répertoire stable.
+	(
+		cd / || exit 1
+		"${tmp_dir}/install.sh" \
+			--prefix="${RUST_FEAT_INSTALL_ROOT}" \
+			--disable-ldconfig
+	)
+	install_status=$?
 
 	rm -Rf "${tmp_dir}"
+
+	if [ "${install_status}" -ne 0 ]; then
+		echo "ERROR: Rust installation failed with status ${install_status}" >&2
+		return 1
+	fi
+	
 	if ! rust_is_installed; then
 		echo "ERROR: Rust installation did not provide rustc and cargo"
 		return 1

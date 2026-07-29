@@ -84,3 +84,55 @@ python_uninstall() {
     echo "Uninstalling python"
     rm -Rf "${AISTACK_ISOLATED_ROOT}/miniforge3"
 }
+
+
+
+
+
+
+
+python_yara_x_package_build_install() {
+	local version="${1:-v1.19.0}"
+	local download_url
+	local tmp_dir
+	
+    aistack_runtime_require "rust"
+
+	tmp_dir="$(mktemp -d)" || return 1
+	download_url="https://github.com/VirusTotal/yara-x/archive/refs/tags/${version}.tar.gz"
+	${STELLA_API} get_resource "yara-x" "${download_url}" "HTTP_ZIP" "${tmp_dir}" "DEST_ERASE STRIP"
+
+	cd "${tmp_dir}"
+
+	(
+		aistack_context_load_runtime_path "rust"
+
+		export MATURIN_NO_INSTALL_RUST=1
+		python_pip_package_install "maturin"
+		#python -m pip install maturin
+
+		# cache cargo is in a subfolder of CARGO_HOME, which is by default ${HOME}/.cargo
+
+		"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/maturin" build \
+				-vv \
+				--release \
+				--locked \
+				--manifest-path "${tmp_dir}/py/Cargo.toml" \
+				--interpreter "${AISTACK_RUNTIME_PYTHON_PATH}"
+		#   python -m maturin build \
+		#       --release \
+		#       --locked \
+		#       --manifest-path py/Cargo.toml \
+		#       --interpreter "$(command -v python)"
+
+		python_pip_package_install "${tmp_dir}/target/wheels/yara_x-*.whl"
+		#   python -m pip install \
+		#       --force-reinstall \
+		#       target/wheels/yara_x-*.whl
+	)
+	rm -Rf "${tmp_dir}"
+}
+
+python_yara_x_package_uninstall() {
+	python_pip_package_uninstall "yara-x"
+}

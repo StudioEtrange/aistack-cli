@@ -41,17 +41,24 @@ ciss_install() {
 		aistack_runtime_require "${r}"
 	done
 
-	echo "Installing Cisco AI Skill Scanner"
-	#python_pip_package_install "cisco-ai-skill-scanner"
+	case $(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.17") in
+		-1|0) 
+			# yara-x is available for glibc 2.17 with yara-x<1.0.2 but cisco-ai-skill-scanner 2.x needs yara-x=>1.10
+			# need to build it and install it before cisco-ai-skill-scanner
+			python_yara_x_package_build_install
+			;;
+	esac
+
 	python_uv_package_install "cisco-ai-skill-scanner"
 	ciss_is_installed
 	return $?
 }
 
+
+
+
 ciss_uninstall() {
 	if ciss_is_installed; then
-		# TODO : first fix uv use mirror ?
-		#python_pip_package_uninstall "cisco-ai-skill-scanner"
 		python_uv_package_uninstall "cisco-ai-skill-scanner"
 		ciss_is_installed
 	else

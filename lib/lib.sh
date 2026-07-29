@@ -119,7 +119,7 @@ aistack_info() {
         echo "Python version: $($AISTACK_RUNTIME_PYTHON_PATH --version)"
     fi
     echo "AISTACK_MODULE_MAMBA_AVAILABLE: $AISTACK_MODULE_MAMBA_AVAILABLE"
-    echo "Python packages constraints files - PIP_CONSTRAINT and UV_CONSTRAINT : $UV_CONSTRAINT"
+    echo "Python packages constraints files - PIP_CONSTRAINT, PIP_BUILD_CONSTRAINT, UV_CONSTRAINT, UV_BUILD_CONSTRAINT: $UV_CONSTRAINT"
     echo
     echo "--rust ecosystem--"
     echo "AISTACK_RUNTIME_RUST_AVAILABLE: $AISTACK_RUNTIME_RUST_AVAILABLE"
@@ -235,20 +235,47 @@ aistack_uninstall() {
     
 }
 
+
+# inject into current aistack path, the search path of a list of runtimes
+aistack_context_load_runtime_path() {
+    local runtime_list="$1"
+    local r va vp list_path
+
+    for r in ${runtime_list}; do
+        va="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
+        vp="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
+        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
+    done
+    export PATH="${list_path}:${PATH}"
+}
+
+# inject into current aistack path, the search path of a list of module
+aistack_context_load_module_path() {
+    local module_list="$1"
+    local m va vp list_path
+
+    for m in ${module_list}; do
+        va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
+        vp="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
+        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
+    done
+    export PATH="${list_path}:${PATH}"
+}
+
 # create files that centralize components and runtime PATH
 aistack_tool_context_file_generate() {
     local m r va vp list_path
 
     echo '#!/bin/sh' > "${AISTACK_TOOL_CONTEXT_FILE}"
 
-    # add to run context runtime search path
+    # add to tool run context runtime search path
     for r in ${AISTACK_TOOL_CONTEXT_ADD_RUNTIME}; do
         va="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
         vp="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
         [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
     done
 
-    # add to run context module search path
+    # add to tool run context module search path
     for m in ${AISTACK_TOOL_CONTEXT_ADD_MODULE}; do
         va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
         vp="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
@@ -817,7 +844,6 @@ node_package_uninstall() {
 	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g "${@}"
 }
 
-
 bun_package_install() {
 	PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g "${@}"
 }
@@ -833,7 +859,7 @@ python_uv_package_uninstall() {
 }
 
 python_pip_package_install() {
-    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip install --force-reinstall --verbose "${@}"
+    PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip install --no-cache-dir --no-binary=yara-x --force-reinstall --verbose "${@}"
 }
 python_pip_package_uninstall() {
 	PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" pip uninstall --yes --verbose "${@}"
@@ -842,7 +868,6 @@ python_pip_package_uninstall() {
 python_mamba_package_install() {
     PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y "${@}"
 }
-
 python_mamba_package_uninstall() {
     PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba remove -y "${@}"
 }
