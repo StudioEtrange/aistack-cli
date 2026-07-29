@@ -5,6 +5,7 @@ _CURRENT_RUNNING_DIR="$( cd "$( dirname "." )" && pwd )"
 STELLA_LOG_STATE="OFF"
 . "${_CURRENT_FILE_DIR}/stella-link.sh" include
 
+
 # NOTE
 #   From HERE, $STELLA_ORIGINAL_SYSTEM_PATH contains $PATH before stella features are included
 
