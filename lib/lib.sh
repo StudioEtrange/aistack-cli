@@ -20,8 +20,8 @@ aistack_initialize() {
     # add search path of runtimes and modules to tool run context
     #export AISTACK_TOOL_CONTEXT_ADD_RUNTIME="nodejs bun python"
     #export AISTACK_TOOL_CONTEXT_ADD_MODULE="yq jq"
-    $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_RUNTIME"
-    $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_MODULE"
+    [ -n "${AISTACK_TOOL_CONTEXT_ADD_RUNTIME}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_RUNTIME"
+    [ -n "${AISTACK_TOOL_CONTEXT_ADD_MODULE}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_MODULE"
 
     # paths ---
     export AISTACK_POOL="${STELLA_APP_ROOT}/pool"

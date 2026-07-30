@@ -1,9 +1,9 @@
 #!/bin/bash
-_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-_CURRENT_RUNNING_DIR="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
+AISTACK_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+AISTACK_CURRENT_RUNNING_DIR="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
 
 STELLA_LOG_STATE=OFF
-. "$_CURRENT_FILE_DIR/stella-link.sh" include
+. "$AISTACK_CURRENT_FILE_DIR/stella-link.sh" include
 
 #$STELLA_API require "bats" "bats" "INTERNAL"
 $STELLA_API get_feature "bats"
@@ -46,7 +46,7 @@ function init_aistack_test_env() {
 	aistack_launcher_regenerate 1>/dev/null 2>&1
 
 	# install core requirements
-	# use aistack_component_core_install instead of aistack_install for speed gain
+	# NOTE: use aistack_component_core_install instead of aistack_install for speed gain
 	#( aistack_core_install 1>/dev/null 2>&1 )
 	aistack_component_core_install
 	aistack_component_core_is_detected

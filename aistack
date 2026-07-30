@@ -1,36 +1,50 @@
 #!/bin/bash
-_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-_CURRENT_RUNNING_DIR="$( cd "$( dirname "." )" && pwd )"
+AISTACK_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+AISTACK_CURRENT_RUNNING_DIR="$( cd "$( dirname "." )" && pwd )"
+
+
+get_hostname() {
+    if command -v hostname >/dev/null 2>&1; then
+        hostname
+    elif command -v uname >/dev/null 2>&1; then
+        uname -n
+    elif [ -r /etc/hostname ]; then
+        cat /etc/hostname
+    else
+        echo "ERROR: can not determine hostname"
+        exit 1
+    fi
+}
 
 STELLA_LOG_STATE="OFF"
-. "${_CURRENT_FILE_DIR}/stella-link.sh" include
+. "${AISTACK_CURRENT_FILE_DIR}/stella-link.sh" include
 
 
 # NOTE
 #   From HERE, $STELLA_ORIGINAL_SYSTEM_PATH contains $PATH before stella features are included
 
-. "${_CURRENT_FILE_DIR}/lib/lib.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_json.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_yaml.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_node.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_bun.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_rust.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_python.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_agy.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_cpa.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_vscode.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_opencode.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_orla.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_gsd.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_adk.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_asm.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_llmfit.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_sktor.sh"
-. "${_CURRENT_FILE_DIR}/lib/lib_ciss.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_json.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_yaml.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_node.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_bun.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_rust.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_python.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_agy.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_cpa.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_vscode.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_opencode.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_orla.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_gsd.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_adk.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_asm.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_llmfit.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_sktor.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_ciss.sh"
 
 
 # --- USAGE ---
@@ -170,7 +184,7 @@ Options:
                                           Launch asm. Instead use 'asm' command if ${AISTACK_ASM_LAUNCHER_HOME} is in your PATH.
                                           Use 'aistack asm register <shell>' to set it in your PATH.
     ----
-	BMAD-Method - https://docs.bmad-method.org/
+    BMAD-Method - https://docs.bmad-method.org/
     bmad <install|uninstall>            Install/Uninstall bmad cli.
     bmad register <all|shell|vs>        Register bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
     bmad unregister [<all|shell|vs>]    Unregister bmad cli PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs"). Default value is "all".
@@ -230,11 +244,12 @@ Options:
     vs set <key> <value>                Set a VS Code configuration in settings file.
     vs del <key>                        Delete a VS Code configuration in settings file.
    	----
-    nvm|npm|npx|bun|pip|pipx|uv|conda|mamba|rustc|cargo|rustdoc [<command>]
-                                      Execute a command using the matching internal runtime from AIStack. (i.e: aistack cargo --version)
+    nvm|npm|npx|bun|node|python|pip|pipx|uv|conda|mamba|rustc|cargo|rustdoc [<command>]
+                                        Execute a command using the matching internal runtime from AIStack. (i.e: aistack cargo --version)
     runtime add|remove <runtime>        Install|remove a runtime ($AISTACK_RUNTIME_TO_DETECT)
+    api <command>                       Call any internal AIStack function.
     ----
-    app killport <port>                  Kill process running on a specific port.
+    app killport <port>                 Kill process running on a specific port.
     ----
 EOF
 }
@@ -314,6 +329,9 @@ main() {
 
 
 	case "$command" in
+        api)
+            "$@"
+            ;;
         bun)
             if ! aistack_runtime_is_detected "bun"; then echo " -- ERROR : bun managed runtime missing, use aistack runtime command"; exit 1; fi;     
 			PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${PATH}" "$command" "$@"
@@ -324,7 +342,7 @@ main() {
 			PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}:${PATH}" "$command" "$@"
 			#PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
-        npm|npx)
+        npm|npx|node)
             if ! aistack_runtime_is_detected "nodejs"; then echo " -- ERROR : nodejs managed runtime missing, use aistack runtime command"; exit 1; fi;     
 			PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "$command" "$@"
 			#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
@@ -339,7 +357,7 @@ main() {
                 exit 1
             fi
             ;;
-        pip|pipx|uv|conda|mamba)
+        pip|pipx|uv|conda|mamba|python)
             if ! aistack_runtime_is_detected "python"; then echo " -- ERROR : python managed runtime missing, use aistack runtime command"; exit 1; fi;     
             PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${PATH}" "$command" "$@"
             #PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
@@ -392,46 +410,46 @@ main() {
             esac
             ;;
         oc)
-            . "${_CURRENT_FILE_DIR}/lib/main_oc.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_oc.sh"
             ;;
         gc)
-            . "${_CURRENT_FILE_DIR}/lib/main_gc.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_gc.sh"
             ;;
         cpa)
-            . "${_CURRENT_FILE_DIR}/lib/main_cpa.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_cpa.sh"
             ;;
         agy)
-            . "${_CURRENT_FILE_DIR}/lib/main_agy.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_agy.sh"
             ;;
         vs)
-            . "${_CURRENT_FILE_DIR}/lib/main_vs.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_vs.sh"
             ;;
         orla)
-            . "${_CURRENT_FILE_DIR}/lib/main_orla.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_orla.sh"
             ;;
         bmad)
-            . "${_CURRENT_FILE_DIR}/lib/main_bmad.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_bmad.sh"
             ;;
 		gsd)
-            . "${_CURRENT_FILE_DIR}/lib/main_gsd.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_gsd.sh"
             ;;
         adk)
-            . "${_CURRENT_FILE_DIR}/lib/main_adk.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_adk.sh"
             ;;
         kc)
-            . "${_CURRENT_FILE_DIR}/lib/main_kilo.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_kilo.sh"
             ;;
         asm)
-            . "${_CURRENT_FILE_DIR}/lib/main_asm.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_asm.sh"
             ;;
 		llmfit)
-            . "${_CURRENT_FILE_DIR}/lib/main_llmfit.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_llmfit.sh"
             ;;
         sktor)
-            . "${_CURRENT_FILE_DIR}/lib/main_sktor.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_sktor.sh"
             ;;
         ciss)
-            . "${_CURRENT_FILE_DIR}/lib/main_ciss.sh"
+            . "${AISTACK_CURRENT_FILE_DIR}/lib/main_ciss.sh"
             ;;
         *)
             echo "ERROR: Unknown command $command"

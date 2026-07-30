@@ -95,7 +95,7 @@ adk_launcher_manage() {
 				{
 					echo '#!/bin/sh'
 					for v in $adk_launch_export_variables; do
-						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+						printf '[ -n "$%s" ] && export %s="$%s" || export %s=%s\n' "$v" "$v" "$v" "$v" "$(shell_quote_posix "${!v}")"
 					done
 
 					declare -f adk_launch
@@ -107,8 +107,7 @@ adk_launcher_manage() {
             ;;
 
         delete)
-            rm -Rf "${AISTACK_ADK_LAUNCHER_HOME}/adk"
-			mkdir -p "${AISTACK_ADK_LAUNCHER_HOME}/adk"
+            rm -f "${AISTACK_ADK_LAUNCHER_HOME}/adk"
             ;;
 		
 		refresh_if_exists)

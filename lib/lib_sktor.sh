@@ -125,7 +125,7 @@ sktor_launcher_manage() {
 				{
 					echo '#!/bin/sh'
 					for v in $sktor_launch_export_variables; do
-						printf 'export %s=%s\n' "$v" "$(shell_quote_posix "${!v}")"
+						printf '[ -n "$%s" ] && export %s="$%s" || export %s=%s\n' "$v" "$v" "$v" "$v" "$(shell_quote_posix "${!v}")"
 					done
 
 					declare -f sktor_launch
