@@ -64,6 +64,8 @@ node_install() {
     fi
 
     [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] && glibc_binary_compat "node" "${AISTACK_NVM_HOME}" "${AISTACK_INIT_FORCE_NODE_GBC}"
+
+    node_package_install "pnpm"
 }
 
 node_uninstall() {

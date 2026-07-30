@@ -10,12 +10,14 @@ aistack_initialize() {
     export AISTACK_RUNTIME_CORE="nodejs"
 
     # modules lists
-    export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm cargo"
+    export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm pnpm cargo"
 	# modules required for AIStack - installed before everything else at init - MUST not depends on any runtimes
     export AISTACK_MODULE_CORE_BOOTSTRAP="yq"
 	# modules required for AIStack - installed after required runtime
     export AISTACK_MODULE_CORE="jq json5"
 
+    # NOTE : json5 nodejs package to correct invalid json
+    # https://github.com/json5/json5
 
     # add search path of runtimes and modules to tool run context
     #export AISTACK_TOOL_CONTEXT_ADD_RUNTIME="nodejs bun python"
@@ -505,6 +507,15 @@ aistack_module_detect() {
 
                 fi
                 ;;
+            pnpm)
+                export AISTACK_MODULE_PNPM_AVAILABLE="false"
+                if aistack_component_is_installed "${m}"; then
+                    export AISTACK_MODULE_PNPM_AVAILABLE="true"
+                    export AISTACK_MODULE_PNPM_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/pnpm"
+                    export AISTACK_MODULE_PNPM_SEARCH_PATH="$(dirname ${AISTACK_MODULE_PNPM_PATH})"
+
+                fi
+                ;;
             # python modules -------
             pipx)
                 export AISTACK_MODULE_PIPX_AVAILABLE="false"
@@ -751,13 +762,12 @@ aistack_component_is_installed() {
 			[ -x "${RUST_FEAT_INSTALL_ROOT}/bin/rustc" ] && [ -x "${RUST_FEAT_INSTALL_ROOT}/bin/cargo" ]
 			return $?
 			;;
-        # module -- runtime variables are available
+        # module -- runtime variables like AISTACK_RUNTIME_PYTHON_SEARCH_PATH are available
         mamba|pipx|uv)
             [ -f "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/${c}" ]
             return $?
             ;;
-        npm|json5)
-            # TODO
+        npm|json5|pnpm)
             [ -f "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/${c}" ]
             return $?
             ;;
@@ -803,10 +813,8 @@ aistack_component_install() {
             aistack_runtime_require "python"
             PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y "${c}"
             ;;
-        json5) 
+        json5|pnpm) 
             aistack_runtime_require "nodejs"
-            # install json5 nodejs package (to correct invalid json)
-            # https://github.com/json5/json5
             PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install -g "${c}" 1>/dev/null
             [ $? -ne 0 ] && {
                 echo "ERROR : installing module ${c}"

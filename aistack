@@ -244,7 +244,7 @@ Options:
     vs set <key> <value>                Set a VS Code configuration in settings file.
     vs del <key>                        Delete a VS Code configuration in settings file.
    	----
-    nvm|npm|npx|bun|node|python|pip|pipx|uv|conda|mamba|rustc|cargo|rustdoc [<command>]
+    nvm|npm|npx|pnpm|bun|node|python|pip|pipx|uv|conda|mamba|rustc|cargo|rustdoc [<command>]
                                         Execute a command using the matching internal runtime from AIStack. (i.e: aistack cargo --version)
     runtime add|remove <runtime>        Install|remove a runtime ($AISTACK_RUNTIME_TO_DETECT)
     api <command>                       Call any internal AIStack function.
@@ -343,7 +343,7 @@ main() {
 			PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}:${PATH}" "$command" "$@"
 			#PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
             ;;
-        npm|npx|node)
+        npm|pnpm|npx|node)
             if ! aistack_runtime_is_detected "nodejs"; then echo " -- ERROR : nodejs managed runtime missing, use aistack runtime command"; exit 1; fi;     
 			PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "$command" "$@"
 			#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" "$command" "$@"
