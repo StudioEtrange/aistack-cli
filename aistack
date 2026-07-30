@@ -330,7 +330,8 @@ main() {
 
 	case "$command" in
         api)
-            "$@"
+            eval "$*"
+            #"$@"
             ;;
         bun)
             if ! aistack_runtime_is_detected "bun"; then echo " -- ERROR : bun managed runtime missing, use aistack runtime command"; exit 1; fi;     
