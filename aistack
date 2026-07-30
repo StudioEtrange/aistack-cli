@@ -3,19 +3,6 @@ AISTACK_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 AISTACK_CURRENT_RUNNING_DIR="$( cd "$( dirname "." )" && pwd )"
 
 
-get_hostname() {
-    if command -v hostname >/dev/null 2>&1; then
-        hostname
-    elif command -v uname >/dev/null 2>&1; then
-        uname -n
-    elif [ -r /etc/hostname ]; then
-        cat /etc/hostname
-    else
-        echo "ERROR: can not determine hostname"
-        exit 1
-    fi
-}
-
 STELLA_LOG_STATE="OFF"
 . "${AISTACK_CURRENT_FILE_DIR}/stella-link.sh" include
 
