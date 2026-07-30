@@ -9,7 +9,7 @@
   * Integrates with LLMs for reasoning and tool-based workflows.
 
 * cpa : add a way to set port and host
-
+* launchers : add a way to override variable with external env var
 * serving LLM
   * Lemonade
     * https://github.com/lemonade-sdk/lemonade
