@@ -59,6 +59,13 @@ node_install() {
     # to set it to be able to install node package with npm
     aistack_runtime_detect
 
+    if [ -n "${AISTACK_INIT_FORCE_NPM_REGISTRY}" ]; then
+        if [ "$AISTACK_MODULE_NPM_AVAILABLE" = "true" ]; then
+            "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" config set registry "${AISTACK_INIT_FORCE_NPM_REGISTRY}" -g
+        else
+            echo "WARN : can not set npm registry, npm is not available"
+        fi
+    fi
 
     echo "-- install pnpm"
     aistack_module_install "pnpm"

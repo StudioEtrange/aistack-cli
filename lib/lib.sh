@@ -692,13 +692,6 @@ aistack_component_core_install() {
     for r in ${AISTACK_RUNTIME_CORE}; do
         #aistack_runtime_install "${r}"
         aistack_runtime_require "${r}"
-        if [ "${r}" = "nodejs" ]; then
-            if [ -n "${AISTACK_INIT_FORCE_NPM_REGISTRY}" ]; then
-                if check_binary "npm"; then
-                    npm config set registry "${AISTACK_INIT_FORCE_NPM_REGISTRY}" -g
-                fi
-            fi
-        fi
     done
 
     #aistack_runtime_detect
