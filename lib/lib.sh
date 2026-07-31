@@ -882,6 +882,7 @@ stella_feature_install() {
 
 }
 
+# f : stella feature schema
 # return 0 : is installed
 # return 1 : component is not installed
 # return 2 : component do not support those options
@@ -891,22 +892,40 @@ stella_feature_installed() {
     local o
 
     local loaded_in_path_during_aistack_run="ON"
-	local not_loaded_in_path_during_aistack_run=""
 	for o in $opt; do
 		[ "$o" = "LOADED_IN_PATH" ] && loaded_in_path_during_aistack_run="ON"
-		[ "$o" = "NOT_LOADED_IN_PATH" ] && not_loaded_in_path_during_aistack_run="ON"
+		[ "$o" = "NOT_LOADED_IN_PATH" ] && loaded_in_path_during_aistack_run=""
 	done
 
     if [ "${loaded_in_path_during_aistack_run}" = "ON" ]; then
+		
+		case "${f}" in
+			# complex stella feature schema
+			*'#'*|*'@'*|*':'*|*'/'*|*'\'*|*'!'*|*'%'*)
+				;;
+			# schema with name only
+			*)
+				case " ${FEATURE_LIST_ENABLED} " in
+					*" ${f}#"*) return 0 ;;
+					*) return 1 ;;
+				esac
+				;;
+		esac
+
         local _feature_schema=""
         local _feature_name=""
         local _feature_ver=""
         $STELLA_API select_official_schema "${f}" "_feature_schema" "_feature_name" "_feature_ver"
-        list_contains "$FEATURE_LIST_ENABLED" "${_feature_name}#${_feature_ver}"
-        return $?
-    fi
+		
+		[ -n "${_feature_schema}" ] || return 1
+		
+		case " ${FEATURE_LIST_ENABLED} " in
+			*" ${_feature_name}#${_feature_ver} "*) return 0 ;;
+		esac
 
-    if [ "${not_loaded_in_path_during_aistack_run}" = "ON" ]; then
+        return 1
+
+	else
         # a component from stella framework NOT_LOADED_IN_PATH must be checked
         # with some special code checking binary presence in AISTACK_ISOLATED_ROOT 
         
