@@ -62,3 +62,4 @@
 * optillm
   * Optimizing inference proxy for LLMs
   * https://github.com/algorithmicsuperintelligence/optillm
+* get llm metadata context size and prices from https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
