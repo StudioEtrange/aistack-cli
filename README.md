@@ -67,7 +67,7 @@ agy
 ## Specific documentation interest
 
 * Installing AIStack using a [specific npm registry](./doc/nodejs.md#using-a-npm-registry)
-+ Installing AIStack on old linux system, like Redhat/Centos 7 [see GBC](./doc/nodejs.md#using-aistack-on-old-linux-system-with-gbc)
++ Using AIStack on older Linux systems with automatically patch incompatible binary with a provided glibc runtime version. So AIStack can work on old glibc 2.17 from RHEL/Centos7 [see GBC](./doc/glibc.md)
 
 ## Directory Structure
 
@@ -109,6 +109,10 @@ See [Kilo Code](doc/kilocode.md)
 ### Orla
 
 See [Orla](doc/orla.md)
+
+### llmfit
+
+See [llmfit](doc/llmfit.md)
 
 ### BMAD
 

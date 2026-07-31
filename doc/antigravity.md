@@ -49,20 +49,13 @@ In Antigravity CLI, the `/tools` command from the legacy Gemini CLI has been spl
 
 
 
-## Using Antigravity CLI on old linux system with GBC
+## Antigravity CLI and glibc
 
-AIStack can support Antigravity CLI installation on old glibc system using https://github.com/StudioEtrange/glibc-binary-compat.git
-
-Same steps than [here](./nodejs.md#using-aistack-on-old-linux-system-with-gbc) but using `AISTACK_INIT_FORCE_AGY_GBC` variable.
-
-    ```
-    cd aistack-cli
-    export AISTACK_INIT_FORCE_AGY_GBC="/opt/custom-glibc228-runtime"
-    ./aistack-cli agy install
-    ```
+* Antigravity CLI requires glibc 2.28 or newer
+* If you do not meet this requirement see [glibc](glibc.md)
 
 ## NOTES
 
-* antigravity-cli fork verzion for android termux https://github.com/wallentx/antigravity-cli-termux
+* antigravity-cli fork version for android termux https://github.com/wallentx/antigravity-cli-termux
   * https://gist.github.com/Brajesh2022/e42160d29b55417db6c18c52dd1d6d37
 * releases page : https://antigravity.google/releases

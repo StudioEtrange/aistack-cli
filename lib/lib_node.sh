@@ -53,7 +53,20 @@ node_install() {
 		aistack_runtime_require "${r}"
 	done
 	
+    node_nvm_install
 
+     # NOTE : Here $AISTACK_RUNTIME_NODEJS_SEARCH_PATH is empty so we launch aistack_runtime_detect
+    # to set it to be able to install node package with npm
+    aistack_runtime_detect
+
+
+    echo "-- install pnpm"
+    aistack_module_install "pnpm"
+}
+
+
+node_nvm_install() {
+    
     nvm_install
     nvm_load
 
@@ -65,7 +78,6 @@ node_install() {
 
     [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] && glibc_binary_compat "node" "${AISTACK_NVM_HOME}" "${AISTACK_INIT_FORCE_NODE_GBC}"
 
-    node_package_install "pnpm"
 }
 
 node_uninstall() {

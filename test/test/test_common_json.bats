@@ -11,6 +11,74 @@ teardown() {
 }
 
 
+@test "glibc_alternative_system selects runtime per tool requirement" {
+	local runtime_217="$(mktemp -d)"
+	local runtime_228="$(mktemp -d)"
+	local runtime_239="$(mktemp -d)"
+
+	export AISTACK_GLIBC_217_PATH="${runtime_217}"
+	export AISTACK_GLIBC_228_PATH="${runtime_228}"
+	export AISTACK_GLIBC_239_PATH="${runtime_239}"
+
+	unset AISTACK_INIT_FORCE_NODE_GBC AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
+	export AISTACK_GLIBC_CURRENT_VERSION="2.17"
+	glibc_alternative_system
+	[ "${AISTACK_INIT_FORCE_NODE_GBC}" = "${runtime_228}" ]
+	[ "${AISTACK_INIT_FORCE_AGY_GBC}" = "${runtime_228}" ]
+	[ "${AISTACK_INIT_FORCE_LLMFIT_GBC}" = "${runtime_239}" ]
+
+	unset AISTACK_INIT_FORCE_NODE_GBC AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
+	export AISTACK_GLIBC_CURRENT_VERSION="2.28"
+	glibc_alternative_system
+	[ -z "${AISTACK_INIT_FORCE_NODE_GBC}" ]
+	[ -z "${AISTACK_INIT_FORCE_AGY_GBC}" ]
+	[ "${AISTACK_INIT_FORCE_LLMFIT_GBC}" = "${runtime_239}" ]
+
+	unset AISTACK_INIT_FORCE_NODE_GBC AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
+	export AISTACK_GLIBC_CURRENT_VERSION="2.39"
+	glibc_alternative_system
+	[ -z "${AISTACK_INIT_FORCE_NODE_GBC}" ]
+	[ -z "${AISTACK_INIT_FORCE_AGY_GBC}" ]
+	[ -z "${AISTACK_INIT_FORCE_LLMFIT_GBC}" ]
+
+	rm -rf "${runtime_217}" "${runtime_228}" "${runtime_239}"
+}
+
+
+@test "glibc_alternative_system uses newer configured fallback" {
+	local runtime_239="$(mktemp -d)"
+
+	export AISTACK_GLIBC_CURRENT_VERSION="2.17"
+	export AISTACK_GLIBC_228_PATH=""
+	export AISTACK_GLIBC_239_PATH="${runtime_239}"
+	unset AISTACK_INIT_FORCE_NODE_GBC AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
+
+	glibc_alternative_system
+	[ "${AISTACK_INIT_FORCE_NODE_GBC}" = "${runtime_239}" ]
+	[ "${AISTACK_INIT_FORCE_AGY_GBC}" = "${runtime_239}" ]
+	[ "${AISTACK_INIT_FORCE_LLMFIT_GBC}" = "${runtime_239}" ]
+
+	rm -rf "${runtime_239}"
+}
+
+
+@test "glibc_alternative_system preserves explicit tool runtime" {
+	local runtime_228="$(mktemp -d)"
+
+	export AISTACK_GLIBC_CURRENT_VERSION="2.17"
+	export AISTACK_GLIBC_228_PATH="${runtime_228}"
+	export AISTACK_GLIBC_239_PATH="${runtime_228}"
+	export AISTACK_INIT_FORCE_NODE_GBC="/custom/node-glibc"
+	unset AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
+
+	glibc_alternative_system
+	[ "${AISTACK_INIT_FORCE_NODE_GBC}" = "/custom/node-glibc" ]
+	[ "${AISTACK_INIT_FORCE_AGY_GBC}" = "${runtime_228}" ]
+
+	rm -rf "${runtime_228}"
+}
+
+
 # GENERIC -------------------------------------------------------------------
 @test "build_jq_expr_from_path" {
 	

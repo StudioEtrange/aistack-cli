@@ -42,6 +42,7 @@ aistack_initialize() {
     export AISTACK_TOOL_CONTEXT_FILE="${AISTACK_CONTEXT_HOME}/tool_context.sh"
 
     export AISTACK_GLIBC_CURRENT_VERSION="$(glibc_version)"
+	glibc_alternative_system
 
     # init variables ---
 	node_init
@@ -77,7 +78,6 @@ aistack_info() {
     echo "AISTACK_ISOLATED_ROOT: $AISTACK_ISOLATED_ROOT"
     echo "AISTACK_TOOL_CONTEXT_FILE: $AISTACK_TOOL_CONTEXT_FILE"
     echo
-    echo "Current glibc version AISTACK_GLIBC_CURRENT_VERSION: ${AISTACK_GLIBC_CURRENT_VERSION}"
     echo
     echo "--JavaScript ecosystem--"
     echo "AISTACK_MODULE_NVM_AVAILABLE : $AISTACK_MODULE_NVM_AVAILABLE"
@@ -171,7 +171,16 @@ aistack_info() {
                 ;;
 		esac
 	done < <(compgen -v AISTACK_ | sort)
-	echo
+    echo
+    echo "--glibc runtime alternative system--"
+    echo "Current glibc version AISTACK_GLIBC_CURRENT_VERSION: ${AISTACK_GLIBC_CURRENT_VERSION}"
+	echo "Alternative glibc 2.17 path AISTACK_GLIBC_217_PATH: ${AISTACK_GLIBC_217_PATH}"
+	echo "Alternative glibc 2.28 path AISTACK_GLIBC_228_PATH: ${AISTACK_GLIBC_228_PATH}"
+	echo "Alternative glibc 2.39 path AISTACK_GLIBC_239_PATH: ${AISTACK_GLIBC_239_PATH}"
+	echo "Node.js alternative glibc path AISTACK_INIT_FORCE_NODE_GBC: ${AISTACK_INIT_FORCE_NODE_GBC}"
+	echo "Antigravity CLI alternative glibc path AISTACK_INIT_FORCE_AGY_GBC: ${AISTACK_INIT_FORCE_AGY_GBC}"
+	echo "llmfit alternative glibc path AISTACK_INIT_FORCE_LLMFIT_GBC: ${AISTACK_INIT_FORCE_LLMFIT_GBC}"
+    echo
 	echo "-- CURRENT SEARCH PATH --"
     echo "PATH : $PATH"
 }
@@ -1202,20 +1211,22 @@ glibc_version() {
     ldd --version 2>/dev/null | awk '/ldd/{print $NF}' 2>/dev/null
 }
 
-# test if a minimal version is available on current system
-# glibc_version_require "2.17"
+# test if a glibc version fullfull the minimal required version
+# by default, the glibc version tested is the current system glibc version
+# glibc_version_require "2.17" # test if the glibc version on system match the minimal 2.17 requirement
+# glibc_version_require "2.17" "3"  # test if a glibc version 3 match the minimal 2.17 requirement
 # return 0 or 1
 glibc_version_require() {
-    local _ver="$1"
-    local _current_ver
+    local _minimal_ver="$1"
+    local _tested_ver="$2"
     local _comparison
     
-    [ -n "${_ver}" ] || return 1
+    [ -n "${_minimal_ver}" ] || return 1
 
-    _current_ver="$(glibc_version)" || return 1
-    [ -n "${_current_ver}" ] || return 1
+    [ -z "${_tested_ver}" ] && _tested_ver="$(glibc_version)"
+    [ -n "${_tested_ver}" ] || return 1
 
-    _comparison="$(glibc_version_compare "${_current_ver}" "${_ver}")"
+    _comparison="$(glibc_version_compare "${_tested_ver}" "${_minimal_ver}")"
     case "${_comparison}" in
         0|1) return 0;;
         *) return 1;;
@@ -1261,6 +1272,59 @@ glibc_version_compare() {
     done
 
     printf '%s\n' '0'
+}
+
+# Print the first configured alternative glibc satisfying a minimum version.
+glibc_alternative_path() {
+	local _required_version="$1"
+	local _version
+	local _version_key
+	local _path_var
+	local _path
+
+	[ -n "${_required_version}" ] || return 1
+
+	for _version in 2.17 2.28 2.39; do
+		if ! glibc_version_require "${_required_version}" "${_version}"; then
+            continue
+		fi
+
+		_version_key="$(printf '%s' "${_version}" | tr -d '.')"
+		_path_var="AISTACK_GLIBC_${_version_key}_PATH"
+		_path="${!_path_var}"
+		[ -n "${_path}" ] || continue
+
+		if [ ! -d "${_path}" ]; then
+			echo "WARN: ${_path_var} does not reference a directory: ${_path}" >&2
+			continue
+		fi
+
+		printf '%s' "${_path}"
+		return 0
+	done
+
+	return 1
+}
+
+# Configure each tool only when the system glibc does not meet its requirement.
+# Explicit per-tool GBC paths always take precedence over automatic selection.
+glibc_alternative_system() {
+	local _path
+
+	[ -n "${AISTACK_GLIBC_CURRENT_VERSION}" ] || return 0
+
+	if [ "$(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.28")" = "-1" ]; then
+		_path="$(glibc_alternative_path "2.28")"
+		if [ -n "${_path}" ]; then
+			[ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] || export AISTACK_INIT_FORCE_NODE_GBC="${_path}"
+			[ -n "${AISTACK_INIT_FORCE_AGY_GBC}" ] || export AISTACK_INIT_FORCE_AGY_GBC="${_path}"
+		fi
+	fi
+
+	if [ "$(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.39")" = "-1" ]; then
+		_path="$(glibc_alternative_path "2.39")"
+		[ -n "${_path}" ] && [ -z "${AISTACK_INIT_FORCE_LLMFIT_GBC}" ] && export AISTACK_INIT_FORCE_LLMFIT_GBC="${_path}"
+	fi
 }
 
 # see https://github.com/StudioEtrange/glibc-binary-compat.git

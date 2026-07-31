@@ -1,12 +1,17 @@
 # Node.js
 
 - [Node.js](#nodejs)
+  - [Node.js and glibc](#nodejs-and-glibc)
   - [Notes](#notes)
   - [About MCP server](#about-mcp-server)
   - [Using a npm registry](#using-a-npm-registry)
-  - [Using AIStack on old linux system with GBC](#using-aistack-on-old-linux-system-with-gbc)
 
 
+## Node.js and glibc
+
+* Node.js requires glibc 2.28 or newer
+* If you do not meet this requirement see [glibc](glibc.md)
+  
 ## Notes 
 
 * `npx` command needs at least `node` binary in PATH and `sh` binary in PATH
@@ -72,29 +77,3 @@ cd aistack-cli
 ```
 
 
-## Using AIStack on old linux system with GBC
-
-AIStack can support Node.js installation on old glibc system using https://github.com/StudioEtrange/glibc-binary-compat.git
-
-1. Build a supported recent custom glibc for your system. Change target parameters in script. Default parameters will build a glibc 2.28 to be used on RedHat/Centos 7 OS which have by default a 2.17 glibc.
-
-
-    ```
-    cd $HOME
-    git clone https://github.com/StudioEtrange/glibc-binary-compat.git
-    cd glibc-binary-compat
-    build-custom-glibc-runtime.sh
-    sudo cp -R $HOME/custom-glibc228-runtime /opt
-    sudo chmod -R a+rx /opt/custom-glibc228-runtime
-    ```
-
-
-2. Set `AISTACK_INIT_FORCE_NODE_GBC` variable with the PATH of the built glibc with GBC when init AIStack or installing Node.js runtime.
-
-    ```
-    cd $HOME
-    git clone https://github.com/StudioEtrange/aistack-cli.git
-    cd aistack-cli
-    export AISTACK_INIT_FORCE_NODE_GBC="/opt/custom-glibc228-runtime"
-    ./aistack-cli init
-    ```
