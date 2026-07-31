@@ -207,47 +207,62 @@ yaml_get_key_from_file() {
 #   double: string with double quote
 # yaml_set_key "a.b.c" "new_value"
 yaml_set_key() {
-    local key_path="$1"
-    local value="$2"
-    local string_style="$3"
+	local key_path="$1"
+	local value="$2"
+	local string_style="$3"
+	local prog yq_path input_file ret
 
-    if [ "$#" -lt 2 ]; then
-        echo "ERROR : argument missing"
-        exit 1
-    fi
+	if [ "$#" -lt 2 ]; then
+		echo "ERROR : argument missing" >&2
+		return 1
+	fi
 
-    if [ -z "$key_path" ]; then
-        echo "ERROR : yaml key path empty"
-        exit 1
-    fi
+	if [ -z "$key_path" ]; then
+		echo "ERROR : yaml key path empty" >&2
+		return 1
+	fi
 
-    local yq_opt=""
-    if [ -t 0 ]; then
-        # no stdin, create new yaml
-        yq_opt="-n"
-    fi
+	case "$string_style" in
+		double|single|literal|folded|flow)
+			# force string + style (double/single/literal/folded/flow)
+			prog='eval(strenv(PATH_VAR)) = strenv(VAL) | eval(strenv(PATH_VAR)) style=strenv(STRING_STYLE)'
+			;;
+		*)
+			# default: yq parse value as YAML (true, 12, [a,b], {k:v}, ...)
+			prog='eval(strenv(PATH_VAR)) = env(VAL)'
+			;;
+	esac
 
-    local prog
-    case "$string_style" in
-       double|single|literal|folded|flow)
-            # force string + style (double/single/literal/folded/flow)
-            prog='eval(strenv(PATH_VAR)) = strenv(VAL) | eval(strenv(PATH_VAR)) style=strenv(STRING_STYLE)'
-            ;;
-       *) 
-            # default: yq parse value as YAML (true, 12, [a,b], {k:v}, ...)
-            prog='eval(strenv(PATH_VAR)) = env(VAL)'
-            # NOTE : avoid -P usage because it simplfy style and remove some quotes
-            #yq_opt="$yq_opt -P"
-            ;;
-    esac
+	yq_path="$(build_yq_expr_from_path "$key_path")" || return 1
 
-    local yq_path
-    yq_path="$(build_yq_expr_from_path "$key_path")" || return 1
+	if [ -t 0 ]; then
+		STRING_STYLE="${string_style}" PATH_VAR="${yq_path}" VAL="${value}" \
+			yq eval --null-input "$prog"
+		return $?
+	fi
 
-    if ! STRING_STYLE="${string_style}" PATH_VAR="${yq_path}" VAL="${value}" yq eval $yq_opt "$prog"; then
-        echo "ERROR : generating yaml from key_path/value" >&2
-        return 1
-    fi
+	input_file="$(mktemp)" || {
+		echo "ERROR : unable to create temporary YAML file" >&2
+		return 1
+	}
+	cat > "$input_file"
+
+	if [ -s "$input_file" ]; then
+		STRING_STYLE="${string_style}" PATH_VAR="${yq_path}" VAL="${value}" \
+			yq eval "$prog" "$input_file"
+		ret=$?
+	else
+		STRING_STYLE="${string_style}" PATH_VAR="${yq_path}" VAL="${value}" \
+			yq eval --null-input "$prog"
+		ret=$?
+	fi
+
+	rm -f "$input_file"
+	if [ "$ret" -ne 0 ]; then
+		echo "ERROR : generating yaml from key_path/value" >&2
+	fi
+
+	return "$ret"
 
 }
 
@@ -420,6 +435,5 @@ merge_yaml_file() {
 
     rm -f "$tmp_merge" "$tmp_into_json"
 }
-
 
 

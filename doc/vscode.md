@@ -4,12 +4,14 @@
   
 * vs code server needs linux minimal requirements : kernel >= 4.18, glibc >=2.28, libstdc++ >= 3.4.25, binutils >= 2.29. If you do not meet these requirements you have two solutions
 
-* Solution A : Use old vs code desktop version (downgrade actual version)
-  * vs code version 1.96.4 supports glibc 2.17, you could downgrade vs code if you wish to connect to older linux system with glibc 2.17
 
-* Solution B : 
+
+* **Solution A :** use GBC tool
   * Use this solution https://github.com/StudioEtrange/glibc-binary-compat
 
+
+* **Solution B :** use old vs code desktop version (downgrade actual version)
+  * vs code version 1.96.4 supports glibc 2.17, you could downgrade vs code if you wish to connect to older linux system with glibc 2.17
 
 ## Custom LLM
 
@@ -24,7 +26,7 @@
 
 
 * VS Code extension Gemini cli companion specification
-  * discovery files for MCP server : $TMPDIR/gemini/ide/gemini-ide-server-${PID}-${PORT}.json
+  * discovery files for MCP server : `$TMPDIR/gemini/ide/gemini-ide-server-${PID}-${PORT}.json`
   * https://geminicli.com/docs/ide-integration/ide-companion-spec/
 
 

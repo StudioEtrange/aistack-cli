@@ -274,6 +274,62 @@ EOF
 }
 
 
+@test "yaml_set_key reads stdin from file redirection" {
+	local input_file
+	input_file="$(mktemp)"
+	cat > "${input_file}" <<'EOF'
+a:
+  b:
+    c: old_value
+    preserved: true
+EOF
+
+	run yaml_set_key ".a.b.c" "new_value" < "${input_file}"
+	rm -f "${input_file}"
+
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: new_value
+    preserved: true
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+
+@test "yaml_set_key reads stdin from here string" {
+	local input
+	input=$'a:\n  b:\n    c: old_value\n'
+
+	run yaml_set_key ".a.b.c" "new_value" "double" <<< "${input}"
+
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: "new_value"
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+
+@test "yaml_set_key handles empty stdin" {
+	run yaml_set_key ".a.b.c" "new_value" "single" < /dev/null
+
+	expected=$(cat <<'EOF'
+a:
+  b:
+    c: 'new_value'
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+
 
 
 
@@ -534,4 +590,3 @@ EOF
 	assert_equal "$(cat "$tmp")" "$expected"
 
 }
-

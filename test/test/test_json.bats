@@ -10,75 +10,6 @@ teardown() {
     true
 }
 
-
-@test "glibc_alternative_system selects runtime per tool requirement" {
-	local runtime_217="$(mktemp -d)"
-	local runtime_228="$(mktemp -d)"
-	local runtime_239="$(mktemp -d)"
-
-	export AISTACK_GLIBC_217_PATH="${runtime_217}"
-	export AISTACK_GLIBC_228_PATH="${runtime_228}"
-	export AISTACK_GLIBC_239_PATH="${runtime_239}"
-
-	unset AISTACK_INIT_FORCE_NODE_GBC AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
-	export AISTACK_GLIBC_CURRENT_VERSION="2.17"
-	glibc_alternative_system
-	[ "${AISTACK_INIT_FORCE_NODE_GBC}" = "${runtime_228}" ]
-	[ "${AISTACK_INIT_FORCE_AGY_GBC}" = "${runtime_228}" ]
-	[ "${AISTACK_INIT_FORCE_LLMFIT_GBC}" = "${runtime_239}" ]
-
-	unset AISTACK_INIT_FORCE_NODE_GBC AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
-	export AISTACK_GLIBC_CURRENT_VERSION="2.28"
-	glibc_alternative_system
-	[ -z "${AISTACK_INIT_FORCE_NODE_GBC}" ]
-	[ -z "${AISTACK_INIT_FORCE_AGY_GBC}" ]
-	[ "${AISTACK_INIT_FORCE_LLMFIT_GBC}" = "${runtime_239}" ]
-
-	unset AISTACK_INIT_FORCE_NODE_GBC AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
-	export AISTACK_GLIBC_CURRENT_VERSION="2.39"
-	glibc_alternative_system
-	[ -z "${AISTACK_INIT_FORCE_NODE_GBC}" ]
-	[ -z "${AISTACK_INIT_FORCE_AGY_GBC}" ]
-	[ -z "${AISTACK_INIT_FORCE_LLMFIT_GBC}" ]
-
-	rm -rf "${runtime_217}" "${runtime_228}" "${runtime_239}"
-}
-
-
-@test "glibc_alternative_system uses newer configured fallback" {
-	local runtime_239="$(mktemp -d)"
-
-	export AISTACK_GLIBC_CURRENT_VERSION="2.17"
-	export AISTACK_GLIBC_228_PATH=""
-	export AISTACK_GLIBC_239_PATH="${runtime_239}"
-	unset AISTACK_INIT_FORCE_NODE_GBC AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
-
-	glibc_alternative_system
-	[ "${AISTACK_INIT_FORCE_NODE_GBC}" = "${runtime_239}" ]
-	[ "${AISTACK_INIT_FORCE_AGY_GBC}" = "${runtime_239}" ]
-	[ "${AISTACK_INIT_FORCE_LLMFIT_GBC}" = "${runtime_239}" ]
-
-	rm -rf "${runtime_239}"
-}
-
-
-@test "glibc_alternative_system preserves explicit tool runtime" {
-	local runtime_228="$(mktemp -d)"
-
-	export AISTACK_GLIBC_CURRENT_VERSION="2.17"
-	export AISTACK_GLIBC_228_PATH="${runtime_228}"
-	export AISTACK_GLIBC_239_PATH="${runtime_228}"
-	export AISTACK_INIT_FORCE_NODE_GBC="/custom/node-glibc"
-	unset AISTACK_INIT_FORCE_AGY_GBC AISTACK_INIT_FORCE_LLMFIT_GBC
-
-	glibc_alternative_system
-	[ "${AISTACK_INIT_FORCE_NODE_GBC}" = "/custom/node-glibc" ]
-	[ "${AISTACK_INIT_FORCE_AGY_GBC}" = "${runtime_228}" ]
-
-	rm -rf "${runtime_228}"
-}
-
-
 # GENERIC -------------------------------------------------------------------
 @test "build_jq_expr_from_path" {
 	
@@ -344,6 +275,79 @@ EOF
 EOF
 	)
 	assert_output "$expected"
+}
+
+
+@test "json_set_key reads stdin from file redirection" {
+	local input_file
+	input_file="$(mktemp)"
+	cat > "${input_file}" <<'EOF'
+{"a":{"b":{"c":"old_value","preserved":true}}}
+EOF
+
+	run json_set_key ".a.b.c" '"new_value"' < "${input_file}"
+	rm -f "${input_file}"
+
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "b": {
+      "c": "new_value",
+      "preserved": true
+    }
+  }
+}
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+
+@test "json_set_key reads stdin from here string" {
+	local input
+	input='{"a":{"b":{"c":"old_value"}}}'
+
+	run json_set_key ".a.b.c" '"new_value"' <<< "${input}"
+
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "b": {
+      "c": "new_value"
+    }
+  }
+}
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+
+@test "json_set_key handles empty stdin" {
+	run json_set_key ".a.b.c" '"new_value"' < /dev/null
+
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "b": {
+      "c": "new_value"
+    }
+  }
+}
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+
+@test "json_set_key rejects invalid JSON value" {
+	run json_set_key ".a.b.c" 'not valid JSON' < /dev/null
+
+	assert_failure
+	assert_output --partial "ERROR : generating json from key_path/value"
 }
 
 
@@ -872,6 +876,8 @@ EOF
 }
 EOF
   )
+	assert_success
+	assert_output "$expected"
 
 
   run json_escape_string_containing_char "A?A" "?" "RESTORE" <<'EOF'
@@ -884,6 +890,7 @@ EOF
 EOF
   )
 
+	assert_success
 	assert_output "$expected"
 }
 
@@ -1200,49 +1207,47 @@ EOF
 }
 
 
-# TODO : why this is commented ?
-# @test "json_tweak_value_of_list6" {
+@test "json_tweak_value_of_list appends value containing separator" {
+  run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "POSTPEND_IF_NOT_EXISTS" <<'EOF'
+{"PATH":"BB:CC"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "BB:CC:${env:PATH}"
+}
+EOF
+  )
 
-#     run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "POSTPEND_IF_NOT_EXISTS" <<'EOF'
-# {"PATH":"BB:CC"}
-# EOF
-#   expected=$(cat <<'EOF'
-# {
-#   "PATH": "BB:CC:${env:PATH}"
-# }
-# EOF
-#   )
-
-# 	assert_output "$expected"
-# }
-
-# @test "json_tweak_value_of_list7" {
-
-#       run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "PREPEND_IF_NOT_EXISTS" <<'EOF'
-# {"PATH":"BB:CC"}
-# EOF
-#   expected=$(cat <<'EOF'
-# {
-#   "PATH": "${env:PATH}:BB:CC"
-# }
-# EOF
-#   )
-
-# 	assert_output "$expected"
-
-# }
+	assert_success
+	assert_output "$expected"
+}
 
 
-# @test "json_tweak_value_of_list8" {
+@test "json_tweak_value_of_list prepends value containing separator" {
+  run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "PREPEND_IF_NOT_EXISTS" <<'EOF'
+{"PATH":"BB:CC"}
+EOF
+  expected=$(cat <<'EOF'
+{
+  "PATH": "${env:PATH}:BB:CC"
+}
+EOF
+  )
 
-#       run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "PREPEND_IF_NOT_EXISTS"
-#   expected=$(cat <<'EOF'
-# {
-#   "PATH": "${env:PATH}"
-# }
-# EOF
-#   )
+	assert_success
+	assert_output "$expected"
+}
 
-# 	assert_output "$expected"
 
-# }
+@test "json_tweak_value_of_list creates value containing separator with empty stdin" {
+  run json_tweak_value_of_list ".PATH" '${env:PATH}' ":" "PREPEND_IF_NOT_EXISTS" < /dev/null
+  expected=$(cat <<'EOF'
+{
+  "PATH": "${env:PATH}"
+}
+EOF
+  )
+
+	assert_success
+	assert_output "$expected"
+}

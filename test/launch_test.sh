@@ -71,7 +71,7 @@ function test_launch_bats() {
 	if [ "$filter" = "" ]; then
 		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "${STELLA_APP_ROOT}/test/test_$domain.bats"
 	else
-		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "${STELLA_APP_ROOT}/test/test_$domain.bats" -f ${filter}
+		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "${STELLA_APP_ROOT}/test/test_$domain.bats" -f "${filter}"
 	fi
 	rm -f "$_v"
 }
@@ -83,21 +83,21 @@ case $1 in
     ;;
   all|"")
 	init_aistack_test_env
-    test_launch_bats common_json $2
-	test_launch_bats common_yaml $2
-	test_launch_bats common_glibc $2
+    test_launch_bats json $2
+	test_launch_bats yaml $2
+	test_launch_bats glibc $2
     ;;
   json)
 	init_aistack_test_env
-    test_launch_bats common_json $2
+    test_launch_bats json $2
   	;;
   yaml)
 	init_aistack_test_env
-    test_launch_bats common_yaml $2
+    test_launch_bats yaml $2
   	;;
   glibc)
 	init_aistack_test_env
-    test_launch_bats common_glibc $2
+    test_launch_bats glibc $2
   	;;
   *)
 	usage

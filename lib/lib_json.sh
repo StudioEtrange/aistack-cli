@@ -300,6 +300,7 @@ json_get_key_from_file() {
 json_set_key() {
     local key_path="$1"
     local value="$2"
+	local jq_path input_file ret
 
     if [ "$#" -lt 2 ]; then
         echo "ERROR : argument missing"
@@ -311,24 +312,38 @@ json_set_key() {
         exit 1
     fi
 
-    local jq_opt
-    if [ ! -t 0 ]; then
-        # parse stream from stdin
-        :
-    else
-        # no stdin, create new json
-        jq_opt="-n"
-    fi
-
-    local jq_path
-    jq_path="$(build_jq_array_from_path "$key_path")" || return 1
+	jq_path="$(build_jq_array_from_path "$key_path")" || return 1
 
     # value must be a valid JSON (ie: '"str"', '123', 'true', '{"x":1}', '["a"]', etc.)
-    if ! jq $jq_opt --argjson path "$jq_path" --argjson v "$value" \
-        'setpath($path; $v)'; then
-        echo "ERROR : generating json from key_path/value (value must be valid JSON)" >&2
-        return 1
-    fi
+	if [ -t 0 ]; then
+		jq -n --argjson path "$jq_path" --argjson v "$value" \
+			'setpath($path; $v)'
+		ret=$?
+	else
+		input_file="$(mktemp)" || {
+			echo "ERROR : unable to create temporary JSON file" >&2
+			return 1
+		}
+		cat > "$input_file"
+
+		if [ -s "$input_file" ]; then
+			jq --argjson path "$jq_path" --argjson v "$value" \
+				'setpath($path; $v)' "$input_file"
+			ret=$?
+		else
+			jq -n --argjson path "$jq_path" --argjson v "$value" \
+				'setpath($path; $v)'
+			ret=$?
+		fi
+		rm -f "$input_file"
+	fi
+
+	if [ "$ret" -ne 0 ]; then
+		echo "ERROR : generating json from key_path/value (value must be valid JSON)" >&2
+		return 1
+	fi
+
+	return 0
 }
 
 
@@ -530,6 +545,7 @@ json_escape_string_containing_char() {
     local string="$1"
     local character="$2"
     local mode="${3:-ESCAPE}" # ESCAPE or RESTORE
+	local input_file ret
     # ESCAPE : escape string containing a character in the input string
     # RESTORE : do the opposite to the input string
     # GET_ESCAPED_VALUE : output escaped string
@@ -543,34 +559,39 @@ json_escape_string_containing_char() {
     # Escape character inside string with ASCII Unit character (0x1f)
     local alt_character=$'\x1f'
     local string_raw="$string"
-    local string_escaped="${string//"$character"/"$alt_character"}"
+	
+	# NOTE : compatible with bash 3.2
+	# keep this form : "$character"/$alt_character
+    local string_escaped="${string//"$character"/$alt_character}"
 
     if [ "$mode" = "GET_ESCAPED_VALUE" ]; then
         printf "%s" "$string_escaped"
         return 0
     fi
 
-    if [ -z "$string" ]; then
-        if [ ! -t 0 ]; then
-            # return stdin
-            jq
-        else
-            # return empty json
-            jq -n '{}'
-        fi
-        return 0
-    fi
+	if [ ! -t 0 ]; then
+		input_file="$(mktemp)" || {
+			echo "ERROR : unable to create temporary JSON file" >&2
+			return 1
+		}
+		cat > "$input_file"
+	fi
 
-    local jq_opt
-    if [ ! -t 0 ]; then
-        # parse stream from stdin
-        :
-    else
-        jq_opt="-n"
-    fi
+	if [ -z "$string" ]; then
+		if [ -n "$input_file" ] && [ -s "$input_file" ]; then
+			jq . "$input_file"
+			ret=$?
+		else
+			jq -n '{}'
+			ret=$?
+		fi
+		[ -n "$input_file" ] && rm -f "$input_file"
+		return "$ret"
+	fi
 
     # replace all occurences of string with string_escaped
-    if ! jq $jq_opt --arg string_raw "$string_raw" --arg string_escaped "$string_escaped" --arg mode "$mode" '
+	if [ -n "$input_file" ] && [ -s "$input_file" ]; then
+		jq --arg string_raw "$string_raw" --arg string_escaped "$string_escaped" --arg mode "$mode" '
   
         def escape_regex:
             gsub("(?<c>[\\\\.^$|()\\[\\]{}*+?])"; "\\\(.c)");
@@ -605,11 +626,55 @@ json_escape_string_containing_char() {
             end;
         . as $doc
         | process
-    '; then
-        
+		' "$input_file"
+		ret=$?
+	else
+		jq -n --arg string_raw "$string_raw" --arg string_escaped "$string_escaped" --arg mode "$mode" '
+  
+        def escape_regex:
+            gsub("(?<c>[\\\\.^$|()\\[\\]{}*+?])"; "\\\(.c)");
+
+        def process:
+            if . == null or . == "" then
+                {}
+            else
+                if $mode == "ESCAPE" then
+                    ($string_raw | escape_regex) as $pattern
+
+                    | walk(
+                        if type == "string" then
+                            gsub($pattern; $string_escaped)
+                        else
+                            .
+                        end
+                        )
+                elif $mode == "RESTORE" then
+                    ($string_escaped | escape_regex) as $pattern
+
+                    | walk(
+                        if type == "string" then
+                            gsub($pattern; $string_raw)
+                        else
+                            .
+                        end
+                        )
+                else
+                    .
+                end
+            end;
+        . as $doc
+        | process
+		'
+		ret=$?
+	fi
+
+	[ -n "$input_file" ] && rm -f "$input_file"
+	if [ "$ret" -ne 0 ]; then
         echo "ERROR json_escape_string_containing_separator - mode : $mode"
         return 1
-    fi
+	fi
+
+	return 0
 }
 
 
@@ -618,6 +683,7 @@ json_tweak_value_of_list() {
     local value="$2"
     local separator="$3" # separator of values in the list
     local mode="${4:-ALWAYS_PREPEND}"
+	local input_file ret
     # ALWAYS_PREPEND add value or move it at the begining position
     # ALWAYS_POSTPEND add value or move it at the end position
     # PREPEND_IF_NOT_EXISTS add value at the begining position only if not already present
@@ -640,26 +706,26 @@ json_tweak_value_of_list() {
         exit 1
     fi
     
-    # string is empty
-    if [ -z "$value" ]; then
-        if [ ! -t 0 ]; then
-            # return stdin
-            jq
-        else
-            # return empty json
-            jq -n '{}'
-        fi
-        return 0
-    fi
+	if [ ! -t 0 ]; then
+		input_file="$(mktemp)" || {
+			echo "ERROR : unable to create temporary JSON file" >&2
+			return 1
+		}
+		cat > "$input_file"
+	fi
 
-    local jq_opt
-    if [ ! -t 0 ]; then
-        # parse stream from stdin
-        :
-    else
-        # no stdin, create new json
-        jq_opt="-n"
-    fi
+	# string is empty
+	if [ -z "$value" ]; then
+		if [ -n "$input_file" ] && [ -s "$input_file" ]; then
+			jq . "$input_file"
+			ret=$?
+		else
+			jq -n '{}'
+			ret=$?
+		fi
+		[ -n "$input_file" ] && rm -f "$input_file"
+		return "$ret"
+	fi
 
     local jq_path
     jq_path="$(build_jq_array_from_path "$key_path")" || return 1
@@ -668,9 +734,12 @@ json_tweak_value_of_list() {
     local escaped_value="$(json_escape_string_containing_char "$value" "$separator" "GET_ESCAPED_VALUE")"
 
 
-    if ! {
-        json_escape_string_containing_char "$value" "$separator" "ESCAPE" \
-        | jq $jq_opt --arg separator "$separator" --arg value "$escaped_value" --arg mode "$mode" --argjson key_path "$jq_path" '
+	if [ -n "$input_file" ] && [ -s "$input_file" ]; then
+		json_escape_string_containing_char "$value" "$separator" "ESCAPE" < "$input_file"
+	else
+		json_escape_string_containing_char "$value" "$separator" "ESCAPE" < /dev/null
+	fi \
+		| jq --arg separator "$separator" --arg value "$escaped_value" --arg mode "$mode" --argjson key_path "$jq_path" '
     
             # split by "$separator"
             def split_by_separator:
@@ -741,9 +810,13 @@ json_tweak_value_of_list() {
             | setpath($key_path; ($cur | process))
         ' \
         | json_escape_string_containing_char "$value" "$separator" "RESTORE"
-    }; then
+	ret=$?
+
+	[ -n "$input_file" ] && rm -f "$input_file"
+	if [ "$ret" -ne 0 ]; then
         echo "ERROR json_tweak_value_of_list"
         return 1
-    fi
+	fi
 
+	return 0
 }
