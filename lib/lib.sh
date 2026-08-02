@@ -7,17 +7,20 @@ aistack_initialize() {
     # runtime lists
     export AISTACK_RUNTIME_TO_DETECT="python nodejs bun rust"
 	# runtimes required for AIStack
+    # note : json5 core module require nodejs and nodejs require module nvm
     export AISTACK_RUNTIME_CORE="nodejs"
 
     # modules lists
-    export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm pnpm cargo"
+    export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm pnpm cargo nvm"
 	# modules required for AIStack - installed before everything else at init - MUST not depends on any runtimes
-    export AISTACK_MODULE_CORE_BOOTSTRAP="yq"
+    export AISTACK_MODULE_CORE_BOOTSTRAP="yq nvm"
 	# modules required for AIStack - installed after required runtime
     export AISTACK_MODULE_CORE="jq json5"
-
-    # NOTE : json5 nodejs package to correct invalid json
+    # NOTE : json5 is a nodejs package to correct invalid json
     # https://github.com/json5/json5
+
+    # remove from AISTACK_MODULE_CORE any items from AISTACK_MODULE_CORE_BOOTSTRAP
+    AISTACK_MODULE_CORE="$($STELLA_API filter_list_with_list "${AISTACK_MODULE_CORE}" "${AISTACK_MODULE_CORE_BOOTSTRAP}")"
 
     # add search path of runtimes and modules to tool run context
     #export AISTACK_TOOL_CONTEXT_ADD_RUNTIME="nodejs bun python"
@@ -81,6 +84,7 @@ aistack_info() {
     echo
     echo "--JavaScript ecosystem--"
     echo "AISTACK_MODULE_NVM_AVAILABLE : $AISTACK_MODULE_NVM_AVAILABLE"
+    echo "AISTACK_MODULE_NVM_LOADED : $AISTACK_MODULE_NVM_LOADED"
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
     echo "NVM_DIR : $NVM_DIR"
     echo "AISTACK_NVM_CACHE (npm/npx): $AISTACK_NVM_CACHE"
@@ -88,7 +92,6 @@ aistack_info() {
     if [ "$AISTACK_RUNTIME_NODEJS_AVAILABLE" = "true" ]; then
         echo "AISTACK_RUNTIME_NODEJS_SEARCH_PATH: $AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
         echo "AISTACK_RUNTIME_NODEJS_PATH: $AISTACK_RUNTIME_NODEJS_PATH"
-        echo "AISTACK_INTERNAL_NVM_LOADED: $AISTACK_INTERNAL_NVM_LOADED"
         echo "AISTACK_MODULE_NPM_AVAILABLE: $AISTACK_MODULE_NPM_AVAILABLE"
         echo "NodeJS version : $($AISTACK_RUNTIME_NODEJS_PATH --version)"
         echo "NPM version : $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --version)"
@@ -548,6 +551,12 @@ aistack_module_detect() {
             mamba|npm|cargo)
                 # already detected at python/nodejs/rust runtime install
                 ;;
+			nvm)
+                export AISTACK_MODULE_NVM_AVAILABLE="false"
+				if aistack_component_is_installed "${m}"; then
+					export AISTACK_MODULE_NVM_AVAILABLE="true"
+				fi
+				;;
         esac
     done
 }
@@ -557,7 +566,6 @@ aistack_module_detect() {
 aistack_module_is_detected() {
     local m="${1}"
     local _var="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
-
     [ "${!_var}" = "true" ] || return 1
 }
 
@@ -686,11 +694,11 @@ aistack_component_core_install() {
     echo "- Install some module to bootstrap AIStack"
     for m in ${AISTACK_MODULE_CORE_BOOTSTRAP}; do
         aistack_component_install "${m}"
+        aistack_module_detect
     done
 
     echo "- Install core mandatories runtimes managed by AIStack"
     for r in ${AISTACK_RUNTIME_CORE}; do
-        #aistack_runtime_install "${r}"
         aistack_runtime_require "${r}"
     done
 
@@ -706,7 +714,6 @@ aistack_component_core_install() {
   	aistack_tool_context_file_generate
 
 }
-
 
 # return 0 : is installed
 # return 1 : component is not installed
@@ -724,10 +731,7 @@ aistack_component_is_installed() {
         nvm)
             # check if nvm.sh file is installed
             if [ -s "${AISTACK_NVM_HOME}/nvm.sh" ]; then
-                # check if nvm alias command is loaded
-                if type nvm >/dev/null 2>&1; then
-                    return 0
-                fi
+               return 0
             fi
             return 1
             ;;
@@ -748,11 +752,9 @@ aistack_component_is_installed() {
             return 1
             ;;
         nodejs)
-            if aistack_component_is_installed "nvm"; then
-            #if [ -s "${AISTACK_NVM_HOME}/nvm.sh" ]; then
-                if nvm which default >/dev/null 2>&1; then
-                    return 0
-                fi
+            if [ "${AISTACK_MODULE_NVM_LOADED}" = "true" ]; then
+                [ -n "${NVM_BIN}" ] && [ -x "${NVM_BIN}/node" ]
+                return $?
             fi
             return 1
             ;;
@@ -811,6 +813,10 @@ aistack_component_install() {
 			rust_install
 			;;
         # modules --
+        nvm)
+            nvm_install
+            nvm_load
+            ;;
         pipx|uv)
             aistack_runtime_require "python"
             PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" mamba install -y "${c}"
@@ -822,6 +828,10 @@ aistack_component_install() {
                 echo "ERROR : installing module ${c}"
                 return 1
             }
+            ;;
+        *)
+            echo "ERROR : internal error in aistack_component_install : unknow omponent ${c}"
+            exit 1
             ;;
     esac
 }

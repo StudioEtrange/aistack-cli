@@ -9,39 +9,43 @@ node_init() {
     mkdir -p "${AISTACK_NVM_CACHE}"
 
     export AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED=""
+	export AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED="nvm"
 
-	# those functions are invoqued before runtime_detect
-	# so we cannot use variable AISTACK_MODULE_NVM_AVAILABLE inside them
-    nvm_load
-    node_activate
+	if aistack_component_is_installed "nvm"; then
+		export AISTACK_MODULE_NVM_AVAILABLE="true"
+
+		# load nvm
+		nvm_load
+	
+		# activate default node
+		# only if a nodejs version was previously installed
+		nvm_default_node_activate
+	fi
 }
 
 # return 0 : is installed
 # return 1 : tool is not installed
 # return 2 : missing runtime
 node_is_installed() {
-    local r
-    
+    local r m
+
     export AISTACK_RUNTIME_NODEJS_AVAILABLE="false"
     export AISTACK_MODULE_NPM_AVAILABLE="false"
-    export AISTACK_MODULE_NVM_AVAILABLE="false"
+
 	for r in ${AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 
-
-    if aistack_component_is_installed "nvm"; then
-        export AISTACK_MODULE_NVM_AVAILABLE="true"
-        if aistack_component_is_installed "nodejs"; then
-            export AISTACK_RUNTIME_NODEJS_AVAILABLE="true"
-            export AISTACK_RUNTIME_NODEJS_PATH="$(nvm which default)"
-            # bin folder which contains node
-            export AISTACK_RUNTIME_NODEJS_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_NODEJS_PATH})"
-            # npm module is always included in nodejs installation
-            export AISTACK_MODULE_NPM_AVAILABLE="true"
-            export AISTACK_MODULE_NPM_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/npm"
-            export AISTACK_MODULE_NPM_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
-            return 0
-        fi
-    fi
+	if aistack_component_is_installed "nodejs"; then
+		export AISTACK_RUNTIME_NODEJS_AVAILABLE="true"
+		[ -n "${NVM_BIN}" ] && export AISTACK_RUNTIME_NODEJS_PATH="${NVM_BIN}/node"
+		# bin folder which contains node
+		[ -n "${NVM_BIN}" ] && export AISTACK_RUNTIME_NODEJS_SEARCH_PATH="${NVM_BIN}"
+		# npm module is always included in nodejs installation
+		export AISTACK_MODULE_NPM_AVAILABLE="true"
+		export AISTACK_MODULE_NPM_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/npm"
+		export AISTACK_MODULE_NPM_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
+		return 0
+	fi
     return 1
 
 }
@@ -49,13 +53,19 @@ node_is_installed() {
 node_install() {
     local r
     for r in $AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED; do 
-		echo "Require needed ${r} managed runtime"
+		echo "INFO: Nodejs require ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
-	
-    node_nvm_install
 
-     # NOTE : Here $AISTACK_RUNTIME_NODEJS_SEARCH_PATH is empty so we launch aistack_runtime_detect
+	for m in $AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED; do 
+		echo "INFO: Nodejs require ${m} managed module"
+		aistack_module_require "${m}"
+	done
+
+	
+    node_install_lts
+
+    # NOTE : Here $AISTACK_RUNTIME_NODEJS_SEARCH_PATH is empty so we launch aistack_runtime_detect
     # to set it to be able to install node package with npm
     aistack_runtime_detect
 
@@ -72,34 +82,36 @@ node_install() {
 }
 
 
-node_nvm_install() {
+node_install_lts() {
     
-    nvm_install
-    nvm_load
-
     # install node LTS version
-    if type nvm >/dev/null 2>&1; then
+	if [ "${AISTACK_MODULE_NVM_LOADED}" = "true" ]; then
         nvm install --lts
         nvm alias default lts/*
-    fi
+	fi
 
     [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] && glibc_binary_compat "node" "${AISTACK_NVM_HOME}" "${AISTACK_INIT_FORCE_NODE_GBC}"
 
 }
 
 node_uninstall() {
-    node_deactivate
+    nvm_deactivate
     nvm_uninstall
 }
 
-node_activate() {
-    if type nvm >/dev/null 2>&1; then
+# select a nodejs version
+nvm_default_node_activate() {
+    if [ "${AISTACK_MODULE_NVM_LOADED}" = "true" ]; then
+		# will set NVM_BIN
         nvm use default >/dev/null
+		return $?
     fi
+	return 1
 }
 
-node_deactivate() {
-    if type nvm >/dev/null 2>&1; then
+
+nvm_deactivate() {
+    if [ "${AISTACK_MODULE_NVM_LOADED}" = "true" ]; then
         # will remove node from path
         nvm deactivate
     fi
@@ -130,15 +142,26 @@ nvm_install() {
     if [ -d "${AISTACK_NVM_CACHE}" ]; then
         ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache"
     fi
-    
+
+
 }
 
 nvm_uninstall() {
-    node_deactivate
+    nvm_deactivate
     nvm_unload
     rm -rf "${AISTACK_NVM_HOME}"
 }
 
+nvm_is_loaded() {
+    # check if nvm alias command is loaded
+	if type nvm >/dev/null 2>&1; then
+		export AISTACK_MODULE_NVM_LOADED="true"
+		return 0
+	fi
+	export AISTACK_MODULE_NVM_LOADED="false"
+    return 1
+
+}
 
 nvm_load() {
     # undefined other nvm function installed outside of aistack
@@ -147,18 +170,19 @@ nvm_load() {
     # --no-use This loads nvm, without auto-using the default nodejs version
     if [ -f "$AISTACK_NVM_HOME/nvm.sh" ]; then
         . "$AISTACK_NVM_HOME/nvm.sh" --no-use
-        export AISTACK_INTERNAL_NVM_LOADED="true"
+        export AISTACK_MODULE_NVM_LOADED="true"
     fi
+
+	nvm_is_loaded
 }
 
 
 nvm_unload() {
-
-    
-    # if type nvm >/dev/null 2>&1; then
+    # if aistack_module_is_detected "nvm"; then
     #     # will remove node from path # TODO : NOT SURE !
     #     nvm unload
     # fi
+    export AISTACK_MODULE_NVM_LOADED="false"
     unset -f nvm
 }
 
