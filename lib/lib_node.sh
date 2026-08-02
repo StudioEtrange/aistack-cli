@@ -96,7 +96,6 @@ node_install_lts() {
 }
 
 node_uninstall() {
-    nvm_deactivate
     nvm_uninstall
 }
 
@@ -112,6 +111,8 @@ nvm_default_node_activate() {
 			"${AISTACK_NVM_HOME}"/versions/node/*/bin)
 				if [ -x "${cached_nvm_bin}/node" ]; then
 					export NVM_BIN="${cached_nvm_bin}"
+					export NVM_INC="${cached_nvm_bin%/bin}"
+					export NVM_INC="${NVM_INC}/include/node"
 					case ":${PATH}:" in
 						*":${NVM_BIN}:"*) ;;
 						*) export PATH="${NVM_BIN}:${PATH}" ;;

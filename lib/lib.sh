@@ -86,6 +86,7 @@ aistack_info() {
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
     echo "NVM_DIR : $NVM_DIR"
     echo "NVM_BIN : $NVM_BIN"
+    echo "NVM_INC : $NVM_INC"
     echo "AISTACK_NVM_CACHE (npm/npx): $AISTACK_NVM_CACHE"
     echo "AISTACK_NVM_DEFAULT_BIN_CACHE : $AISTACK_NVM_DEFAULT_BIN_CACHE"
 
