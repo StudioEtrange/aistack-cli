@@ -7,6 +7,7 @@ node_init() {
     # cache folder for NVM
     export AISTACK_NVM_CACHE="${STELLA_APP_CACHE_DIR}/nvm-cache"
     mkdir -p "${AISTACK_NVM_CACHE}"
+	export AISTACK_NVM_DEFAULT_BIN_CACHE="${AISTACK_NVM_HOME}/aistack-default-bin"
 
     export AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED=""
 	export AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED="nvm"
@@ -83,15 +84,15 @@ node_install() {
 
 
 node_install_lts() {
-    
-    # install node LTS version
-	if [ "${AISTACK_MODULE_NVM_LOADED}" = "true" ]; then
-        nvm install --lts
-        nvm alias default lts/*
-	fi
+	[ "${AISTACK_MODULE_NVM_LOADED}" = "true" ] || return 1
+
+	# Install Node.js, update the default alias, then refresh the cached binary path.
+	nvm install --lts || return $?
+	nvm alias default 'lts/*' || return $?
+	nvm_default_node_cache_remove
+	nvm_default_node_activate || return $?
 
     [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] && glibc_binary_compat "node" "${AISTACK_NVM_HOME}" "${AISTACK_INIT_FORCE_NODE_GBC}"
-
 }
 
 node_uninstall() {
@@ -101,12 +102,45 @@ node_uninstall() {
 
 # select a nodejs version
 nvm_default_node_activate() {
-    if [ "${AISTACK_MODULE_NVM_LOADED}" = "true" ]; then
-		# will set NVM_BIN
-        nvm use default >/dev/null
-		return $?
-    fi
-	return 1
+	local cached_nvm_bin=""
+
+	[ "${AISTACK_MODULE_NVM_LOADED}" = "true" ] || return 1
+
+	if [ -f "${AISTACK_NVM_DEFAULT_BIN_CACHE}" ]; then
+		IFS= read -r cached_nvm_bin < "${AISTACK_NVM_DEFAULT_BIN_CACHE}"
+		case "${cached_nvm_bin}" in
+			"${AISTACK_NVM_HOME}"/versions/node/*/bin)
+				if [ -x "${cached_nvm_bin}/node" ]; then
+					export NVM_BIN="${cached_nvm_bin}"
+					case ":${PATH}:" in
+						*":${NVM_BIN}:"*) ;;
+						*) export PATH="${NVM_BIN}:${PATH}" ;;
+					esac
+					return 0
+				fi
+				;;
+		esac
+	fi
+
+	# Resolve the default alias only when the cache is missing or stale.
+	nvm use default >/dev/null || return $?
+	nvm_default_node_cache_write || :
+	return 0
+}
+
+nvm_default_node_cache_write() {
+	local tmp_file
+
+	[ -n "${NVM_BIN}" ] || return 1
+	[ -x "${NVM_BIN}/node" ] || return 1
+
+	tmp_file="${AISTACK_NVM_DEFAULT_BIN_CACHE}.tmp.$$"
+	printf '%s\n' "${NVM_BIN}" > "${tmp_file}" || return 1
+	mv "${tmp_file}" "${AISTACK_NVM_DEFAULT_BIN_CACHE}"
+}
+
+nvm_default_node_cache_remove() {
+	rm -f "${AISTACK_NVM_DEFAULT_BIN_CACHE}"
 }
 
 
@@ -149,6 +183,7 @@ nvm_install() {
 nvm_uninstall() {
     nvm_deactivate
     nvm_unload
+	nvm_default_node_cache_remove
     rm -rf "${AISTACK_NVM_HOME}"
 }
 
