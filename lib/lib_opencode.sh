@@ -40,7 +40,7 @@ opencode_install() {
 	done
 
     echo "Installing Opencode CLI"
-	node_package_install "opencode-ai${version}"
+	node_package_install --allow-scripts=opencode-ai opencode-ai${version}
 
 	opencode_is_installed
     return $?
