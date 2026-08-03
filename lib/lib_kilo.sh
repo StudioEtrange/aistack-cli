@@ -8,7 +8,8 @@ kilo_init() {
 
     # kilo code specific paths
     # The Kilo CLI is a fork of OpenCode and supports the same configuration options
-    export AISTACK_KILO_CONFIG_FILE="${AISTACK_KILO_CONFIG_HOME}/kilo.jsonc"
+    # KILO_CONFIG takes precedence over the global configuration file.
+    [ -z "${KILO_CONFIG}" ] && export AISTACK_KILO_CONFIG_FILE="${AISTACK_KILO_CONFIG_HOME}/kilo.jsonc" || export AISTACK_KILO_CONFIG_FILE="${KILO_CONFIG}"
     
     # cpa key for kilo to connect to cpa backend
     export AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE="${AISTACK_KILO_CONFIG_HOME}/cpa_key_for_kc"
@@ -258,7 +259,7 @@ kilo_register_provider() {
 
     [ -z "${provider_display_name}" ] && provider_display_name="$provider_id"
 
-    [ -n "${provider_id}" ] && provider_id="${provider_id//./\\.}" || { echo "ERROR kilo_register_model : missing provider_id"; return 1; }
+    [ -n "${provider_id}" ] && provider_id="${provider_id//./\\.}" || { echo "ERROR kilo_register_provider : missing provider_id"; return 1; }
 
 
     kilo_remove_config "provider.${provider_id}"
@@ -283,9 +284,9 @@ kilo_register_model() {
     local limit_output="$8"
 
 
-    original_provider_id="${provider_id}"
+    local original_provider_id="${provider_id}"
     [ -n "${provider_id}" ] && provider_id="${provider_id//./\\.}" || { echo "ERROR kilo_register_model : missing provider_id"; return 1; }
-    original_model_id="${model_id}"
+    local original_model_id="${model_id}"
     [ -n "${model_id}" ] && model_id="${model_id//./\\.}" || { echo "ERROR kilo_register_model : missing model_id"; return 1; }
     
     [ -z "${real_model_id}" ] && { echo "ERROR kilo_register_model : missing real_model_id"; return 1; }
@@ -394,8 +395,10 @@ kilo_connect_cpa() {
     # default model
     [ -n "${wanted_default_model}" ] && default_model="${wanted_default_model}"
     # NOTE : the wanted_default_model might have been already registered into kilo just before.
-    kilo_register_model "aistack-cpa" "${default_model}" "${default_model}" "AIStack cpa-${default_model}"
-    [ -n "${default_model}" ] && kilo_set_default_model "aistack-cpa" "${default_model}"
+    if [ -n "${default_model}" ]; then
+        kilo_register_model "aistack-cpa" "${default_model}" "${default_model}" "AIStack cpa-${default_model}"
+        kilo_set_default_model "aistack-cpa" "${default_model}"
+    fi
 
     # small model
     if [ -n "${wanted_small_model}" ]; then 

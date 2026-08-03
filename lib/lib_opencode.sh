@@ -2,6 +2,7 @@ opencode_init() {
     # oc specific paths
     export AISTACK_OPENCODE_LOCAL_SHARE_HOME="$HOME/.local/share/opencode"
     export AISTACK_OPENCODE_CONFIG_HOME="$HOME/.config/opencode"
+    mkdir -p "${AISTACK_OPENCODE_CONFIG_HOME}"
     #You can also specify a custom config file path using the OPENCODE_CONFIG environment variable. This takes precedence over the global and project configs.
     [ "$OPENCODE_CONFIG" = "" ] && export AISTACK_OPENCODE_CONFIG_FILE="$AISTACK_OPENCODE_CONFIG_HOME/opencode.json" || export AISTACK_OPENCODE_CONFIG_FILE="$OPENCODE_CONFIG"
 
@@ -144,8 +145,8 @@ opencode_settings_configure() {
 opencode_info() {
     echo "Configuration file : $AISTACK_OPENCODE_CONFIG_FILE"
 	echo
-	echo "OPENCODE available : $ISTACK_OPENCODE_TOOL_AVAILABLE"
-	echo "OPENCODE path : $ISTACK_OPENCODE_TOOL_PATH"
+	echo "OPENCODE available : $AISTACK_OPENCODE_TOOL_AVAILABLE"
+	echo "OPENCODE path : $AISTACK_OPENCODE_TOOL_PATH"
 	echo "OPENCODE needed managed runtime : $AISTACK_OPENCODE_RUNTIME_REQUIRED"
 	echo
     [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE)" || \
