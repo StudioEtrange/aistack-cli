@@ -9,6 +9,7 @@ asm_init() {
 
 	#export AISTACK_ASM_RUNTIME_REQUIRED="bun"
 	export AISTACK_ASM_RUNTIME_REQUIRED="nodejs"
+	export AISTACK_ASM_MODULE_REQUIRED=""
 
 }
 
@@ -16,9 +17,10 @@ asm_init() {
 # return 1 : tool is not installed
 # return 2 : missing runtime
 asm_is_installed() {
-	local r
+	local r m
 	export AISTACK_ASM_TOOL_AVAILABLE="false"
-	for r in $AISTACK_ASM_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	for r in ${AISTACK_ASM_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_ASM_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm" ] || return 1
 	export AISTACK_ASM_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm"
 	export AISTACK_ASM_TOOL_AVAILABLE="true"
@@ -26,13 +28,18 @@ asm_is_installed() {
 }
 
 asm_install() {
-	local r
+	local r m
 	local version="$1"
 	[ -z "${version}" ] && version="@latest"
 
-	for r in $AISTACK_ASM_RUNTIME_REQUIRED; do 
-		echo "Require needed ${r} managed runtime"
+	for r in ${AISTACK_ASM_RUNTIME_REQUIRED}; do 
+		echo "INFO: asm require ${r} managed runtime"
 		aistack_runtime_require "${r}"
+	done
+
+	for m in ${AISTACK_ASM_MODULE_REQUIRED}; do 
+		echo "INFO: asm require ${m} managed module"
+		aistack_module_require "${m}"
 	done
 
 	echo "Installing Agent Skill Manager ${version}"
