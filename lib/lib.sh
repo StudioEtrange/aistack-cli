@@ -202,7 +202,9 @@ aistack_install() {
     aistack_module_detect
     aistack_tool_detect
     aistack_mcp_detect
-    
+	# we need this folder for core install
+	mkdir -p "${AISTACK_ISOLATED_ROOT}"
+
     aistack_component_core_install
 }
 

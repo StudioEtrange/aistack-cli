@@ -178,6 +178,8 @@ nvm_install() {
 	# PROFILE=/dev/null : do not edit shell config
     #NVM_DIR="${AISTACK_NVM_HOME}" PROFILE=/dev/null curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/${version}/install.sh | bash
     
+	mkdir -p "$(dirname "${NVM_DIR}")" || return 1
+
 	install_dir="$(mktemp -d "${NVM_DIR}.install.XXXXXX")" || return 1
 	if ! git clone https://github.com/nvm-sh/nvm.git "${install_dir}" >/dev/null; then
 		echo "ERROR: unable to clone NVM ${version}" >&2
