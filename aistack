@@ -28,6 +28,7 @@ STELLA_LOG_STATE="OFF"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_gsd.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_adk.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_asm.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_playwright.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_llmfit.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_sktor.sh"
@@ -170,6 +171,17 @@ Options:
     asm launch [context folder] -- <asm command>
                                           Launch asm. Instead use 'asm' command if ${AISTACK_ASM_LAUNCHER_HOME} is in your PATH.
                                           Use 'aistack asm register <shell>' to set it in your PATH.
+    ----
+    plw : Playwright CLI - https://github.com/microsoft/playwright-cli
+    plw install [@version]                Install Playwright CLI. Default version is @latest.
+    plw uninstall                         Uninstall Playwright CLI and unregister Playwright CLI PATH.
+    plw info                              Print Playwright CLI information.
+    plw version                           Print the installed Playwright CLI version.
+    plw register <all|shell|vs>           Register Playwright CLI PATH into shell env PATH ("all" supported shells or "bash", "zsh" or "fish") or into VS Code integrated terminal env PATH ("vs").
+    plw unregister [<all|shell|vs>]       Unregister Playwright CLI PATH from shell env PATH or VS Code integrated terminal env PATH. Default value is "all".
+    plw launch [context folder] -- <playwright-cli command>
+                                          Launch Playwright CLI. Instead use 'playwright-cli' if ${AISTACK_PLAYWRIGHT_LAUNCHER_HOME} is in your PATH.
+                                          Use 'aistack plw register <shell>' to set it in your PATH.
     ----
     BMAD-Method - https://docs.bmad-method.org/
     bmad <install|uninstall>            Install/Uninstall bmad cli.
@@ -432,6 +444,9 @@ main() {
         asm)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_asm.sh"
             ;;
+		plw)
+			. "${AISTACK_CURRENT_FILE_DIR}/lib/main_playwright.sh"
+			;;
 		llmfit)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_llmfit.sh"
             ;;

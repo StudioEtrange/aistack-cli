@@ -52,7 +52,7 @@ node_is_installed() {
 }
 
 node_install() {
-    local r
+    local r m
     for r in $AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED; do 
 		echo "INFO: Nodejs require ${r} managed runtime"
 		aistack_runtime_require "${r}"

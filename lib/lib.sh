@@ -67,6 +67,7 @@ aistack_initialize() {
 	gsd_init
     adk_init
     asm_init
+	playwright_init
 	llmfit_init
     sktor_init
 	ciss_init
@@ -219,6 +220,7 @@ aistack_uninstall() {
 	#gsd_path_unregister_for_shell "all"
 	adk_path_unregister_for_shell "all"
 	asm_path_unregister_for_shell "all"
+	playwright_path_unregister_for_shell "all"
 	kilo_path_unregister_for_shell "all"
 	agy_path_unregister_for_shell "all"
 	llmfit_path_unregister_for_shell "all"
@@ -234,6 +236,7 @@ aistack_uninstall() {
 		#gsd_path_unregister_for_vs_terminal
 		adk_path_unregister_for_vs_terminal
 		asm_path_unregister_for_vs_terminal
+		playwright_path_unregister_for_vs_terminal
 		kilo_path_unregister_for_vs_terminal
 		agy_path_unregister_for_vs_terminal
 		llmfit_path_unregister_for_vs_terminal
@@ -617,6 +620,7 @@ aistack_tool_launcher_regenerate() (
 	adk_launcher_manage "refresh_if_exists"
 	agy_launcher_manage "refresh_if_exists"
 	asm_launcher_manage "refresh_if_exists"
+	playwright_launcher_manage "refresh_if_exists"
 	bmad_launcher_manage "refresh_if_exists"
 	cpa_launcher_manage "refresh_if_exists"
 	gemini_launcher_manage "refresh_if_exists"
@@ -635,6 +639,7 @@ aistack_tool_launcher_regenerate() (
 aistack_tool_detect() {
 	agy_is_installed
 	asm_is_installed
+	playwright_is_installed
 	adk_is_installed
 	bmad_is_installed
 	cpa_is_installed

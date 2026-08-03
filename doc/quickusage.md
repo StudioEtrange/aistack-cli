@@ -13,6 +13,7 @@ Right to the point how-to
   - [Case 7 : scan skills with asm](#case-7--scan-skills-with-asm)
   - [Case 8 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-8--scan-skills-with-cisco-ai-skill-scanner--openai)
   - [Case 9 : install the Rust runtime](#case-9--install-the-rust-runtime)
+  - [Case 10 : use Playwright CLI to take screenshot of a website](#case-10--install-playwright-cli)
 
 ## Case 0 : AIStack install and init
 
@@ -251,4 +252,23 @@ Remove the managed Rust runtime with:
 
 ```bash
 ./aistack runtime remove rust
+```
+
+## Case 10 : use Playwright CLI to take screenshot of a website
+
+_"I want to install Playwright CLI, register it in shell and use it to take a screenshot of a website."_
+
+```bash
+cd aistack-cli
+./aistack plw install
+./aistack plw info
+./aistack plw register bash
+```
+
+**_in another bash session, open webrowser and take a screenshot in current directory_** :
+
+```bash
+playwright-cli open https://github.com/StudioEtrange/aistack-cli --headed
+playwright-cli screenshot
+playwright-cli close
 ```
