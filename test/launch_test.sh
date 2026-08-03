@@ -86,6 +86,8 @@ case $1 in
     test_launch_bats json $2
 	test_launch_bats yaml $2
 	test_launch_bats glibc $2
+	test_launch_bats vs $2
+	test_launch_bats node $2
     ;;
   json)
 	init_aistack_test_env
@@ -98,10 +100,14 @@ case $1 in
   glibc)
 	init_aistack_test_env
     test_launch_bats glibc $2
+	;;
   vs)
 	init_aistack_test_env
     test_launch_bats vs $2
   	;;
+  node)
+	init_aistack_test_env
+    test_launch_bats node $2
   	;;
   *)
 	usage

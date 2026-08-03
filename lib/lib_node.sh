@@ -154,31 +154,60 @@ nvm_deactivate() {
 
 
 nvm_install() {
-    local version="$1"
+	local version="${1}"
+	local install_dir
 
-    if [ -z "${version}" ] || [ "${version}" = "latest" ]; then
-        echo "No version provided, fetching the latest version..."
-        version=$(github_get_latest_release "nvm-sh/nvm")
-       
-        echo "latest version is ${version}"
-    fi
+	if [ -s "${NVM_DIR}/nvm.sh" ]; then
+		if [ -d "${AISTACK_NVM_CACHE}" ] && [ ! -e "${NVM_DIR}/.cache" ] && [ ! -L "${NVM_DIR}/.cache" ]; then
+			ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache" || return 1
+		fi
+		return 0
+	fi
 
-    # PROFILE=/dev/null : do not edit shell config
+	if [ -z "${version}" ] || [ "${version}" = "latest" ]; then
+		echo "No version provided, fetching the latest version..."
+		version="$(github_get_latest_release "nvm-sh/nvm")"
+		if [ -z "${version}" ]; then
+			echo "ERROR: unable to determine latest NVM version" >&2
+			return 1
+		fi
+
+		echo "latest version is ${version}"
+	fi
+
+	# PROFILE=/dev/null : do not edit shell config
     #NVM_DIR="${AISTACK_NVM_HOME}" PROFILE=/dev/null curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/${version}/install.sh | bash
     
-    (
-        git clone https://github.com/nvm-sh/nvm.git "${NVM_DIR}"
-        cd "${NVM_DIR}"
-        git checkout "${version}"
-    ) >/dev/null
+	install_dir="$(mktemp -d "${NVM_DIR}.install.XXXXXX")" || return 1
+	if ! git clone https://github.com/nvm-sh/nvm.git "${install_dir}" >/dev/null; then
+		echo "ERROR: unable to clone NVM ${version}" >&2
+		rm -rf "${install_dir}"
+		return 1
+	fi
 
-    # special case to manage NVM cache outside of NVM install dir
-    mkdir -p "${NVM_DIR}"
-    if [ -d "${AISTACK_NVM_CACHE}" ]; then
-        ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache"
-    fi
+	if ! (cd "${install_dir}" && git checkout "${version}" >/dev/null); then
+		echo "ERROR: unable to checkout NVM ${version}" >&2
+		rm -rf "${install_dir}"
+		return 1
+	fi
 
+	if [ ! -s "${install_dir}/nvm.sh" ]; then
+		echo "ERROR: invalid NVM installation for version ${version}" >&2
+		rm -rf "${install_dir}"
+		return 1
+	fi
 
+	rm -rf "${NVM_DIR}"
+	if ! mv "${install_dir}" "${NVM_DIR}"; then
+		echo "ERROR: unable to install NVM into ${NVM_DIR}" >&2
+		rm -rf "${install_dir}"
+		return 1
+	fi
+
+	# Keep the NVM cache outside its installation directory.
+	if [ -d "${AISTACK_NVM_CACHE}" ]; then
+		ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache" || return 1
+	fi
 }
 
 nvm_uninstall() {
