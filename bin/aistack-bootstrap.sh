@@ -1,9 +1,12 @@
 #!/bin/bash
-AISTACK_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+AISTACK_CURRENT_FILE_DIR="$( cd "$(dirname "$( dirname "${BASH_SOURCE[0]}" )")" && pwd )"
 AISTACK_CURRENT_RUNNING_DIR="$( cd "$( dirname "." )" && pwd )"
 
 STELLA_LOG_STATE="OFF"
 . "${AISTACK_CURRENT_FILE_DIR}/stella-link.sh" include
+
+# NOTE
+#   From HERE, $STELLA_ORIGINAL_SYSTEM_PATH contains $PATH before stella features are included
 
 
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib.sh"
@@ -38,4 +41,5 @@ aistack_tool_context_file_generate
 
 aistack_tool_detect
 aistack_mcp_detect
+
 aistack_launcher_regenerate
