@@ -7,7 +7,7 @@ STELLA_LOG_STATE=OFF
 
 
 usage() {
-	echo " * Usage $0 json|yaml|glibc|playwright|all [test-name]"
+	echo " * Usage $0 json|yaml|glibc|vs|node|playwright|opencode|all [test-name]"
 	echo "sample:"
 	echo "$0 json json_has_path"
 }
@@ -90,6 +90,7 @@ case $1 in
 	test_launch_bats vs $2
 	test_launch_bats node $2
 	test_launch_bats playwright $2
+	test_launch_bats opencode $2
     ;;
   json)
 	init_aistack_test_env
@@ -114,6 +115,10 @@ case $1 in
   playwright)
 	init_aistack_test_env
 	test_launch_bats playwright $2
+	;;
+  opencode)
+	init_aistack_test_env
+	test_launch_bats opencode $2
 	;;
   *)
 	usage

@@ -82,7 +82,9 @@ Options:
     oc launch [context folder] -- <opencode command>
                                         Launch Opencode. Instead use 'opencode' command if ${AISTACK_OPENCODE_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack oc register <shell>' to set it in your PATH.
-    oc connect cpa [<model>]            Connect Opencode to CLIProxyAPI using OpenAI-compatible provider. By default registers all models and sets the first as default. <model> provide a specific model.
+    oc connect cpa [<default model>] [<small model>]       Connect Opencode to CLIProxyAPI using OpenAI-compatible provider.
+                                                            When CLIProxyAPI is running it registers all models.
+                                                            Set a default and small model, otherwise the first CLIProxyAPI model is used as default.
     oc mcp calculator install|uninstall         Add mcp-calculator local server configuration.
     oc mcp github install|uninstall             Add mcp-github remote server configuration.
     oc mcp context7 install|uninstall           Add mcp-context7 local server configuration.

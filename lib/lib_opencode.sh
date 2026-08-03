@@ -250,12 +250,23 @@ opencode_register_model() {
     [ -n "$limit_output" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.limit.output" "$limit_output"
 }
 
-opencode_register_default_model() {
+# set a default model in opencode config
+opencode_set_default_model() {
     local provider_id="$1"
-    local default_model_id="$2"
+    local model_id="$2"
 
     opencode_remove_config "model"
-    [ -n "$provider_id" ] && [ -n "$default_model_id" ] && opencode_set_config "model" "\"${provider_id}/${default_model_id}\""
+    [ -n "$provider_id" ] && [ -n "$model_id" ] && opencode_set_config "model" "\"${provider_id}/${model_id}\""
+}
+
+# set a small model in opencode config
+# for title generation, commit message generation, prompt enhancement, and other quick tasks
+opencode_set_small_model() {
+    local provider_id="$1"
+    local model_id="$2"
+
+    opencode_remove_config "small_model"
+    [ -n "$provider_id" ] && [ -n "$model_id" ] && opencode_set_config "small_model" "\"${provider_id}/${model_id}\""
 }
 
 
@@ -287,8 +298,11 @@ opencode_unregister_cpa_key() {
 # needs cpa to be running if model is empty, to retrieve model list from CLIProxyAPI
 opencode_connect_cpa() {
     # empty means all available models
-    local model="${1}"
+    local wanted_default_model="${1}"
+    local wanted_small_model="${2}"
     local model_list
+    local default_model
+    local small_model
 
     if ! cpa_is_configured; then
         echo "ERROR: Failed to generate and register CLIProxyAPI API key for Opencode : CLIProxyAPI is not configured."
@@ -303,26 +317,41 @@ opencode_connect_cpa() {
         return 1
     fi
 
+    # register provider AIStack CLIProxyAPI
     opencode_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@ai-sdk/openai-compatible" "$(cpa_settings_get_api_endpoint)" "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE" ""
 
-    local default_model
-    if [ -n "${model}" ]; then
-        opencode_register_model "aistack-cpa" "${model}" "${model}" "AIStack cpa-${model}"
-        default_model="${model}"
-    else
-        if ! cpa_instance_reachable; then
-            echo "ERROR: Failed to generate and register CPA API key for Opencode : CLIProxyAPI instance is not reachable. Please make sure CLIProxyAPI is running and properly configured."
+
+    if ! cpa_instance_reachable; then
+        if [ -z "${wanted_default_model}" ]; then
+            echo "ERROR: Failed to request CLIProxyAPI, instance is not reachable and default model id not provided, can not automaticly pick a model from CLIProxyAPI by requesting a model list. Please launch CLIProxyAPI OR provide a default model id"
             return 1
         fi
-        # cpa_get_model_list needs cpa to be running
+        echo "WARN: Failed to request CLIProxyAPI, instance is not reachable - Only the provided default model id will be registered not all models."
+    else
+        # retrieve cliproxyapi models list and register them
+        # function cpa_get_model_list needs cpa to be running
         model_list="$(cpa_get_model_list)"
-        for m in $model_list; do
+        for m in ${model_list}; do
             # the first model available will be the default model
             [ -z "${default_model}" ] && default_model="${m}"
             opencode_register_model "aistack-cpa" "${m}" "${m}" "AIStack cpa-${m}"
         done
     fi
 
-    [ -n "$default_model" ] && opencode_register_default_model "aistack-cpa" "$default_model"
+    # default model
+    [ -n "${wanted_default_model}" ] && default_model="${wanted_default_model}"
+    # NOTE : the wanted_default_model might have been already registered into opencode just before.
+    if [ -n "${default_model}" ]; then
+        opencode_register_model "aistack-cpa" "${default_model}" "${default_model}" "AIStack cpa-${default_model}"
+        opencode_set_default_model "aistack-cpa" "${default_model}"
+    fi
+
+    # small model
+    if [ -n "${wanted_small_model}" ]; then
+        small_model="${wanted_small_model}"
+        # NOTE : the wanted_small_model might have been already registered into opencode just before.
+        opencode_register_model "aistack-cpa" "${small_model}" "${small_model}" "AIStack cpa-${small_model}"
+        [ -n "${small_model}" ] && opencode_set_small_model "aistack-cpa" "${small_model}"
+    fi
 
 }

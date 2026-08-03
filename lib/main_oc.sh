@@ -70,8 +70,8 @@ case "${sub_command}" in
     connect)
         case "$1" in
             cpa)
-                echo "Connecting Opencode to CLIProxyAPI"
-                opencode_connect_cpa "$2"
+                echo "INFO: Connecting Opencode to CLIProxyAPI"
+                opencode_connect_cpa "$2" "$3"
                 ;;
         esac
         ;;
