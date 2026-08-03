@@ -7,6 +7,9 @@ case "${sub_command}" in
     del)
         vscode_remove_config "${1}"
         ;;
+	merge)
+        vscode_merge_config "${1}"
+        ;;
     info)
         vscode_info
         ;;

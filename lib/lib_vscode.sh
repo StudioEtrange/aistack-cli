@@ -266,8 +266,22 @@ vscode_path_register_cli_for_vs_terminal() {
 
 # generic config management -----------------
 vscode_merge_config() {
-    local file_to_merge="${1}"
-    merge_json_file "${file_to_merge}" "${AISTACK_VSCODE_CONFIG_FILE}"
+	local config_to_merge="${1}"
+	local file_to_merge="${config_to_merge}"
+	local tmp_file=""
+	local result
+
+	if [ ! -f "${file_to_merge}" ]; then
+		tmp_file="$(mktemp)" || return 1
+		printf '%s\n' "${config_to_merge}" > "${tmp_file}"
+		file_to_merge="${tmp_file}"
+	fi
+
+	merge_json_file "${file_to_merge}" "${AISTACK_VSCODE_CONFIG_FILE}"
+	result=$?
+
+	rm -Rf "${tmp_file}"
+	return ${result}
 }
 
 vscode_remove_config() {

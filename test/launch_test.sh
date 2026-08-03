@@ -98,6 +98,10 @@ case $1 in
   glibc)
 	init_aistack_test_env
     test_launch_bats glibc $2
+  vs)
+	init_aistack_test_env
+    test_launch_bats vs $2
+  	;;
   	;;
   *)
 	usage
