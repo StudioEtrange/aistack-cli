@@ -736,6 +736,28 @@ EOF
 }
 
 
+@test "merge_json_file substitutes exported environment variables" {
+	tmp1="$(mktemp)"
+	tmp2="$(mktemp)"
+	export MERGE_JSON_TEST_VAR="substituted-value"
+
+	cat > "${tmp1}" <<'EOF'
+{
+  "expanded": "${MERGE_JSON_TEST_VAR}",
+  "embedded": "prefix-${MERGE_JSON_TEST_VAR}-suffix"
+}
+EOF
+	printf '%s\n' '{}' > "${tmp2}"
+
+	run merge_json_file "${tmp1}" "${tmp2}"
+	assert_success
+	assert_equal "$(jq -c . "${tmp2}")" '{"expanded":"substituted-value","embedded":"prefix-substituted-value-suffix"}'
+
+	rm -f "${tmp1}" "${tmp2}"
+	unset MERGE_JSON_TEST_VAR
+}
+
+
 
 
 

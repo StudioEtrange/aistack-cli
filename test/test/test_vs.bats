@@ -41,3 +41,37 @@ teardown() {
 }
 
 
+@test "vscode_merge_config merges VS Code proxy settings in one call" {
+	tmp="$(mktemp)"
+	AISTACK_VSCODE_CONFIG_FILE="${tmp}"
+	export HTTP_PROXY="http://proxy.example.test:3128"
+	export HTTPS_PROXY="http://proxy.example.test:3128"
+	export http_proxy="http://proxy.example.test:3128"
+	export https_proxy="http://proxy.example.test:3128"
+	printf '%s\n' '{}' > "${tmp}"
+
+	run vscode_merge_config '{
+		"http.proxy": "http://proxy.example.test:3128",
+		"http.noProxy": ["*.foo.com", "localhost", "127.0.0.1"],
+		"http.proxyStrictSSL": false,
+		"terminal.integrated.env.linux.HTTP_PROXY": "${HTTP_PROXY}",
+		"terminal.integrated.env.linux.HTTPS_PROXY": "${HTTPS_PROXY}",
+		"terminal.integrated.env.linux.http_proxy": "${http_proxy}",
+		"terminal.integrated.env.linux.https_proxy": "${https_proxy}"
+	}'
+	assert_success
+
+	run jq -e '
+		.["http.proxy"] == "http://proxy.example.test:3128" and
+		.["http.noProxy"] == ["*.foo.com", "localhost", "127.0.0.1"] and
+		.["http.proxyStrictSSL"] == false and
+		.["terminal.integrated.env.linux.HTTP_PROXY"] == "http://proxy.example.test:3128" and
+		.["terminal.integrated.env.linux.HTTPS_PROXY"] == "http://proxy.example.test:3128" and
+		.["terminal.integrated.env.linux.http_proxy"] == "http://proxy.example.test:3128" and
+		.["terminal.integrated.env.linux.https_proxy"] == "http://proxy.example.test:3128"
+	' "${tmp}"
+	assert_success
+
+	rm -f "${tmp}"
+}
+
