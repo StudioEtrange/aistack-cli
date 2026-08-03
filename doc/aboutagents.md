@@ -60,6 +60,12 @@
 
 ## MCP servers
 
+* MCP transport mpde
+  * stdio: mcp client contact mcp servers on the same host, using stdio
+    * the mcp client will start mcp server itself, with the command provided in its definition
+  * http: mcp client contact mcp servers using http
+    * the mcp servers must be started before
+
 * MCP files location
   * about gemini : https://antigravity.google/docs/gcli-migration
     | *SCOPE* | Gemini CLI | Antigravity CLI |
