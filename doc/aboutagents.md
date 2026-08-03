@@ -102,6 +102,8 @@
     * https://github.com/wdm0006/python-skills
     * https://mcginniscommawill.com/guides/python-library-development/
   * https://github.com/mattpocock/skills
+  * Agent Skill Manager catalog
+    * https://luongnv.com/asm/#/skills
 
 * skills registry hostable :
   * skillhub
