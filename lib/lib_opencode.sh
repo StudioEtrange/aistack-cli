@@ -27,6 +27,9 @@ opencode_is_installed() {
 	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode" ] || return 1
 	export AISTACK_OPENCODE_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode"
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="true"
+
+	# variable used by some other tools (like openchamber)
+	export OPENCODE_BINARY="$AISTACK_OPENCODE_TOOL_PATH"
 	return 0
 }
 
