@@ -3,9 +3,17 @@
 ## ressources links and information
 
 * various AI tools catalog and carography : https://stackmap.shipwithai.xyz/
+* various AI topics and tools in french ; https://korben.info/categories/intelligence-artificielle/
 
 
-## integrations TODO
+## features TODO
+
+* CPA : add a way to set port and host
+
+* bun runtime : support bun configuration file and for bunx
+
+
+## TO EXPLORE
 
 * ghostdesk
   * MCP server over a linux desktop
@@ -17,16 +25,19 @@
   * https://github.com/earendil-works/pi
   * https://pi.dev/
 
+* Swival
+  * Coding Agent designed for tight context windows and limited resources
+  * Manage context size with 7 level of compression, crypt password and key from context, optimize output of reading files
+  * https://github.com/swival/swival
+  * https://swival.dev/
+
+
 * OSD - Osmantic Deployment System (a.k.a Dream Server)
   * https://github.com/Light-Heart-Labs/ODS
   * https://korben.info/dream-server-ia-locale-auto-hebergee.html
   * complete local stack installer
   * Open WebUI, llama-server, Whisper, Kokoro, ComfyUI, Qdrant, SearXNG, n8n, ...
   * install.sh genere des conf avec des virgules au lieu de points . à contourner en relançant l'installeur avec LC_ALL=C : `LC_ALL=C ./install.sh`
-
-* optillm
-  * Optimizing inference proxy for LLMs
-  * https://github.com/algorithmicsuperintelligence/optillm
 
 * CyberStrikeAI
   * https://github.com/Ed1s0nZ/CyberStrikeAI
@@ -41,15 +52,6 @@
 
 * superpowers
   * framework
-
-## features TODO
-
-* CPA : add a way to set port and host
-
-* bun runtime : support bun configuration file and for bunx
-
-
-## TO EXPLORE
 
 * MCP-cli
   * https://github.com/IBM/mcp-cli
@@ -81,6 +83,10 @@
   * Serving LLM - Ollama vs vLLM : https://developers.redhat.com/articles/2025/08/08/ollama-vs-vllm-deep-dive-performance-benchmarking#comparison_2__tuned_ollama_versus_vllm
     * Ollama excels in its intended role: a simple, accessible tool for local development, prototyping, and single-user applications. Its strength lies in its ease of use, not its ability to handle high-concurrency production traffic, where it struggles even when tuned.
     * vLLM is unequivocally the superior choice for production deployment. It is built for performance, delivering significantly higher throughput and lower latency under heavy load. Its dynamic batching and efficient resource management make it the ideal engine for scalable, enterprise-grade AI applications.
+  * Rapid-MLX 
+    * https://github.com/raullenchai/Rapid-MLX
+    * only for macos with Apple Silicon
+    * direclty use kernel MLX without intermediary
 
 
 * neuledge/context
@@ -100,3 +106,100 @@
     # Connect to your AI agent (Claude Code example)
     claude mcp add context -- context serve
     ```
+
+* subwave
+  * https://github.com/perminder-klair/subwave
+  * https://www.getsubwave.com/
+  * Personal internet radio with AI - stream music (icecast), not a playlist
+  * use liquidsoap (https://www.liquidsoap.info/)
+  * use navidrome : 
+    * streaming audio service
+    * https://github.com/navidrome/navidrome/
+    * https://www.navidrome.org
+
+* Alexandria
+  * https://korben.info/alexandria-ebook-livre-audio-multivoix.html
+  * at least 8 GB of VRAM (16+ GB for decent performance);
+  * generate multi-voice audiobooks entirely locally, using an LLM to annotate the text for each character and the Qwen3-TTS (https://github.com/QwenLM/Qwen3-TTS) to generate audio. Offers 9 pre-trained voices, voice cloning from 5–15 seconds of audio, voice generation via text description. 
+
+* Text To Speech
+  * Qwen3-TTS
+    * https://github.com/QwenLM/Qwen3-TTS
+    * Qwen3-TTS is an open-source series of TTS models developed by the Qwen team at Alibaba Cloud, supporting stable, expressive, and streaming speech generation, free-form voice design, and vivid voice cloning.
+  * LuxTTS
+  * Chatterbox Multilingual TTS
+    * https://github.com/resemble-ai/chatterbox
+    * Chatterbox is a family of state-of-the-art, open-source text-to-speech models 
+  * Voicebox
+    * https://github.com/jamiepine/voicebox
+    * Desktop App - Clone voices, generate speech across seven TTS engines
+    * https://voicebox.sh/
+
+* optimization
+  * headroom
+    * https://github.com/headroomlabs-ai/headroom
+    * https://docs.headroomlabs.ai/docs
+    * context optimization layer
+    * LLM request compression
+    * act as a proxy
+    * expose a MCP server
+    ```
+    Your agent / app
+    (Claude Code, Cursor, Codex, LangChain, Agno, Strands, your own code)...
+          │   prompts · tool outputs · logs · RAG results · files
+          ▼
+      ┌────────────────────────────────────────────────────┐
+      │  Headroom   (runs locally — your data stays here)  │
+      │  ────────────────────────────────────────────────  │
+      │  CacheAligner  →  ContentRouter  →  CCR            │
+      │                    ├─ SmartCrusher   (JSON)        │
+      │                    ├─ CodeCompressor (AST)         │
+      │                    └─ Kompress-v2-base (text, HF)  │
+      │                                                    │
+      │  Cross-agent memory  ·  headroom learn  ·  MCP     │
+      └────────────────────────────────────────────────────┘
+          │   compressed prompt  +  retrieval tool
+          ▼
+    LLM provider  (Anthropic · OpenAI · Bedrock...)
+    ```
+
+  * caveman
+    * https://github.com/juliusbrussee/caveman
+    * skills
+    * reduce request size by removing useless word
+
+  * optillm
+    * Optimizing inference proxy for LLMs
+    * https://github.com/algorithmicsuperintelligence/optillm
+
+* web browser
+  * BrowserClaw and BrowserOS
+    * https://github.com/browseros-ai/browseros
+    * BrowserClaw : MCP-compatible browser
+    * BrowserOS : Chromium fork with an AI agent built into every new ta to chat with
+  * browserwing
+    * https://github.com/browserwing/browserwing
+    * Native MCP & Skills protocol support
+    * Visual Script Recording: Record browser actions, edit visually, and replay with precision
+  * browser-use
+    * https://github.com/browser-use/browser-use
+    * Python library (`uv add browser-use`) with human described task to interact with browser
+    * integration with ai agent with a skill https://github.com/browser-use/browser-harness/blob/main/install.md
+
+
+
+
+* llamafile
+  * https://github.com/mozilla-ai/llamafile
+  * make LLM distributable as executable. To interact with LLM it includes a chat box (in TUI), a cli and an OpenAI Compatible API
+
+* OpenRAG
+  * https://github.com/langflow-ai/openrag  
+  * RAG Platform. Ingestion, indexing, search and Q&A, Interface drag-and-drop
+  * Built on Langflow, Docling, and Opensearch.
+
+* privacy-filter
+  * https://github.com/openai/privacy-filter
+  * https://huggingface.co/openai/privacy-filter
+  * open source model that detect privacy data
+  * best work on english text
