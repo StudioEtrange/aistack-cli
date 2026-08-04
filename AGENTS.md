@@ -3,7 +3,7 @@
 ## 1. Project Overview
 
 ### Goal
-AIStack CLI is a **Bash-based tool** that installs and configures AI tools (Gemini CLI, Opencode, Orla, CLIProxyAPI, MCP servers, etc.) in an **isolated environment**, without polluting the host system.
+AIStack CLI is a **Bash-based tool** that installs and configures AI tools (Gemini CLI, Opencode, Orla, CLIProxyAPI, MCP servers, and so on...) in an **isolated environment**, without polluting the host system.
 
 ### Tech Stack
 - **Language**: Bash (MUST be compatible with bash 3.2)
@@ -152,12 +152,17 @@ A task is considered complete when:
 
 ## 6. Testing
 
-### Setup
+### Regular test
+Before directly testing any aistack command, do not forget to init AIStack at least once.
+
 ```bash
 ./aistack init
 ```
 
-### Minimum Checks
+### Unit test suit
+To launch unit tests suit, use `./test/launch.sh <domain tested|all>`.
+**WARN** : do NOT execute several `./test/launch.sh` in parallel.
+
 ```bash
 ./test/launch_test.sh json
 ./test/launch_test.sh yaml
