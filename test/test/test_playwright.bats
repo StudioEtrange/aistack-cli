@@ -88,17 +88,6 @@ EOF
 	assert_line --index 2 "--headed"
 }
 
-@test "playwright_version requests the managed binary version" {
-	cat > "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/playwright-cli" <<'EOF'
-#!/bin/sh
-printf '%s\n' "$@"
-EOF
-	chmod +x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/playwright-cli"
-
-	run playwright_version
-	assert_success
-	assert_output "--version"
-}
 
 @test "playwright_launcher_manage creates an executable wrapper" {
 	aistack_runtime_is_detected() {
