@@ -1,6 +1,56 @@
-# TODO and VARIOUS NOTES
+# NOTES, TODO and TO EXPLORE
 
-* process manager : goreman https://github.com/mattn/goreman
+## ressources links and information
+
+* various AI tools catalog and carography : https://stackmap.shipwithai.xyz/
+
+
+## integrations TODO
+
+* ghostdesk
+  * MCP server over a linux desktop
+  * https://korben.info/ghostdesk-agent-ia-bureau-linux-docker.html
+  * https://github.com/YV17labs/GhostDesk
+
+* Pi
+  * agent toolkit
+  * https://github.com/earendil-works/pi
+  * https://pi.dev/
+
+* OSD - Osmantic Deployment System (a.k.a Dream Server)
+  * https://github.com/Light-Heart-Labs/ODS
+  * https://korben.info/dream-server-ia-locale-auto-hebergee.html
+  * complete local stack installer
+  * Open WebUI, llama-server, Whisper, Kokoro, ComfyUI, Qdrant, SearXNG, n8n, ...
+  * install.sh genere des conf avec des virgules au lieu de points . à contourner en relançant l'installeur avec LC_ALL=C : `LC_ALL=C ./install.sh`
+
+* optillm
+  * Optimizing inference proxy for LLMs
+  * https://github.com/algorithmicsuperintelligence/optillm
+
+* CyberStrikeAI
+  * https://github.com/Ed1s0nZ/CyberStrikeAI
+
+* ollama
+  * host model
+
+* voltagent
+  
+* litellm
+  * router / proxy
+
+* superpowers
+  * framework
+
+## features TODO
+
+* CPA : add a way to set port and host
+
+* bun runtime : support bun configuration file and for bunx
+
+
+## TO EXPLORE
+
 * MCP-cli
   * https://github.com/IBM/mcp-cli
   * CLI to connect and interact with MCP (Model Context Protocol) servers.
@@ -8,7 +58,21 @@
   * Supports chat, interactive shell, and automation via MCP.
   * Integrates with LLMs for reasoning and tool-based workflows.
 
-* cpa : add a way to set port and host
+* openclaw and cliproxyapi https://developer.tenten.co/openclaw-multi-agent-cliproxyapiplus-complete-deployment-guide
+
+* Chrome DevTools MCP https://korben.info/chrome-devtools-mcp.html
+
+* n8n
+  * automation tool
+
+* goreman
+  * https://github.com/mattn/goreman
+  * process manager
+
+* get llm metadata context size and prices
+  * https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
+
+
 * serving LLM
   * Lemonade
     * https://github.com/lemonade-sdk/lemonade
@@ -17,17 +81,11 @@
   * Serving LLM - Ollama vs vLLM : https://developers.redhat.com/articles/2025/08/08/ollama-vs-vllm-deep-dive-performance-benchmarking#comparison_2__tuned_ollama_versus_vllm
     * Ollama excels in its intended role: a simple, accessible tool for local development, prototyping, and single-user applications. Its strength lies in its ease of use, not its ability to handle high-concurrency production traffic, where it struggles even when tuned.
     * vLLM is unequivocally the superior choice for production deployment. It is built for performance, delivering significantly higher throughput and lower latency under heavy load. Its dynamic batching and efficient resource management make it the ideal engine for scalable, enterprise-grade AI applications.
-* security tool : https://github.com/TheAuditorTool/Auditor
-* Chrome DevTools MCP https://korben.info/chrome-devtools-mcp.html
-* openclaw and cliproxyapi https://developer.tenten.co/openclaw-multi-agent-cliproxyapiplus-complete-deployment-guide
-* n8n
-* ollama
-* voltagent
-* litellm
-* superpowers
-* support bun configuration file and for bunx
-* cam
-* local doc querying through a mcp server : 
+
+
+* neuledge/context
+  * local doc querying through a mcp server
+  * context7 alternative
   * https://github.com/neuledge/context
   * npm package @neuledge/context
   * The search is currently keyword-based (FTS5 + BM25). It works well for direct queries like “middleware authentication” 
@@ -36,31 +94,9 @@
     ```
     # Install
     npm install -g @neuledge/context
-
     # Add some docs
     context add https://github.com/vercel/next.js
     context add https://github.com/vercel/ai
-
     # Connect to your AI agent (Claude Code example)
     claude mcp add context -- context serve
     ```
-
-* ghostdesk
-  * MCP server over a linux desktop
-  * https://korben.info/ghostdesk-agent-ia-bureau-linux-docker.html
-  * https://github.com/YV17labs/GhostDesk
-* Pi
-  * agent toolkit
-  * https://github.com/earendil-works/pi
-  * https://pi.dev/
-* OSD - Osmantic Deployment System (a.k.a Dream Server)
-  * https://github.com/Light-Heart-Labs/ODS
-  * https://korben.info/dream-server-ia-locale-auto-hebergee.html
-  * complete local stack installer
-  * Open WebUI, llama-server, Whisper, Kokoro, ComfyUI, Qdrant, SearXNG, n8n, ...
-  * install.sh genere des conf avec des virgules au lieu de points . à contourner en relançant l'installeur avec LC_ALL=C : `LC_ALL=C ./install.sh`
-* optillm
-  * Optimizing inference proxy for LLMs
-  * https://github.com/algorithmicsuperintelligence/optillm
-* get llm metadata context size and prices from https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
-* various AI tools catalog and carography : https://stackmap.shipwithai.xyz/

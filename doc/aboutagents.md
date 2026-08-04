@@ -86,24 +86,26 @@
     | *Global* | ~/.gemini/skills/ | ~/.gemini/antigravity-cli/skills/  |
     | *Workspace* |.gemini/skills/ or .agents/skills/ | .agents/skills/ |
 
+### skills catalogs
 
-* catalogs :
-  * Anthropic skills
-    * https://github.com/anthropics/skills
-  * officials skills - skills developped by major ai actor or company
-    * https://officialskills.sh/
-    * https://github.com/VoltAgent/awesome-agent-skills
-  * VoltAgent clawskills
-    * https://github.com/VoltAgent/awesome-openclaw-skills
-    * https://clawskills.sh/
-  * MCPMarket
-    * https://mcpmarket.com/tools/skills
-  * Will McGinnis's python development
-    * https://github.com/wdm0006/python-skills
-    * https://mcginniscommawill.com/guides/python-library-development/
-  * https://github.com/mattpocock/skills
-  * Agent Skill Manager catalog
-    * https://luongnv.com/asm/#/skills
+* Anthropic skills
+  * https://github.com/anthropics/skills
+* officials skills - skills developped by major ai actor or company
+  * https://officialskills.sh/
+  * https://github.com/VoltAgent/awesome-agent-skills
+* VoltAgent clawskills
+  * https://github.com/VoltAgent/awesome-openclaw-skills
+  * https://clawskills.sh/
+* MCPMarket
+  * https://mcpmarket.com/tools/skills
+* Will McGinnis's python development
+  * https://github.com/wdm0006/python-skills
+  * https://mcginniscommawill.com/guides/python-library-development/
+* https://github.com/mattpocock/skills
+* Agent Skill Manager catalog
+  * https://luongnv.com/asm/#/skills
+
+### skills tools
 
 * skills registry hostable :
   * skillhub
@@ -123,7 +125,8 @@
     * https://www.skill.fish/
   * xingkongliang/skills-manager
     * https://github.com/xingkongliang/skills-manager
-    * Desktop IDE - 663 stars 63 forks - last activity april 26
+    * Desktop IDE and CLI - 663 stars 63 forks - last activity april 26
+    * can manage group (aka preset) of skills
   * jiweiyeah/Skills-Manager
     * https://github.com/jiweiyeah/Skills-Manager
     * Desktop IDE - 526 stars 32 forks - last activity march 26
