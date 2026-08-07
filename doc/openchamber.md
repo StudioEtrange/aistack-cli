@@ -110,3 +110,14 @@ OpenChamber listens on `127.0.0.1` by default. Keep this default unless remote a
     # bind the internal opencode server controlled by openchamber to adress instead of localhost only 
     OPENCHAMBER_OPENCODE_HOSTNAME: 0.0.0.0 
     ```
+
+
+## OpenChamber and PATH
+
+- OpenChamber uses the login shell, adds the OpenCode binary to `PATH`, and requires a full restart after any environment or `PATH` changes.
+- `OPENCODE_BINARY` works and is the preferred environment variable for specifying the OpenCode binary. It takes precedence over the default bundled binary, but the `settings.opencodeBinary` setting can override it. OpenChamber currently uses `/Applications/OpenChamber.app/Contents/Resources/opencode-cli/opencode`.
+- `OPENCODE_PATH`, `OPENCHAMBER_OPENCODE_PATH`, and `OPENCHAMBER_OPENCODE_BIN` are also recognized as aliases, but `OPENCODE_BINARY` is preferred.
+- `OPENCHAMBER_TERMINAL_SHELL` works and takes precedence over `SHELL` for integrated terminals.
+- MacOS: When launched from Finder, OpenChamber initially receives the minimal macOS `PATH`: `/usr/bin:/bin:/usr/sbin:/sbin`. It then starts `/bin/zsh` as an interactive login shell and merges the resulting environment.
+- The active OpenCode process inherits the `PATH` loaded from the shell, with the directory containing the bundled OpenCode binary added to it.
+- The shell environment is cached, so the Reload OpenCode button does not necessarily reload the shell initialization files. After changing `PATH` or related shell configuration, fully quit OpenChamber then relaunch it.
