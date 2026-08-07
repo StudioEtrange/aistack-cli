@@ -60,6 +60,7 @@ aistack_initialize() {
 	gemini_init
 	agy_init
     opencode_init
+	openchamber_init
     cpa_init
     orla_init
     kilo_init
@@ -215,6 +216,7 @@ aistack_uninstall() {
 	echo "INFO : clean various PATHs for shells"
 	gemini_path_unregister_for_shell "all"
 	opencode_path_unregister_for_shell "all"
+	openchamber_path_unregister_for_shell "all"
 	orla_path_unregister_for_shell "all"
 	bmad_path_unregister_for_shell "all"
 	#gsd_path_unregister_for_shell "all"
@@ -231,6 +233,7 @@ aistack_uninstall() {
 	if aistack_module_is_detected "json5"; then 
 		gemini_path_unregister_for_vs_terminal
 		opencode_path_unregister_for_vs_terminal
+		openchamber_path_unregister_for_vs_terminal
 		orla_path_unregister_for_vs_terminal
 		bmad_path_unregister_for_vs_terminal
 		#gsd_path_unregister_for_vs_terminal
@@ -627,6 +630,7 @@ aistack_tool_launcher_regenerate() (
 	gsd_launcher_manage "refresh_if_exists"
 	kilo_launcher_manage "refresh_if_exists"
 	opencode_launcher_manage "refresh_if_exists"
+	openchamber_launcher_manage "refresh_if_exists"
 	orla_launcher_manage "refresh_if_exists"
 	llmfit_launcher_manage "refresh_if_exists"
 	sktor_launcher_manage "refresh_if_exists"
@@ -647,6 +651,7 @@ aistack_tool_detect() {
 	gsd_is_installed
 	kilo_is_installed
 	opencode_is_installed
+	openchamber_is_installed
 	orla_is_installed
 	llmfit_is_installed
     sktor_is_installed

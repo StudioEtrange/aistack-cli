@@ -137,7 +137,7 @@ python_yara_x_package_build_install() {
 		python_pip_package_install "maturin"
 		#python -m pip install maturin
 
-		# cache cargo is in a subfolder of CARGO_HOME, which is by default ${HOME}/.cargo
+		# NOTE; cache cargo is in a subfolder of CARGO_HOME, which is by default ${HOME}/.cargo
 
 		"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/maturin" build \
 				-vv \

@@ -3,7 +3,7 @@
 
 # AIStack CLI
 
-AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `antigravity-cli`, `opencode`, `asm`, `playwright-cli`, `kilo code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `bmad-method`, `get-shit-done-cc` or `ADK`, and so on. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `antigravity-cli`, `opencode`, `openchamber`, `asm`, `playwright-cli`, `kilo code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `bmad-method`, `get-shit-done-cc` or `ADK`, and so on. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
 
 ## Key Features of AIStack
 
@@ -97,6 +97,7 @@ AIStack CLI offers functionalities for these tools
 * [NVIDIA skillspeector](doc/skillspector.md)
 * [Cisco AI Skill Scanner](doc/ciss.md)
 * [VS Code](doc/vscode.md)
+* [OpenChamber CLI/Web](doc/openchamber.md)
 
 ### MCP Servers
 

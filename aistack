@@ -22,6 +22,7 @@ STELLA_LOG_STATE="OFF"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_vscode.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_opencode.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_openchamber.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_orla.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
@@ -88,6 +89,22 @@ Options:
     oc mcp calculator install|uninstall         Add mcp-calculator local server configuration.
     oc mcp github install|uninstall             Add mcp-github remote server configuration.
     oc mcp context7 install|uninstall           Add mcp-context7 local server configuration.
+    ----
+    och : OpenChamber CLI/Web - https://openchamber.dev/
+    och install [@version]              Install OpenChamber CLI/Web. Default version is @latest.
+    och uninstall                       Uninstall OpenChamber CLI/Web and unregister its PATH. Configuration is preserved.
+    och info                            Print OpenChamber CLI/Web information.
+    och version                         Print the installed OpenChamber version.
+    och register <all|shell|vs>         Register OpenChamber PATH into shell env PATH or VS Code integrated terminal env PATH.
+    och unregister [<all|shell|vs>]     Unregister OpenChamber PATH. Default value is "all".
+    och launch [context folder] -- <openchamber command>
+                                        Launch any OpenChamber command.
+    och up [context folder] -- <serve options>
+                                        Start OpenChamber with its native daemon mode and the AIStack-managed UI password.
+    och down [-- <stop options>]        Stop OpenChamber using its native lifecycle command.
+    och restart [-- <restart options>]  Restart OpenChamber using its native lifecycle command.
+    och status [-- <status options>]    Show native OpenChamber daemon status.
+    och logs [-- <logs options>]        Follow native OpenChamber daemon logs.
     ----
     kc : Kilo Code CLI and VS Code extension - https://kilo.ai/
     kc install [cli|extension]          Install and configure Kilo Code. By default, installs the CLI.
@@ -416,6 +433,9 @@ main() {
         oc)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_oc.sh"
             ;;
+		och)
+			. "${AISTACK_CURRENT_FILE_DIR}/lib/main_openchamber.sh"
+			;;
         gc)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_gc.sh"
             ;;

@@ -7,7 +7,7 @@ STELLA_LOG_STATE=OFF
 
 
 usage() {
-	echo " * Usage $0 json|yaml|glibc|vs|node|playwright|opencode|all [test-name]"
+	echo " * Usage $0 json|yaml|glibc|vs|node|playwright|opencode|openchamber|all [test-name]"
 	echo "sample:"
 	echo "$0 json json_has_path"
 }
@@ -31,6 +31,7 @@ function init_aistack_test_env() {
 	. "${STELLA_APP_ROOT}/../lib/lib_vscode.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_gemini.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_opencode.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_openchamber.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_kilo.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_orla.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_bmad.sh"
@@ -91,6 +92,7 @@ case $1 in
 	test_launch_bats node $2
 	test_launch_bats playwright $2
 	test_launch_bats opencode $2
+	test_launch_bats openchamber $2
     ;;
   json)
 	init_aistack_test_env
@@ -119,6 +121,10 @@ case $1 in
   opencode)
 	init_aistack_test_env
 	test_launch_bats opencode $2
+	;;
+  openchamber)
+	init_aistack_test_env
+	test_launch_bats openchamber $2
 	;;
   *)
 	usage

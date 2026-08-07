@@ -14,6 +14,7 @@ Right to the point how-to
   - [Case 8 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-8--scan-skills-with-cisco-ai-skill-scanner--openai)
   - [Case 9 : install the Rust runtime](#case-9--install-the-rust-runtime)
   - [Case 10 : use Playwright CLI to take screenshot of a website](#case-10--install-playwright-cli)
+  - [Case 11 : run OpenChamber Web with OpenCode](#case-11--run-openchamber-web-with-opencode)
 
 ## Case 0 : AIStack install and init
 
@@ -271,4 +272,31 @@ cd aistack-cli
 playwright-cli open https://github.com/StudioEtrange/aistack-cli --headed
 playwright-cli screenshot
 playwright-cli close
+```
+
+## Case 11 : run OpenChamber Web with OpenCode
+
+_"I want to install OpenChamber CLI/Web and use the OpenCode CLI managed by AIStack."_
+
+```bash
+cd aistack-cli
+./aistack oc install
+./aistack och install
+./aistack och up
+```
+
+The UI password is generated automatically and displayed by `./aistack och info`. Manage the native OpenChamber daemon with:
+
+```bash
+./aistack och status
+./aistack och logs
+./aistack och restart
+./aistack och down
+```
+
+Register the launcher to use OpenChamber from another shell:
+
+```bash
+./aistack och register bash
+openchamber status
 ```
