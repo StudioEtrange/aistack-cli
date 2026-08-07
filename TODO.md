@@ -12,6 +12,8 @@
 
 * bun runtime : support bun configuration file and for bunx
 
+* problem with cpa_daemon_restart, we want to keep the same args used for up command. Store args in file ?
+
 
 ## TO EXPLORE
 

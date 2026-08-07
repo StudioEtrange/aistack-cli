@@ -78,7 +78,7 @@ case "${sub_command}" in
                 ;;
         esac
         ;;
-    launch)
+    launch|up)
         #cpa_launcher_manage
 
 		if cpa_is_installed; then
@@ -96,34 +96,16 @@ case "${sub_command}" in
 			fi
 			[ "$1" = "--" ] && shift
 
-			cpa_launch "$@"
+			if [ "${sub_command}" = "up" ]; then
+				cpa_daemon_up "$@" || exit $?
+			else
+				cpa_launch "$@"
+			fi
 		else
 			echo "ERROR: CLIProxyAPI is not installed"
 			exit 1
 		fi
         ;;
-	up)
-		if cpa_is_installed; then
-			local folder=
-			if [ -n "$1" ] && [ "$1" != "--" ]; then
-				folder="$1"
-				if [ -d "${folder}" ]; then
-					echo "change to context folder : ${folder}"
-					cd "${folder}" || exit 1
-					shift
-				else
-					echo "ERROR: Directory '${folder}' not found"
-					exit 1
-				fi
-			fi
-			[ "$1" = "--" ] && shift
-
-			cpa_daemon_up "$@"
-		else
-			echo "ERROR: CLIProxyAPI is not installed"
-			exit 1
-		fi
-		;;
 	down)
 		cpa_daemon_down
 		;;

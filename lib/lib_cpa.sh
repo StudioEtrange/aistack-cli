@@ -80,7 +80,7 @@ cpa_uninstall() {
 	if cpa_is_installed; then
 		echo "Uninstalling CLIProxyAPI from ${CLIPROXYAPI_FEAT_INSTALL_ROOT}..."
 
-        cpa_daemon_down
+        cpa_daemon_down >/dev/null 2>&1 || :
 
 		rm -Rf "${CLIPROXYAPI_FEAT_INSTALL_ROOT}"
 		echo "CLIProxyAPI uninstalled successfully."
@@ -119,9 +119,16 @@ cpa_daemon_up() {
     fi
 
 	if [ "$#" -gt 0 ]; then
-		STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_start "${daemon_name}" "${AISTACK_CLIPROXYAPI_TOOL_PATH}" "${log_file}" "$@"
+		STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_start \
+			"${daemon_name}" \
+			"${AISTACK_CLIPROXYAPI_TOOL_PATH}" \
+			"${log_file}" \
+			"$@"
 	else
-		STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_start "${daemon_name}" "${AISTACK_CLIPROXYAPI_TOOL_PATH}" "${log_file}"
+		STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_start \
+			"${daemon_name}" \
+			"${AISTACK_CLIPROXYAPI_TOOL_PATH}" \
+			"${log_file}"
 	fi
 
 }
@@ -137,6 +144,12 @@ cpa_daemon_status() {
 cpa_daemon_logs() {
     STELLA_LOG_STATE="ON" "${STELLA_API}" daemon_logs "cpa"
 }
+
+# TODO restart with save and reuse parameters from up command
+# cpa_daemon_restart() {
+# 	cpa_daemon_down || :
+# 	cpa_daemon_up "$@"
+# }
 
 cpa_launcher_manage() {
     local action="${1:-create}"
