@@ -1,6 +1,5 @@
 opencode_init() {
     # oc specific paths
-    export AISTACK_OPENCODE_LOCAL_SHARE_HOME="$HOME/.local/share/opencode"
     export AISTACK_OPENCODE_CONFIG_HOME="$HOME/.config/opencode"
     mkdir -p "${AISTACK_OPENCODE_CONFIG_HOME}"
     #You can also specify a custom config file path using the OPENCODE_CONFIG environment variable. This takes precedence over the global and project configs.
@@ -176,7 +175,6 @@ opencode_show_config() {
 
 opencode_settings_remove() {
     opencode_unregister_cpa_key
-    rm -Rf "$AISTACK_OPENCODE_LOCAL_SHARE_HOME"
     rm -Rf "$AISTACK_OPENCODE_CONFIG_HOME"
 }
 
@@ -315,16 +313,18 @@ opencode_connect_cpa() {
     local default_model
     local small_model
 
+	echo "generate a CLIProxyAPI API key for Opencode to connect to CPA backend"
+	echo "and register model cpa as provider in opencode configuration ($AISTACK_OPENCODE_CONFIG_HOME)"
+  
     if ! cpa_is_configured; then
-        echo "ERROR: Failed to generate and register CLIProxyAPI API key for Opencode : CLIProxyAPI is not configured."
+        echo "ERROR: Failed to connect Opencode to CLIProxyAPI : CLIProxyAPI is not configured."
         return 1
     fi
 
     # needs cpa conf file exists
-    echo "generate a CLIProxyAPI API key for Opencode to connect to CPA backend"
     opencode_generate_cpa_key
     if [ $? -ne 0 ]; then
-        echo "ERROR: Failed to generate and register CLIProxyAPI API key for Opencode."
+        echo "ERROR: Failed to generate and register a CLIProxyAPI API key dedicated to Opencode."
         return 1
     fi
 
