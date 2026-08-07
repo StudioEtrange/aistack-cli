@@ -96,10 +96,10 @@ sktor_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "skillspector" "${AISTACK_SKTOR_LAUNCHER_HOME}"
 }
 
-sktor_launch_export_variables="AISTACK_TOOL_CONTEXT_FILE AISTACK_SKTOR_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
+sktor_launch_export_variables="AISTACK_GENERIC_CONTEXT_FILE AISTACK_SKTOR_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
 sktor_launch() {
 
-    . "${AISTACK_TOOL_CONTEXT_FILE}"
+    . "${AISTACK_GENERIC_CONTEXT_FILE}"
 
 	. "${AISTACK_SKTOR_CONTEXT_FILE}"
 

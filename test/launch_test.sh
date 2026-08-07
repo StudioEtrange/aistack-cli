@@ -47,7 +47,7 @@ function init_aistack_test_env() {
 	aistack_initialize 1>/dev/null 2>&1
 	aistack_runtime_detect 1>/dev/null 2>&1
 	aistack_module_detect 1>/dev/null 2>&1
-	aistack_tool_context_file_generate 1>/dev/null 2>&1
+	aistack_generic_context_file_generate 1>/dev/null 2>&1
 
 	aistack_tool_detect 1>/dev/null 2>&1
 	aistack_mcp_detect 1>/dev/null 2>&1

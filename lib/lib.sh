@@ -22,12 +22,12 @@ aistack_initialize() {
     # remove from AISTACK_MODULE_CORE any items from AISTACK_MODULE_CORE_BOOTSTRAP
     AISTACK_MODULE_CORE="$($STELLA_API filter_list_with_list "${AISTACK_MODULE_CORE}" "${AISTACK_MODULE_CORE_BOOTSTRAP}")"
 
-    # add search path of runtimes and modules to tool run context
-	# NOTE : there is no AISTACK_TOOL_CONTEXT_ADD_TOOL because each tool can be registered in shell wight "register" command
-    #export AISTACK_TOOL_CONTEXT_ADD_RUNTIME="nodejs bun python"
-    #export AISTACK_TOOL_CONTEXT_ADD_MODULE="yq jq"
-    [ -n "${AISTACK_TOOL_CONTEXT_ADD_RUNTIME}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_RUNTIME"
-    [ -n "${AISTACK_TOOL_CONTEXT_ADD_MODULE}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_MODULE"
+    # add search path of runtimes and modules to a generic context file used when a tool is launched
+	# NOTE : there is no AISTACK_GENERIC_CONTEXT_ADD_TOOL because each tool can be registered in shell wight "register" command
+    #export AISTACK_GENERIC_CONTEXT_ADD_RUNTIME="nodejs bun python"
+    #export AISTACK_GENERIC_CONTEXT_ADD_MODULE="yq jq"
+    [ -n "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_RUNTIME"
+    [ -n "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_MODULE"
 
     # paths ---
     export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
@@ -43,7 +43,7 @@ aistack_initialize() {
 
     export AISTACK_CONTEXT_HOME="${STELLA_APP_WORK_ROOT}/context"
     mkdir -p "${AISTACK_CONTEXT_HOME}"
-    export AISTACK_TOOL_CONTEXT_FILE="${AISTACK_CONTEXT_HOME}/tool_context.sh"
+    export AISTACK_GENERIC_CONTEXT_FILE="${AISTACK_CONTEXT_HOME}/tool_context.sh"
 
     export AISTACK_GLIBC_CURRENT_VERSION="$(glibc_version)"
 	glibc_alternative_system
@@ -81,7 +81,7 @@ aistack_info() {
     echo "AISTACK_LAUNCHER_HOME: $AISTACK_LAUNCHER_HOME"
     echo "AISTACK_MCP_LAUNCHER_HOME: $AISTACK_MCP_LAUNCHER_HOME"
     echo "AISTACK_ISOLATED_ROOT: $AISTACK_ISOLATED_ROOT"
-    echo "AISTACK_TOOL_CONTEXT_FILE: $AISTACK_TOOL_CONTEXT_FILE"
+    echo "AISTACK_GENERIC_CONTEXT_FILE: $AISTACK_GENERIC_CONTEXT_FILE"
     echo
     echo
     echo "--JavaScript ecosystem--"
@@ -153,8 +153,8 @@ aistack_info() {
 	echo "AISTACK_MODULE_CORE : $AISTACK_MODULE_CORE"
 	echo "AISTACK_MODULE_CORE_BOOTSTRAP : $AISTACK_MODULE_CORE_BOOTSTRAP"
     echo
-    echo "AISTACK_TOOL_CONTEXT_ADD_RUNTIME : $AISTACK_TOOL_CONTEXT_ADD_RUNTIME"
-    echo "AISTACK_TOOL_CONTEXT_ADD_MODULE : $AISTACK_TOOL_CONTEXT_ADD_MODULE"
+    echo "AISTACK_GENERIC_CONTEXT_ADD_RUNTIME : $AISTACK_GENERIC_CONTEXT_ADD_RUNTIME"
+    echo "AISTACK_GENERIC_CONTEXT_ADD_MODULE : $AISTACK_GENERIC_CONTEXT_ADD_MODULE"
     echo
     echo "--module status--"
     local var name p
@@ -288,32 +288,32 @@ aistack_context_load_module_path() {
 }
 
 # create files that centralize components and runtime PATH
-aistack_tool_context_file_generate() {
+aistack_generic_context_file_generate() {
     local m r va vp list_path
 
-    echo '#!/bin/sh' > "${AISTACK_TOOL_CONTEXT_FILE}"
+    echo '#!/bin/sh' > "${AISTACK_GENERIC_CONTEXT_FILE}"
 
     # add to tool run context runtime search path
-    for r in ${AISTACK_TOOL_CONTEXT_ADD_RUNTIME}; do
+    for r in ${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}; do
         va="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
         vp="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
         [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
     done
 
     # add to tool run context module search path
-    for m in ${AISTACK_TOOL_CONTEXT_ADD_MODULE}; do
+    for m in ${AISTACK_GENERIC_CONTEXT_ADD_MODULE}; do
         va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
         vp="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
         [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
     done
 
     
-    [ -n "${list_path}" ] && echo "export PATH=\"${list_path}:\${PATH}\"" >> "${AISTACK_TOOL_CONTEXT_FILE}"
-    chmod +x "${AISTACK_TOOL_CONTEXT_FILE}"
+    [ -n "${list_path}" ] && echo "export PATH=\"${list_path}:\${PATH}\"" >> "${AISTACK_GENERIC_CONTEXT_FILE}"
+    chmod +x "${AISTACK_GENERIC_CONTEXT_FILE}"
 }
 
-aistack_tool_context_file_remove() {
-    rm -f "${AISTACK_TOOL_CONTEXT_FILE}"
+aistack_generic_context_file_remove() {
+    rm -f "${AISTACK_GENERIC_CONTEXT_FILE}"
 }
 
 aistack_launcher_regenerate() {
@@ -405,7 +405,7 @@ aistack_runtime_require() {
             exit 1
         fi
         #aistack_runtime_detect
-		#aistack_tool_context_file_generate
+		#aistack_generic_context_file_generate
     fi
 
     # if ! aistack_runtime_is_detected "${r}"; then
@@ -423,28 +423,28 @@ aistack_runtime_install() {
         "python")
             aistack_component_install "python"
             aistack_runtime_detect
-            aistack_tool_context_file_generate
+            aistack_generic_context_file_generate
             aistack_runtime_is_detected "python"
             return $?
             ;;
         "nodejs")
             aistack_component_install "nodejs"
             aistack_runtime_detect
-			aistack_tool_context_file_generate
+			aistack_generic_context_file_generate
             aistack_runtime_is_detected "nodejs"
             return $?
             ;;
         "bun")
             aistack_component_install "bun"
             aistack_runtime_detect
-			aistack_tool_context_file_generate
+			aistack_generic_context_file_generate
             aistack_runtime_is_detected "bun"
             return $?
             ;;
 		"rust")
 			aistack_component_install "rust"
 			aistack_runtime_detect
-			aistack_tool_context_file_generate
+			aistack_generic_context_file_generate
             aistack_runtime_is_detected "rust"
             return $?
 			;;
@@ -461,22 +461,22 @@ aistack_runtime_uninstall() {
         "python")
             python_uninstall
             aistack_runtime_detect
-			aistack_tool_context_file_generate
+			aistack_generic_context_file_generate
             ;;
         "nodejs")
             node_uninstall
             aistack_runtime_detect
-			aistack_tool_context_file_generate
+			aistack_generic_context_file_generate
             ;;
         "bun")
             bun_uninstall
             aistack_runtime_detect
-			aistack_tool_context_file_generate
+			aistack_generic_context_file_generate
             ;;
 		"rust")
 			rust_uninstall
 			aistack_runtime_detect
-			aistack_tool_context_file_generate
+			aistack_generic_context_file_generate
 			;;
          *)
 			echo "ERROR: Unknown runtime $r"
@@ -588,7 +588,7 @@ aistack_module_require() {
     if ! aistack_module_is_detected "${m}"; then
         aistack_module_install "${m}"
         #aistack_module_detect
-		#aistack_tool_context_file_generate
+		#aistack_generic_context_file_generate
     fi
 
     if ! aistack_module_is_detected "${m}"; then
@@ -600,7 +600,7 @@ aistack_module_require() {
 aistack_module_install() {
     aistack_component_install "$@"
     aistack_module_detect
-    aistack_tool_context_file_generate
+    aistack_generic_context_file_generate
 }
 
 # NOTE : we do not need to implements this function
@@ -608,7 +608,7 @@ aistack_module_install() {
 aistack_module_uninstall() {
     :
     # aistack_module_detect
-    # aistack_tool_context_file_generate
+    # aistack_generic_context_file_generate
 }
 
 
@@ -724,7 +724,7 @@ aistack_component_core_install() {
     done
     
 
-  	aistack_tool_context_file_generate
+  	aistack_generic_context_file_generate
 
 }
 
@@ -852,7 +852,7 @@ aistack_component_install() {
 
 # remove tools, managed runtime and modules
 aistack_component_remove_all() {
-	aistack_tool_context_file_remove
+	aistack_generic_context_file_remove
 
     # remove isolated vomponent (tuntimes, tools, component)
     rm -Rf "${AISTACK_ISOLATED_ROOT}"

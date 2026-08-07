@@ -68,10 +68,10 @@ adk_path_unregister_for_vs_terminal() {
 
 
 
-adk_launch_export_variables="AISTACK_TOOL_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
+adk_launch_export_variables="AISTACK_GENERIC_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
 adk_launch() {
     (
-        . "${AISTACK_TOOL_CONTEXT_FILE}"
+        . "${AISTACK_GENERIC_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk" "$@"

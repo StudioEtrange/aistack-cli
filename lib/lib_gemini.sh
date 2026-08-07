@@ -76,10 +76,10 @@ gemini_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}"
 }
 
-gemini_launch_export_variables="AISTACK_TOOL_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
+gemini_launch_export_variables="AISTACK_GENERIC_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 gemini_launch() {
     (
-        . "${AISTACK_TOOL_CONTEXT_FILE}"
+        . "${AISTACK_GENERIC_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/gemini" "$@"
@@ -95,7 +95,7 @@ gemini_launcher_manage() {
     case $action in
         create)
             # echo '#!/bin/sh' > "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
-            # echo ". ${AISTACK_TOOL_CONTEXT_FILE}" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
+            # echo ". ${AISTACK_GENERIC_CONTEXT_FILE}" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
             # echo "gemini \$@" >> "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
             # chmod +x "${AISTACK_GEMINI_LAUNCHER_HOME}/gemini"
 

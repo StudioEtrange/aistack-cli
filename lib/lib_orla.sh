@@ -119,7 +119,7 @@ orla_path_unregister_for_vs_terminal() {
 }
 
 
-orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_TOOL_CONTEXT_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
+orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_GENERIC_CONTEXT_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
 orla_launch() {
     set -- "$@"
 
@@ -128,7 +128,7 @@ orla_launch() {
     fi
 
     (
-        . "${AISTACK_TOOL_CONTEXT_FILE}"
+        . "${AISTACK_GENERIC_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "${ORLA_FEAT_INSTALL_ROOT}/orla" "$@"

@@ -108,10 +108,10 @@ kilo_path_unregister_for_vs_terminal() {
 }
 
 
-kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_TOOL_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
+kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_GENERIC_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 kilo_launch() {
     (
-        . "${AISTACK_TOOL_CONTEXT_FILE}"
+        . "${AISTACK_GENERIC_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo" "$@"

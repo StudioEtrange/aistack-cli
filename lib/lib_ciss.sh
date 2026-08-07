@@ -88,9 +88,9 @@ ciss_path_unregister_for_vs_terminal() {
 	vscode_path_unregister_for_vs_terminal "skill-scanner" "${AISTACK_CISS_LAUNCHER_HOME}"
 }
 
-ciss_launch_export_variables="AISTACK_TOOL_CONTEXT_FILE AISTACK_CISS_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
+ciss_launch_export_variables="AISTACK_GENERIC_CONTEXT_FILE AISTACK_CISS_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
 ciss_launch() {
-	. "${AISTACK_TOOL_CONTEXT_FILE}"
+	. "${AISTACK_GENERIC_CONTEXT_FILE}"
 	. "${AISTACK_CISS_CONTEXT_FILE}"
 
 	if [ "$#" -gt 0 ]; then

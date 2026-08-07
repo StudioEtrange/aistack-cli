@@ -6,9 +6,9 @@ setup() {
 	PLAYWRIGHT_TEST_TMP="$(mktemp -d)"
 	AISTACK_LAUNCHER_HOME="${PLAYWRIGHT_TEST_TMP}/launcher"
 	AISTACK_RUNTIME_NODEJS_SEARCH_PATH="${PLAYWRIGHT_TEST_TMP}/node/bin"
-	AISTACK_TOOL_CONTEXT_FILE="${PLAYWRIGHT_TEST_TMP}/tool_context.sh"
+	AISTACK_GENERIC_CONTEXT_FILE="${PLAYWRIGHT_TEST_TMP}/tool_context.sh"
 	mkdir -p "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
-	printf '%s\n' '#!/bin/sh' > "${AISTACK_TOOL_CONTEXT_FILE}"
+	printf '%s\n' '#!/bin/sh' > "${AISTACK_GENERIC_CONTEXT_FILE}"
 	playwright_init
 }
 

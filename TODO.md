@@ -37,7 +37,7 @@
             xxx_launcher_manage
         fi
         aistack_tool_detect
-        aistack_tool_context_file_generate
+        aistack_generic_context_file_generate
     }
     ```
   * add support for AISTACK_xxxx_TOOL_REQUIRED
