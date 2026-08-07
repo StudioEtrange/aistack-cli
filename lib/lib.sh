@@ -23,6 +23,7 @@ aistack_initialize() {
     AISTACK_MODULE_CORE="$($STELLA_API filter_list_with_list "${AISTACK_MODULE_CORE}" "${AISTACK_MODULE_CORE_BOOTSTRAP}")"
 
     # add search path of runtimes and modules to tool run context
+	# NOTE : there is no AISTACK_TOOL_CONTEXT_ADD_TOOL because each tool can be registered in shell wight "register" command
     #export AISTACK_TOOL_CONTEXT_ADD_RUNTIME="nodejs bun python"
     #export AISTACK_TOOL_CONTEXT_ADD_MODULE="yq jq"
     [ -n "${AISTACK_TOOL_CONTEXT_ADD_RUNTIME}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_RUNTIME"

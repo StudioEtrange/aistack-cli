@@ -16,16 +16,17 @@ kilo_init() {
     [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_KILO="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE")"
 
 	export AISTACK_KILO_RUNTIME_REQUIRED="nodejs"
-
+	export AISTACK_KILO_MODULE_REQUIRED=""
 }
 
 # return 0 : is installed
 # return 1 : tool is not installed
 # return 2 : missing runtime
 kilo_is_installed() {
-	local r
+	local r m
 	export AISTACK_KILO_TOOL_AVAILABLE="false"
-	for r in $AISTACK_KILO_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	for r in ${AISTACK_KILO_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_KILO_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/kilo" ] || return 1
 	export AISTACK_KILO_TOOL_AVAILABLE="true"
 	export AISTACK_KILO_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/kilo"
@@ -37,13 +38,18 @@ kilo_install() {
     # available versions : https://www.npmjs.com/package/@kilocode/cli
     local version="$2"
     [ -z "${version}" ] && version="@latest"
-	local r
+	local r m
 
     case "$type" in
         "cli")
-			for r in $AISTACK_KILO_RUNTIME_REQUIRED; do 
-				echo "Require needed ${r} rmanaged untime"
+			for r in ${AISTACK_KILO_RUNTIME_REQUIRED}; do 
+				echo "INFO: Kilo Code CLI require ${r} managed runtime"
 				aistack_runtime_require "${r}"
+			done
+
+			for m in ${AISTACK_KILO_MODULE_REQUIRED}; do 
+				echo "INFO: Kilo Code CLI require ${m} managed module"
+				aistack_module_require "${m}"
 			done
 			
             echo "Installing Kilo Code CLI ${version}"

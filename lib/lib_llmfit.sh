@@ -8,6 +8,7 @@ llmfit_init() {
     mkdir -p "${LLMFIT_FEAT_INSTALL_ROOT}"
 
 	export AISTACK_LLMFIT_RUNTIME_REQUIRED=""
+	export AISTACK_LLMFIT_MODULE_REQUIRED=""
     
 }
 
@@ -15,9 +16,10 @@ llmfit_init() {
 # return 1 : tool is not installed
 # return 2 : missing runtime
 llmfit_is_installed() {
-	local r
+	local r m
 	export AISTACK_LLMFIT_TOOL_AVAILABLE="false"
 	for r in ${AISTACK_LLMFIT_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_LLMFIT_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${LLMFIT_FEAT_INSTALL_ROOT}/llmfit" ] || return 1
 	export AISTACK_LLMFIT_TOOL_AVAILABLE="true"
 	export AISTACK_LLMFIT_TOOL_PATH="${LLMFIT_FEAT_INSTALL_ROOT}/llmfit"
@@ -27,11 +29,16 @@ llmfit_is_installed() {
 
 
 llmfit_install() {
-	local r
+	local r m
   
 	for r in ${AISTACK_LLMFIT_RUNTIME_REQUIRED}; do 
-		echo "Require needed ${r} managed runtime"
+		echo "INFO: llmfit require ${r} managed runtime"
 		aistack_runtime_require "${r}"
+	done
+
+	for m in ${AISTACK_LLMFIT_MODULE_REQUIRED}; do 
+		echo "INFO: llmfit require ${m} managed module"
+		aistack_module_require "${m}"
 	done
 
 	echo "Installing llmfit"

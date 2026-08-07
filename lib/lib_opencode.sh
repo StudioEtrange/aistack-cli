@@ -15,15 +15,18 @@ opencode_init() {
     mkdir -p "${AISTACK_OPENCODE_LAUNCHER_HOME}"
 
 	export AISTACK_OPENCODE_RUNTIME_REQUIRED="nodejs"
+	export AISTACK_OPENCODE_MODULE_REQUIRED=""
+
 }
 
 # return 0 : is installed
 # return 1 : tool is not installed
 # return 2 : missing runtime
 opencode_is_installed() {
-	local r
+	local r m
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="false"
 	for r in $AISTACK_OPENCODE_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode" ] || return 1
 	export AISTACK_OPENCODE_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode"
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="true"
@@ -34,13 +37,18 @@ opencode_is_installed() {
 }
 
 opencode_install() {
-	local r
+	local r m
     local version="$1"
     [ -z "${version}" ] && version="@latest"
 
-	for r in $AISTACK_OPENCODE_RUNTIME_REQUIRED; do 
-		echo "Require needed ${r} rmanaged untime"
+	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED}; do 
+		echo "INFO: OpenCode require ${r} managed runtime"
 		aistack_runtime_require "${r}"
+	done
+
+	for m in ${AISTACK_ASM_MODULE_REQUIRED}; do 
+		echo "INFO: OpenCode require ${m} managed module"
+		aistack_module_require "${m}"
 	done
 
     echo "Installing Opencode CLI"

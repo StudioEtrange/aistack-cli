@@ -18,6 +18,8 @@ orla_init() {
     mkdir -p "${ORLA_FEAT_INSTALL_ROOT}"
 
 	export AISTACK_ORLA_RUNTIME_REQUIRED=""
+	export AISTACK_ORLA_MODULE_REQUIRED=""
+
     
 }
 
@@ -25,9 +27,10 @@ orla_init() {
 # return 1 : tool is not installed
 # return 2 : missing runtime
 orla_is_installed() {
-	local r
+	local r m
 	export AISTACK_ORLA_TOOL_AVAILABLE="false"
 	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_ORLA_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${ORLA_FEAT_INSTALL_ROOT}/orla" ] || return 1
 	export AISTACK_ORLA_TOOL_AVAILABLE="true"
 	export AISTACK_ORLA_TOOL_PATH="${ORLA_FEAT_INSTALL_ROOT}/orla"
@@ -41,7 +44,7 @@ orla_is_installed() {
 # This function relies on the following environment variables to be set:
 # - ORLA_FEAT_INSTALL_ROOT: The directory where cliproxyapi will be installed.
 orla_install() {
-	local r
+	local r m
     local version="$1"
     
     if [ -z "$version" ] || [ "$version" = "latest" ]; then
@@ -50,9 +53,13 @@ orla_install() {
         echo "latest version is ${version}"
     fi
 
-	for r in $AISTACK_ORLA_RUNTIME_REQUIRED; do 
-		echo "Require needed ${r} managed runtime"
+	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED}; do 
+		echo "INFO: Orla require ${r} managed runtime"
 		aistack_runtime_require "${r}"
+	done
+	for m in $AISTACK_ORLA_MODULE_REQUIRED; do 
+		echo "INFO: Orla require ${m} managed module"
+		aistack_module_require "${m}"
 	done
 
     local os_arch
