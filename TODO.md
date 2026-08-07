@@ -2,9 +2,8 @@
 
 ## ressources links and information
 
-* various AI tools catalog and carography : https://stackmap.shipwithai.xyz/
+* various AI tools catalog and cartography : https://stackmap.shipwithai.xyz/
 * various AI topics and tools in french ; https://korben.info/categories/intelligence-artificielle/
-
 
 ## features TODO
 
@@ -12,8 +11,40 @@
 
 * bun runtime : support bun configuration file and for bunx
 
+* implements a generic gateway with a reverse proxy for all exposed component (cpa, opencode, ...)
+
+* allow cpa to register ai endpoint with a command
+
+* get llm metadata context size and prices
+  * https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
+
+* in lib.sh, add tool require and detection same as module/runtime
+  * aistack_tool_is_detected
+  * aistack_tool_require
+  * aistack_tool_uninstall
+  * aistack_tool_install
+    ```
+    aistack_tool_install() {
+        local t="$1"
+        shift
+        if ! xxx_install "$@"; then
+            echo "ERROR: TOOL not installed"
+            return 1
+        else
+            echo "Configuring TOOL"
+            xxx_settings_configure
+            vscode_settings_configure "xxx"
+            xxx_launcher_manage
+        fi
+        aistack_tool_detect
+        aistack_tool_context_file_generate
+    }
+    ```
+  * add support for AISTACK_xxxx_TOOL_REQUIRED
+
 * problem with cpa_daemon_restart, we want to keep the same args used for up command. Store args in file ?
 
+* add a way to disable feature management in stella framework, to gain speed.
 
 ## TO EXPLORE
 
@@ -28,7 +59,7 @@
   * https://pi.dev/
 
 * Swival
-  * Coding Agent designed for tight context windows and limited resources
+  * Coding Agent designed for tight context windows and limited resources. Reliable with small models. Context management is one of Swival's strengths
   * Manage context size with 7 level of compression, crypt password and key from context, optimize output of reading files
   * https://github.com/swival/swival
   * https://swival.dev/
@@ -44,27 +75,9 @@
 * CyberStrikeAI
   * https://github.com/Ed1s0nZ/CyberStrikeAI
 
-* ollama
-  * host model
 
-* voltagent
-  
-* litellm
-  * router / proxy
 
-* superpowers
-  * framework
-
-* MCP-cli
-  * https://github.com/IBM/mcp-cli
-  * CLI to connect and interact with MCP (Model Context Protocol) servers.
-  * Manages conversation, tool invocation, session handling.
-  * Supports chat, interactive shell, and automation via MCP.
-  * Integrates with LLMs for reasoning and tool-based workflows.
-
-* openclaw and cliproxyapi https://developer.tenten.co/openclaw-multi-agent-cliproxyapiplus-complete-deployment-guide
-
-* Chrome DevTools MCP https://korben.info/chrome-devtools-mcp.html
+* openclaw and cliproxyapiplus Deployment Guide https://developer.tenten.co/openclaw-multi-agent-cliproxyapiplus-complete-deployment-guide
 
 * n8n
   * automation tool
@@ -73,11 +86,21 @@
   * https://github.com/mattn/goreman
   * process manager
 
-* get llm metadata context size and prices
-  * https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
+* MCP
+  * MCP-cli
+    * https://github.com/IBM/mcp-cli
+    * CLI to connect and interact with MCP (Model Context Protocol) servers.
+    * Manages conversation, tool invocation, session handling.
+    * Supports chat, interactive shell, and automation via MCP.
+    * Integrates with LLMs for reasoning and tool-based workflows.
+
+  * Chrome DevTools MCP
+    * https://github.com/ChromeDevTools/chrome-devtools-mcp
+    * disable telemetry: `--no-usage-statistics`
+    * mcp command to register: `npx -y "chrome-devtools-mcp@latest"`
 
 
-* serving LLM
+* host LLM
   * Lemonade
     * https://github.com/lemonade-sdk/lemonade
     * https://korben.info/lemonade-sdk-serveur-llm-local-npu-amd.html
@@ -89,7 +112,20 @@
     * https://github.com/raullenchai/Rapid-MLX
     * only for macos with Apple Silicon
     * direclty use kernel MLX without intermediary
+  * llama.cpp
+    * `llama-server --reasoning auto --fit on -hf unsloth/gemma-4-26B-A4B-it-GGUF:UD-Q4_K_XL`
+      * (use --fit on to auto-size context to available memory)
+  * ollama
+    * https://github.com/ollama/ollama
+    * ollama.com
 
+
+
+* memory management
+  * memvid
+    * https://github.com/memvid/memvid
+    * https://stackmap.shipwithai.xyz/repos/memvid/memvid?utm_source=substack&utm_medium=email
+    * single-file memory layer for AI agents with instant retrieval and long-term memory. Persistent, versioned, and portable memory, without databases.
 
 * neuledge/context
   * local doc querying through a mcp server
@@ -109,33 +145,10 @@
     claude mcp add context -- context serve
     ```
 
-* subwave
-  * https://github.com/perminder-klair/subwave
-  * https://www.getsubwave.com/
-  * Personal internet radio with AI - stream music (icecast), not a playlist
-  * use liquidsoap (https://www.liquidsoap.info/)
-  * use navidrome : 
-    * streaming audio service
-    * https://github.com/navidrome/navidrome/
-    * https://www.navidrome.org
+* router
+  * litellm
+    * https://github.com/BerriAI/litellm
 
-* Alexandria
-  * https://korben.info/alexandria-ebook-livre-audio-multivoix.html
-  * at least 8 GB of VRAM (16+ GB for decent performance);
-  * generate multi-voice audiobooks entirely locally, using an LLM to annotate the text for each character and the Qwen3-TTS (https://github.com/QwenLM/Qwen3-TTS) to generate audio. Offers 9 pre-trained voices, voice cloning from 5–15 seconds of audio, voice generation via text description. 
-
-* Text To Speech
-  * Qwen3-TTS
-    * https://github.com/QwenLM/Qwen3-TTS
-    * Qwen3-TTS is an open-source series of TTS models developed by the Qwen team at Alibaba Cloud, supporting stable, expressive, and streaming speech generation, free-form voice design, and vivid voice cloning.
-  * LuxTTS
-  * Chatterbox Multilingual TTS
-    * https://github.com/resemble-ai/chatterbox
-    * Chatterbox is a family of state-of-the-art, open-source text-to-speech models 
-  * Voicebox
-    * https://github.com/jamiepine/voicebox
-    * Desktop App - Clone voices, generate speech across seven TTS engines
-    * https://voicebox.sh/
 
 * optimization
   * headroom
@@ -205,3 +218,71 @@
   * https://huggingface.co/openai/privacy-filter
   * open source model that detect privacy data
   * best work on english text
+
+
+* Text To Speech
+  * Qwen3-TTS
+    * https://github.com/QwenLM/Qwen3-TTS
+    * Qwen3-TTS is an open-source series of TTS models developed by the Qwen team at Alibaba Cloud, supporting stable, expressive, and streaming speech generation, free-form voice design, and vivid voice cloning.
+  * LuxTTS
+    * https://github.com/ysharma3501/LuxTTS
+    * fast model
+  * Chatterbox Multilingual TTS
+    * https://github.com/resemble-ai/chatterbox
+    * Chatterbox is a family of state-of-the-art, open-source text-to-speech models 
+  * Voicebox
+    * https://github.com/jamiepine/voicebox
+    * Desktop App - Clone voices, generate speech across seven TTS engines
+    * https://voicebox.sh/
+
+
+* subwave
+  * https://github.com/perminder-klair/subwave
+  * https://www.getsubwave.com/
+  * Personal internet radio with AI - stream music (icecast), not a playlist
+  * use liquidsoap (https://www.liquidsoap.info/)
+  * use navidrome : 
+    * streaming audio service
+    * https://github.com/navidrome/navidrome/
+    * https://www.navidrome.org
+
+* Alexandria
+  * https://korben.info/alexandria-ebook-livre-audio-multivoix.html
+  * at least 8 GB of VRAM (16+ GB for decent performance);
+  * generate multi-voice audiobooks entirely locally, using an LLM to annotate the text for each character and the Qwen3-TTS (https://github.com/QwenLM/Qwen3-TTS) to generate audio. Offers 9 pre-trained voices, voice cloning from 5–15 seconds of audio, voice generation via text description. 
+
+
+
+* Spec-Driven Development Methodology framework
+  * superpowers
+    * https://github.com/obra/superpowers
+  * conductor
+    * https://github.com/gemini-cli-extensions/conductor
+
+
+
+* agent orchestrator
+  * oh-my-openagent (aka OmO) (formely oh-my-opencode)
+    * https://github.com/code-yeongyu/oh-my-openagent
+    * for OpenCode
+    * telemetry: set "telemetry": false in oh-my-openagent config, OMO_DISABLE_POSTHOG=1, or OMO_SEND_ANONYMOUS_TELEMETRY=0
+  * LazyCodex
+    * https://lazycodex.ai/
+    * https://github.com/code-yeongyu/lazycodex
+    * LazyCodex is a light version of OmO but for Codex cli
+    * telemetry: OMO_CODEX_DISABLE_POSTHOG=1 or OMO_CODEX_SEND_ANONYMOUS_TELEMETRY=0
+  * oh-my-codex (aka OmX)
+    * https://github.com/Yeachan-Heo/oh-my-codex
+    * https://oh-my-codex.dev/
+    * Multi-agent orchestration layer for OpenAI Codex CLI. Build faster with staged team pipelines, persistent memory/state MCP servers, and extensible hooks.
+  * oh-my-claudecode (aka OmC)
+    * https://github.com/yeachan-heo/oh-my-claudecode
+    * https://oh-my-claudecode.dev/
+    * Claude, Codex, and Gemini CLI workers running in parallel tmux panes — each doing what it does best.
+  * oh-my-antigravity
+    * for gemini-cli and antigravity cli
+    * https://github.com/Joonghyun-Lee-Frieren/oh-my-antigravity
+  * oh-my-opencode-slim
+    * https://github.com/alvinunreal/oh-my-opencode-slim
+    * https://ohmyopencodeslim.com/
+    * Lean, fine tuned Opencode multi agent suite · Mix any models · Auto delegate tasks

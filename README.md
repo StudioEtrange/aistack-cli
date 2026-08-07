@@ -62,7 +62,8 @@ cd aistack-cli
 agy
 ```
 
-**SEE OTHER [Quick Usage](./doc/quickusage.md)**
+**[Read every quick usage HERE](./doc/quickusage.md)**
+
 
 ## Specific documentation interest
 
@@ -80,63 +81,22 @@ agy
 
 ## Integrations
 
-* AIStack CLI offers functionality for these tools
+AIStack CLI offers functionalities for these tools
 
-### Gemini CLI
-
-See [Gemini CLI](doc/geminicli.md) 
-
-### Opencode
-
-See [Opencode](doc/opencode.md) 
-
-### CLIProxyAPI
-
-See [CLIProxyAPI](doc/cliproxyapi.md) 
-
-### Antigravity CLI
-
-See [Antigravity CLI](doc/antigravity.md)
-
-### asm - agent skill manager
-
-See [asm](doc/asm.md)
-
-### Playwright CLI
-
-See [Playwright CLI](doc/playwright-cli.md)
-
-### Kilo Code
-
-See [Kilo Code](doc/kilocode.md)
-
-### Orla
-
-See [Orla](doc/orla.md)
-
-### llmfit
-
-See [llmfit](doc/llmfit.md)
-
-### BMAD
-
-See [BMAD](doc/bmad.md)
-
-### Agent Development Kit (ADK)
-
-See [Agent Development Kit](doc/adk.md)
-
-### NVIDIA skillspeector
-
-See [NVIDIA skillspeector](doc/skillspector.md)
-
-### Cisco AI Skill Scanner
-
-See [Cisco AI Skill Scanner](doc/ciss.md)
-
-### VS Code
-
-See [VS Code](doc/vscode.md)
+* [Gemini CLI](doc/geminicli.md) 
+* [Opencode](doc/opencode.md) 
+* [CLIProxyAPI](doc/cliproxyapi.md) 
+* [Antigravity CLI](doc/antigravity.md)
+* [asm - agent skill manager](doc/asm.md)
+* [Playwright CLI](doc/playwright-cli.md)
+* [Kilo Code](doc/kilocode.md)
+* [Orla](doc/orla.md)
+* [llmfit](doc/llmfit.md)
+* [BMAD](doc/bmad.md)
+* [Agent Development Kit (ADK)](doc/adk.md)
+* [NVIDIA skillspeector](doc/skillspector.md)
+* [Cisco AI Skill Scanner](doc/ciss.md)
+* [VS Code](doc/vscode.md)
 
 ### MCP Servers
 

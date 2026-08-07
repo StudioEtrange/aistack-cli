@@ -14,7 +14,8 @@
             "context_length": 128000,
             "max_tokens": 4096,
             "apiMode": "openai",
-            "temperature": 0
+            "temperature": 0,
+            "top_p": 1
         }
     ]
     ```
