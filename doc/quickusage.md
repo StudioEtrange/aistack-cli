@@ -13,7 +13,7 @@ Right to the point how-to
   - [Case 7 : scan skills with asm](#case-7--scan-skills-with-asm)
   - [Case 8 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-8--scan-skills-with-cisco-ai-skill-scanner--openai)
   - [Case 9 : install the Rust runtime](#case-9--install-the-rust-runtime)
-  - [Case 10 : use Playwright CLI to take screenshot of a website](#case-10--install-playwright-cli)
+  - [Case 10 : use Playwright CLI to take screenshot of a website](#case-10--use-playwright-cli-to-take-screenshot-of-a-website)
 
 ## Case 0 : AIStack install and init
 
@@ -30,13 +30,12 @@ cd aistack-cli
 
 _"I want to install Kilo Code VS Code extension and use it connected to my OpenAI subscription."_
 
-**_CPA installation and daemon start_** :
+**_CPA installation and launch in background_** :
 ```
 cd aistack-cli
 ./aistack cpa install
 ./aistack cpa up
 ```
-
 Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to follow its logs, and `./aistack cpa down` to stop it.
 
 
@@ -109,7 +108,7 @@ cd aistack
 
 _"I want to install Orla agent and use it connected to my OpenAI subscription."_
 
-**_CPA installation and daemon start_** :
+**_CPA installation and launch in background_** :
 ```
 cd aistack-cli
 ./aistack cpa install
@@ -203,7 +202,7 @@ rm -Rf /tmp/skills
 
 _"I want to install Cisco AI Skill Scanner and use it connected to my OpenAI subscription to scan skills."_
 
-**_CPA installation, launch and Codex login_** :
+**_CPA installation and launch in background_** :
 ```
 cd aistack-cli
 ./aistack cpa install
