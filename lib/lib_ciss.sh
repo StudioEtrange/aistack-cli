@@ -41,13 +41,16 @@ ciss_install() {
 		aistack_runtime_require "${r}"
 	done
 
-	case $(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.17") in
-		-1|0) 
-			# yara-x is available for glibc 2.17 with yara-x<1.0.2 but cisco-ai-skill-scanner 2.x needs yara-x=>1.10
-			# need to build it and install it before cisco-ai-skill-scanner
-			python_yara_x_package_build_install
-			;;
-	esac
+
+	if [ ! "${STELLA_CURRENT_PLATFORM}" = "darwin" ]; then
+		case $(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.17") in
+			-1|0) 
+				# yara-x is available for glibc 2.17 with yara-x<1.0.2 but cisco-ai-skill-scanner 2.x needs yara-x=>1.10
+				# need to build it and install it before cisco-ai-skill-scanner
+				python_yara_x_package_build_install
+				;;
+		esac
+	fi
 
 	python_uv_package_install "cisco-ai-skill-scanner"
 	ciss_is_installed

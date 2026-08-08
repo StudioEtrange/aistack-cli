@@ -1243,7 +1243,9 @@ path_unregister_for_shell() {
 }
 
 glibc_version() {
-    ldd --version 2>/dev/null | awk '/ldd/{print $NF}' 2>/dev/null
+	if [ ! "${STELLA_CURRENT_PLATFORM}" = darwin ]; then
+    	ldd --version 2>/dev/null | awk '/ldd/{print $NF}' 2>/dev/null
+	fi
 }
 
 # test if a glibc version fullfull the minimal required version
