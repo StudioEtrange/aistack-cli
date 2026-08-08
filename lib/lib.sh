@@ -1243,9 +1243,9 @@ path_unregister_for_shell() {
 }
 
 glibc_version() {
-	if [ ! "${STELLA_CURRENT_PLATFORM}" = darwin ]; then
-    	ldd --version 2>/dev/null | awk '/ldd/{print $NF}' 2>/dev/null
-	fi
+	[ "${STELLA_CURRENT_PLATFORM}" = "darwin" ] && return 0
+
+    ldd --version 2>/dev/null | awk '/ldd/{print $NF}' 2>/dev/null
 }
 
 # test if a glibc version fullfull the minimal required version
@@ -1347,6 +1347,8 @@ glibc_alternative_path() {
 # Explicit per-tool GBC paths always take precedence over automatic selection.
 glibc_alternative_system() {
 	local _path
+
+	[ "${STELLA_CURRENT_PLATFORM}" = "darwin" ] && return 0
 
 	[ -n "${AISTACK_GLIBC_CURRENT_VERSION}" ] || return 0
 
