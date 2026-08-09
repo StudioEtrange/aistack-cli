@@ -15,6 +15,11 @@
 
 * allow cpa to register ai endpoint with a command
 
+* allow to include aistack-cli as a framework in another shell app
+  * use aistack-bootstrap.sh in aistack instead of init sequence
+  * prefix EVERY function with ais_xxx
+  * include aistack-bootstrap.sh in other shell app
+
 * get llm metadata context size and prices
   * https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json
 
