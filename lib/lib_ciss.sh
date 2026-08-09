@@ -166,23 +166,31 @@ ciss_settings_remove() {
 
 aistack_ciss_context_file_generate() {
 	echo '#!/bin/sh' > "${AISTACK_CISS_CONTEXT_FILE}"
+	
+	if [ -n "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS}" ]; then  
+        if [ -n "${AISTACK_CLIPROXYAPI_MODEL_FOR_CISS}" ]; then
+			if cpa_is_configured; then
+                (
+					export SKILL_SCANNER_LLM_API_KEY="${AISTACK_CLIPROXYAPI_KEY_FOR_CISS}"
+					export SKILL_SCANNER_LLM_PROVIDER="openai"
+					export SKILL_SCANNER_LLM_BASE_URL="$(cpa_settings_get_api_endpoint)"
+					export SKILL_SCANNER_LLM_MODEL="${AISTACK_CLIPROXYAPI_MODEL_FOR_CISS}"
+				
+                    aistack_context_file_export_variables "${AISTACK_CISS_CONTEXT_FILE}" "SKILL_SCANNER_LLM_API_KEY SKILL_SCANNER_LLM_PROVIDER SKILL_SCANNER_LLM_BASE_URL SKILL_SCANNER_LLM_MODEL"
+				)
+			fi
+		fi
+	elif [ -n "${AISTACK_MODEL_KEY_FOR_CISS}" ]; then
+		if [ -n "${AISTACK_MODEL_ID_FOR_CISS}" ]; then
+			(
+				export SKILL_SCANNER_LLM_API_KEY="${AISTACK_MODEL_KEY_FOR_CISS}"
+				export SKILL_SCANNER_LLM_PROVIDER="${AISTACK_MODEL_PROVIDER_FOR_CISS}"
+				export SKILL_SCANNER_LLM_BASE_URL="${AISTACK_MODEL_PROVIDER_URL_FOR_CISS}"
+				export SKILL_SCANNER_LLM_MODEL="${AISTACK_MODEL_ID_FOR_CISS}"
 
-	if cpa_is_configured && [ -n "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS}" ] && [ -n "${AISTACK_CLIPROXYAPI_MODEL_FOR_CISS}" ]; then
-		{
-			echo 'export SKILL_SCANNER_LLM_API_KEY="'"${AISTACK_CLIPROXYAPI_KEY_FOR_CISS}"'"'
-			echo 'export SKILL_SCANNER_LLM_PROVIDER="openai"'
-			echo 'export SKILL_SCANNER_LLM_BASE_URL="'"$(cpa_settings_get_api_endpoint)"'"'
-			echo 'export SKILL_SCANNER_LLM_MODEL="'"${AISTACK_CLIPROXYAPI_MODEL_FOR_CISS}"'"'
-		} >> "${AISTACK_CISS_CONTEXT_FILE}"
-	fi
-
-	if [ -n "${AISTACK_MODEL_KEY_FOR_CISS}" ] && [ -n "${AISTACK_MODEL_ID_FOR_CISS}" ]; then
-		{
-			echo 'export SKILL_SCANNER_LLM_API_KEY="'"${AISTACK_MODEL_KEY_FOR_CISS}"'"'
-			echo 'export SKILL_SCANNER_LLM_PROVIDER="'"${AISTACK_MODEL_PROVIDER_FOR_CISS}"'"'
-			echo 'export SKILL_SCANNER_LLM_BASE_URL="'"${AISTACK_MODEL_PROVIDER_URL_FOR_CISS}"'"'
-			echo 'export SKILL_SCANNER_LLM_MODEL="'"${AISTACK_MODEL_ID_FOR_CISS}"'"'
-		} >> "${AISTACK_CISS_CONTEXT_FILE}"
+				aistack_context_file_export_variables "${AISTACK_CISS_CONTEXT_FILE}" "SKILL_SCANNER_LLM_API_KEY SKILL_SCANNER_LLM_PROVIDER SKILL_SCANNER_LLM_BASE_URL SKILL_SCANNER_LLM_MODEL"
+			)
+		fi
 	fi
 
 	chmod +x "${AISTACK_CISS_CONTEXT_FILE}"
