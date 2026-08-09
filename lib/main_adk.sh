@@ -6,7 +6,7 @@ case "${sub_command}" in
             echo "ERROR: adk not installed"
             exit 1
         else
-            adk_launcher_manage
+            adk_launcher_and_context_files_manage
 
             echo "You should register it's path into a spacific supported shell OR vscode terminal"
             echo "aistack adk register all|bash|zsh|fish"
@@ -21,7 +21,7 @@ case "${sub_command}" in
         adk_path_unregister_for_shell "all"
         adk_path_unregister_for_vs_terminal
 
-        adk_launcher_manage "delete"
+        adk_launcher_and_context_files_manage "delete"
         ;;
     register)
         echo "Registering adk launcher in PATH for $1"
@@ -46,7 +46,7 @@ case "${sub_command}" in
         esac
         ;;
     launch)
-        #adk_launcher_manage
+        #adk_launcher_and_context_files_manage
 		if adk_is_installed; then
 			[ "$1" = "--" ] && shift
 

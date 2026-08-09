@@ -31,6 +31,7 @@ function init_aistack_test_env() {
 	. "${STELLA_APP_ROOT}/../lib/lib_vscode.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_gemini.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_opencode.sh"
+	. "${STELLA_APP_ROOT}/../lib/lib_och.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_kilo.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_orla.sh"
 	. "${STELLA_APP_ROOT}/../lib/lib_bmad.sh"
@@ -52,7 +53,7 @@ function init_aistack_test_env() {
 	aistack_mcp_detect 1>/dev/null 2>&1
 	
 	aistack_generic_context_file_generate 1>/dev/null 2>&1
-	aistack_launcher_regenerate 1>/dev/null 2>&1
+	aistack_launcher_and_context_files_regenerate 1>/dev/null 2>&1
 
 	# install core requirements
 	# NOTE: use aistack_component_core_install instead of aistack_install for speed gain

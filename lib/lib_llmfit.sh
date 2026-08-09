@@ -119,7 +119,7 @@ llmfit_launch() {
 	)
 }
 
-llmfit_launcher_manage() {
+llmfit_launcher_and_context_files_manage() {
     local action="${1:-create}"
 
     case ${action} in
@@ -150,7 +150,7 @@ llmfit_launcher_manage() {
             ;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_LLMFIT_LAUNCHER_FILE}" ] && ( llmfit_launcher_manage "delete"; llmfit_launcher_manage "create" )
+			[ -f "${AISTACK_LLMFIT_LAUNCHER_FILE}" ] && ( llmfit_launcher_and_context_files_manage "delete"; llmfit_launcher_and_context_files_manage "create" )
 			;;
     esac
 }

@@ -10,7 +10,7 @@ case "${sub_command}" in
             echo "Configuring Orla"
             orla_settings_configure
 
-            orla_launcher_manage
+            orla_launcher_and_context_files_manage
 
             echo "You should register it's path into a spacific supported shell OR vscode terminal"
             echo "aistack orla register all|bash|zsh|fish"
@@ -28,7 +28,7 @@ case "${sub_command}" in
         orla_path_unregister_for_shell "all"
         orla_path_unregister_for_vs_terminal
 
-        orla_launcher_manage "delete"
+        orla_launcher_and_context_files_manage "delete"
         ;;
     configure)
         echo "Configuring Orla"
@@ -68,7 +68,7 @@ case "${sub_command}" in
         ;;
 
     launch)
-        #orla_launcher_manage
+        #orla_launcher_and_context_files_manage
 		if orla_is_installed; then
 			local folder=
 			if [ -n "$1" ] && [ "$1" != "--" ]; then

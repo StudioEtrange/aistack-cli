@@ -116,7 +116,7 @@ asm_launch() {
 	)
 }
 
-asm_launcher_manage() {
+asm_launcher_and_context_files_manage() {
 	local action="${1:-create}"
 
 	case $action in
@@ -148,7 +148,7 @@ asm_launcher_manage() {
 			;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_ASM_LAUNCHER_FILE}" ] && ( asm_launcher_manage "delete"; asm_launcher_manage "create" )
+			[ -f "${AISTACK_ASM_LAUNCHER_FILE}" ] && ( asm_launcher_and_context_files_manage "delete"; asm_launcher_and_context_files_manage "create" )
 			;;
 	esac
 }

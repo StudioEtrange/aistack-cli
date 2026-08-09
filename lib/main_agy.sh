@@ -10,7 +10,7 @@ case "${sub_command}" in
 			agy_settings_configure
 			vscode_settings_configure "antigravity"
 
-			agy_launcher_manage
+			agy_launcher_and_context_files_manage
 
 			echo "You should register its path into a specific supported shell OR vscode terminal"
 			echo "aistack agy register all|bash|zsh|fish"
@@ -25,21 +25,21 @@ case "${sub_command}" in
 		agy_path_unregister_for_shell "all"
 		agy_path_unregister_for_vs_terminal
 
-		agy_launcher_manage "delete"
+		agy_launcher_and_context_files_manage "delete"
 		;;
 	configure)
         echo "Configuring Antigravity CLI"
         agy_settings_configure
 		vscode_settings_configure "antigravity"
 
-        #antigravity_launcher_manage
+        #agy_launcher_and_context_files_manage
         ;;
 	reset)
         echo "Resetting Antigravity CLI configuration"
         agy_settings_remove
         vscode_settings_remove "antigravity"
 
-        #antigravity_launcher_manage
+        #agy_launcher_and_context_files_manage
         ;;
 	register)
 		echo "Registering Antigravity CLI launcher in PATH for $1"

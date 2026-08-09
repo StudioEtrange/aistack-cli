@@ -89,7 +89,7 @@ EOF
 }
 
 
-@test "playwright_launcher_manage creates an executable wrapper" {
+@test "playwright_launcher_and_context_files_manage creates an executable wrapper" {
 	aistack_runtime_is_detected() {
 		return 0
 	}
@@ -99,7 +99,7 @@ EOF
 	printf '%s\n' '#!/bin/sh' > "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/playwright-cli"
 	chmod +x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/playwright-cli"
 
-	playwright_launcher_manage create
+	playwright_launcher_and_context_files_manage create
 
 	[ -x "${AISTACK_PLAYWRIGHT_LAUNCHER_HOME}/playwright-cli" ]
 }

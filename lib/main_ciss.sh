@@ -6,7 +6,7 @@ case "${sub_command}" in
             echo "ERROR: ciss not installed"
 			exit 1
 		else
-			ciss_launcher_manage
+			ciss_launcher_and_context_files_manage
 			echo "You should register its path into a supported shell or VS Code terminal"
 			echo "aistack ciss register all|bash|zsh|fish"
 			echo "aistack ciss register vs"
@@ -18,7 +18,7 @@ case "${sub_command}" in
 		ciss_uninstall
 		ciss_path_unregister_for_shell "all"
 		ciss_path_unregister_for_vs_terminal
-		ciss_launcher_manage "delete"
+		ciss_launcher_and_context_files_manage "delete"
 		;;
 	register)
 		echo "Registering ciss launcher in PATH"
@@ -73,7 +73,7 @@ case "${sub_command}" in
 	disconnect)
 		ciss_unregister_model "CPA"
 		ciss_unregister_model
-		ciss_launcher_manage "create"
+		ciss_launcher_and_context_files_manage "create"
 		;;
 	*)
 		echo "ERROR: Unknown command ${sub_command} for ciss"

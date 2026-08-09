@@ -10,7 +10,7 @@ case "${sub_command}" in
             echo "Configuring CLIProxyAPI"
             cpa_settings_configure
 
-            cpa_launcher_manage
+            cpa_launcher_and_context_files_manage
         fi
         ;;
     uninstall)
@@ -24,7 +24,7 @@ case "${sub_command}" in
         echo "Uninstalling CLIProxyAPI (keeping all configuration unchanged. to remove configuration use reset command)"
         cpa_uninstall
 
-        cpa_launcher_manage "delete"
+        cpa_launcher_and_context_files_manage "delete"
         ;;
     configure)
         echo "Configuring CLIProxyAPI"
@@ -79,7 +79,7 @@ case "${sub_command}" in
         esac
         ;;
     launch|up)
-        #cpa_launcher_manage
+        #cpa_launcher_and_context_files_manage
 
 		if cpa_is_installed; then
 			local folder=

@@ -34,7 +34,7 @@
             echo "Configuring TOOL"
             xxx_settings_configure
             vscode_settings_configure "xxx"
-            xxx_launcher_manage
+            xxx_launcher_and_context_files_manage
         fi
         aistack_tool_detect
         aistack_generic_context_file_generate

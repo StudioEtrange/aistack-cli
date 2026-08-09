@@ -6,7 +6,7 @@ case "${sub_command}" in
             echo "ERROR: sktor not installed"
             exit 1
         else
-            sktor_launcher_manage
+            sktor_launcher_and_context_files_manage
 
             echo "You should register it's path into a spacific supported shell OR vscode terminal"
             echo "aistack sktor register all|bash|zsh|fish"
@@ -21,7 +21,7 @@ case "${sub_command}" in
         sktor_path_unregister_for_shell "all"
         sktor_path_unregister_for_vs_terminal
 
-        sktor_launcher_manage "delete"
+        sktor_launcher_and_context_files_manage "delete"
         ;;
     register)
         echo "Registering sktor launcher in PATH"
@@ -87,7 +87,7 @@ case "${sub_command}" in
         sktor_unregister_model "CPA"
         sktor_unregister_model
 
-        sktor_launcher_manage "create"
+        sktor_launcher_and_context_files_manage "create"
         ;;
     *)
         echo "ERROR: Unknown command ${sub_command} for sktor"

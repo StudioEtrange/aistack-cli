@@ -9,7 +9,7 @@ case "${sub_command}" in
 			echo "Configuring asm"
 			asm_settings_configure
 
-			asm_launcher_manage
+			asm_launcher_and_context_files_manage
 
 			echo "You should register it's path into a spacific supported shell OR vscode terminal"
 			echo "aistack asm register all|bash|zsh|fish"
@@ -24,7 +24,7 @@ case "${sub_command}" in
 		asm_path_unregister_for_shell "all"
 		asm_path_unregister_for_vs_terminal
 
-		asm_launcher_manage "delete"
+		asm_launcher_and_context_files_manage "delete"
 		# TODO delete asm context file here ?
 		;;
 	configure)
@@ -64,7 +64,7 @@ case "${sub_command}" in
 		asm_show_config
 		;;
 	launch)
-		#asm_launcher_manage
+		#asm_launcher_and_context_files_manage
 		if asm_is_installed; then
 			local folder=
 			if [ -n "$1" ] && [ "$1" != "--" ]; then

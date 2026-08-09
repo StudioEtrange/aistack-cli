@@ -106,7 +106,7 @@ adk_launch() {
 	)
 }
 
-adk_launcher_manage() {
+adk_launcher_and_context_files_manage() {
 	local action="${1:-create}"
 
 	case $action in
@@ -138,7 +138,7 @@ adk_launcher_manage() {
 			;;
 		
 		refresh_if_exists)
-			[ -f "${AISTACK_ADK_LAUNCHER_FILE}" ] && ( adk_launcher_manage "delete"; adk_launcher_manage "create" )
+			[ -f "${AISTACK_ADK_LAUNCHER_FILE}" ] && ( adk_launcher_and_context_files_manage "delete"; adk_launcher_and_context_files_manage "create" )
 			;;
 	esac
 }

@@ -118,7 +118,7 @@ opencode_launch() {
 	)
 }
 
-opencode_launcher_manage() {
+opencode_launcher_and_context_files_manage() {
     local action="${1:-create}"
 
 	case $action in
@@ -149,7 +149,7 @@ opencode_launcher_manage() {
             ;;
 	
 		refresh_if_exists)
-			[ -f "${AISTACK_OPENCODE_LAUNCHER_FILE}" ] && ( opencode_launcher_manage "delete"; opencode_launcher_manage "create" )
+			[ -f "${AISTACK_OPENCODE_LAUNCHER_FILE}" ] && ( opencode_launcher_and_context_files_manage "delete"; opencode_launcher_and_context_files_manage "create" )
 			;;
     esac
 }
@@ -329,7 +329,7 @@ opencode_generate_cpa_key() {
     echo "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE" > "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE"
 
     # each time an api key is generated we need to refresh the launcher to update env vars
-    opencode_launcher_manage "create"
+    opencode_launcher_and_context_files_manage "create"
 }
 
 opencode_unregister_cpa_key() {

@@ -7,7 +7,7 @@ case "${sub_command}" in
 			exit 1
 		fi
 
-		playwright_launcher_manage
+		playwright_launcher_and_context_files_manage
 
 		echo "You should register its path into a specific supported shell OR VS Code terminal"
 		echo "aistack plw register all|bash|zsh|fish"
@@ -21,7 +21,7 @@ case "${sub_command}" in
 		playwright_path_unregister_for_shell "all"
 		playwright_path_unregister_for_vs_terminal
 
-		playwright_launcher_manage "delete"
+		playwright_launcher_and_context_files_manage "delete"
 		;;
 	info)
 		playwright_info

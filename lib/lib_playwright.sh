@@ -106,7 +106,7 @@ playwright_launch() {
 	)
 }
 
-playwright_launcher_manage() {
+playwright_launcher_and_context_files_manage() {
 	local action="${1:-create}"
 
 	case "${action}" in
@@ -137,8 +137,8 @@ playwright_launcher_manage() {
 			;;
 		refresh_if_exists)
 			if [ -f "${AISTACK_PLAYWRIGHT_LAUNCHER_FILE}" ]; then
-				playwright_launcher_manage "delete"
-				playwright_launcher_manage "create"
+				playwright_launcher_and_context_files_manage "delete"
+				playwright_launcher_and_context_files_manage "create"
 			fi
 			;;
 	esac

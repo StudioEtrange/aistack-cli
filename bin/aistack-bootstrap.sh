@@ -18,6 +18,7 @@ STELLA_LOG_STATE="OFF"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_vscode.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_gemini.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_opencode.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_och.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_orla.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
@@ -38,4 +39,4 @@ aistack_tool_detect
 aistack_mcp_detect
 
 aistack_generic_context_file_generate
-aistack_launcher_regenerate
+aistack_launcher_and_context_files_regenerate

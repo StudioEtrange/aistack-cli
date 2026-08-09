@@ -143,7 +143,7 @@ agy_launch() {
 	)
 }
 
-agy_launcher_manage() {
+agy_launcher_and_context_files_manage() {
 	local action="${1:-create}"
 
 	case $action in
@@ -175,7 +175,7 @@ agy_launcher_manage() {
 			;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_ANTIGRAVITY_LAUNCHER_FILE}" ] && ( agy_launcher_manage "delete"; agy_launcher_manage "create" )
+			[ -f "${AISTACK_ANTIGRAVITY_LAUNCHER_FILE}" ] && ( agy_launcher_and_context_files_manage "delete"; agy_launcher_and_context_files_manage "create" )
 			;;
 	esac
 }

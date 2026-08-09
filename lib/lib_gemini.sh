@@ -114,7 +114,7 @@ gemini_launch() {
 	)
 }
 
-gemini_launcher_manage() {
+gemini_launcher_and_context_files_manage() {
 	local action="${1:-create}"
 
 	case $action in
@@ -146,7 +146,7 @@ gemini_launcher_manage() {
 			;;
 		
 		refresh_if_exists)
-			[ -f "${AISTACK_GEMINI_LAUNCHER_FILE}" ] && ( gemini_launcher_manage "delete"; gemini_launcher_manage "create" )
+			[ -f "${AISTACK_GEMINI_LAUNCHER_FILE}" ] && ( gemini_launcher_and_context_files_manage "delete"; gemini_launcher_and_context_files_manage "create" )
 			;;
 	esac
 }

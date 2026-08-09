@@ -110,7 +110,7 @@ bmad_launch() {
 	)
 }
 
-bmad_launcher_manage() {
+bmad_launcher_and_context_files_manage() {
 	local action="${1:-create}"
 
 	case $action in
@@ -145,7 +145,7 @@ bmad_launcher_manage() {
 			;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_BMAD_METHOD_LAUNCHER_FILE}" ] && ( bmad_launcher_manage "delete"; bmad_launcher_manage "create" )
+			[ -f "${AISTACK_BMAD_METHOD_LAUNCHER_FILE}" ] && ( bmad_launcher_and_context_files_manage "delete"; bmad_launcher_and_context_files_manage "create" )
 			;;
 	esac
 }

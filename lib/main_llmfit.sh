@@ -6,7 +6,7 @@ case "${sub_command}" in
             echo "ERROR: llmfit not installed"
             exit 1
         else
-            llmfit_launcher_manage
+            llmfit_launcher_and_context_files_manage
 
             echo "You should register it's path into a spacific supported shell OR vscode terminal"
             echo "aistack llmfit register all|bash|zsh|fish"
@@ -22,7 +22,7 @@ case "${sub_command}" in
         llmfit_path_unregister_for_shell "all"
         llmfit_path_unregister_for_vs_terminal
 
-        llmfit_launcher_manage "delete"
+        llmfit_launcher_and_context_files_manage "delete"
         ;;
     register)
         echo "Registering Orla launcher in PATH"
@@ -51,7 +51,7 @@ case "${sub_command}" in
         ;;
 
     launch)
-        #orla_launcher_manage
+        #llmfit_launcher_and_context_files_manage
 		if llmfit_is_installed; then
 			local folder=
 			if [ -n "$1" ] && [ "$1" != "--" ]; then

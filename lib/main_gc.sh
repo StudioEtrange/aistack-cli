@@ -10,7 +10,7 @@ case "${sub_command}" in
             gemini_settings_configure
             vscode_settings_configure "gemini"
 
-            gemini_launcher_manage
+            gemini_launcher_and_context_files_manage
 
             echo "You should register it's path into a spacific supported shell OR vscode terminal"
             echo "aistack gc register all|bash|zsh|fish"
@@ -25,21 +25,21 @@ case "${sub_command}" in
         gemini_path_unregister_for_shell "all"
         gemini_path_unregister_for_vs_terminal
 
-        gemini_launcher_manage "delete"
+        gemini_launcher_and_context_files_manage "delete"
         ;;
     configure)
         echo "Configuring Gemini CLI"
         gemini_settings_configure
         vscode_settings_configure "gemini"
 
-        #gemini_launcher_manage
+        #gemini_launcher_and_context_files_manage
         ;;
     reset)
         echo "Resetting Gemini CLI configuration"
         gemini_settings_remove
         vscode_settings_remove "gemini"
 
-        #gemini_launcher_manage
+        #gemini_launcher_and_context_files_manage
         ;;
     register)
         echo "Registering Gemini CLI launcher in PATH for $1"
@@ -70,7 +70,7 @@ case "${sub_command}" in
         gemini_info
         ;;
     launch)
-        #gemini_launcher_manage
+        #gemini_launcher_and_context_files_manage
 		if gemini_is_installed; then
 			local folder=
 			if [ -n "$1" ] && [ "$1" != "--" ]; then

@@ -11,7 +11,7 @@ case "${sub_command}" in
             # TODO
             # vscode_settings_configure "kilo"
             
-            kilo_launcher_manage
+            kilo_launcher_and_context_files_manage
 
             echo "You should register it's path into a spacific supported shell OR vscode terminal"
             echo "aistack kc register all|bash|zsh|fish"
@@ -26,7 +26,7 @@ case "${sub_command}" in
         kilo_path_unregister_for_shell "all"
         kilo_path_unregister_for_vs_terminal
 
-        kilo_launcher_manage "delete"
+        kilo_launcher_and_context_files_manage "delete"
         ;;
     configure)
         echo "Configuring Kilo Code CLI and Kilo Code VS Code extension"
@@ -34,7 +34,7 @@ case "${sub_command}" in
         # TODO
         #vscode_settings_configure "kilo"
 
-        #kilo_launcher_manage
+        #kilo_launcher_and_context_files_manage
         ;;
     reset)
         echo "Resetting Kilo Code configuration"
@@ -42,7 +42,7 @@ case "${sub_command}" in
         # TODO
         #vscode_settings_remove "kilo"
 
-        #kilo_launcher_manage
+        #kilo_launcher_and_context_files_manage
         ;;
     register)
         echo "Registering Kilo Code CLI launcher in PATH for ${1}"
@@ -74,7 +74,7 @@ case "${sub_command}" in
         ;;
 
     launch)
-        #kilo_launcher_manage
+        #kilo_launcher_and_context_files_manage
 		if kilo_is_installed; then
 			local folder=
 			if [ -n "${1}" ] && [ "${1}" != "--" ]; then

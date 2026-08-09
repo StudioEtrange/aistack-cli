@@ -131,7 +131,7 @@ sktor_launch() {
 	)
 }
 
-sktor_launcher_manage() {
+sktor_launcher_and_context_files_manage() {
     local action="${1:-create}"
 
     case ${action} in
@@ -163,7 +163,7 @@ sktor_launcher_manage() {
             ;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_SKTOR_LAUNCHER_FILE}" ] && ( sktor_launcher_manage "delete"; sktor_launcher_manage "create" )
+			[ -f "${AISTACK_SKTOR_LAUNCHER_FILE}" ] && ( sktor_launcher_and_context_files_manage "delete"; sktor_launcher_and_context_files_manage "create" )
 			;;
     esac
 }
@@ -280,7 +280,7 @@ sktor_generate_cpa_key() {
     echo "$AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR" > "$AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR_FILE"
 
     # each time an api key is generated we need to refresh the launcher to update env vars
-    sktor_launcher_manage "create"
+    sktor_launcher_and_context_files_manage "create"
 }
 
 sktor_unregister_cpa_key() {
@@ -352,7 +352,7 @@ sktor_register_model() {
     esac
     
     sktor_register_model_in_model_registry "${id_model}" "${context_length}" "${max_output_tokens}"
-    sktor_launcher_manage "create"
+    sktor_launcher_and_context_files_manage "create"
 
 }
 

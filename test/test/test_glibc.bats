@@ -136,6 +136,8 @@ teardown() {
 
 
 @test "glibc_alternative_system selects runtime per tool requirement" {
+	[ "${STELLA_CURRENT_PLATFORM}" = darwin ] && skip "Ignored on macos"
+
 	local runtime_217="$(mktemp -d)"
 	local runtime_228="$(mktemp -d)"
 	local runtime_239="$(mktemp -d)"
@@ -170,6 +172,8 @@ teardown() {
 
 
 @test "glibc_alternative_system uses newer configured fallback" {
+	[ "${STELLA_CURRENT_PLATFORM}" = darwin ] && skip "Ignored on macos"
+
 	local runtime_239="$(mktemp -d)"
 
 	export AISTACK_GLIBC_CURRENT_VERSION="2.17"
@@ -187,6 +191,8 @@ teardown() {
 
 
 @test "glibc_alternative_system preserves explicit tool runtime" {
+	[ "${STELLA_CURRENT_PLATFORM}" = darwin ] && skip "Ignored on macos"
+
 	local runtime_228="$(mktemp -d)"
 
 	export AISTACK_GLIBC_CURRENT_VERSION="2.17"

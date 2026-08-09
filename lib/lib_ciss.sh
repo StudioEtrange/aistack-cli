@@ -128,7 +128,7 @@ ciss_launch() {
 	)
 }
 
-ciss_launcher_manage() {
+ciss_launcher_and_context_files_manage() {
 	local action="${1:-create}"
 
 	case "${action}" in
@@ -158,7 +158,7 @@ ciss_launcher_manage() {
 			ciss_context_file_generate_remove
 			;;
 		refresh_if_exists)
-			[ -f "${AISTACK_CISS_LAUNCHER_FILE}" ] && ( ciss_launcher_manage "delete"; ciss_launcher_manage "create" )
+			[ -f "${AISTACK_CISS_LAUNCHER_FILE}" ] && ( ciss_launcher_and_context_files_manage "delete"; ciss_launcher_and_context_files_manage "create" )
 			;;
 	esac
 }
@@ -247,7 +247,7 @@ ciss_generate_cpa_key() {
 		return 1
 	}
 	echo "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS}" > "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS_FILE}"
-	ciss_launcher_manage "create"
+	ciss_launcher_and_context_files_manage "create"
 }
 
 ciss_unregister_cpa_key() {
@@ -301,7 +301,7 @@ ciss_register_model() {
 			echo "${AISTACK_MODEL_PROVIDER_URL_FOR_CISS}" > "${AISTACK_MODEL_PROVIDER_URL_FOR_CISS_FILE}"
 			;;
 	esac
-	ciss_launcher_manage "create"
+	ciss_launcher_and_context_files_manage "create"
 }
 
 ciss_connect_cpa() {

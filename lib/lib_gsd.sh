@@ -60,7 +60,7 @@ gsd_uninstall() {
 }
 
 # GSD do not have a launcher
-gsd_launcher_manage() {
+gsd_launcher_and_context_files_manage() {
 	:
 }
 

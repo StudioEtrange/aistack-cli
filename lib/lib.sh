@@ -70,6 +70,7 @@ aistack_initialize() {
 	gemini_init
 	agy_init
     opencode_init
+	openchamber_init
     cpa_init
     orla_init
     kilo_init
@@ -86,7 +87,7 @@ aistack_initialize() {
 aistack_info() {
     echo "--*== AIStack Informations ==*--"
     echo
-    echo "AISTACK_POOL: $AISTACK_POOL"
+	echo "CURRENT PLATFORM DETECTED: $STELLA_CURRENT_PLATFORM"
     echo "AISTACK_LAUNCHER_HOME: $AISTACK_LAUNCHER_HOME"
     echo "AISTACK_MCP_LAUNCHER_HOME: $AISTACK_MCP_LAUNCHER_HOME"
     echo "AISTACK_ISOLATED_ROOT: $AISTACK_ISOLATED_ROOT"
@@ -109,9 +110,9 @@ aistack_info() {
         echo "AISTACK_RUNTIME_NODEJS_SEARCH_PATH: $AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
         echo "AISTACK_RUNTIME_NODEJS_PATH: $AISTACK_RUNTIME_NODEJS_PATH"
         echo "AISTACK_MODULE_NPM_AVAILABLE: $AISTACK_MODULE_NPM_AVAILABLE"
-        echo "NodeJS version : $($AISTACK_RUNTIME_NODEJS_PATH --version)"
-        echo "NPM version : $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --version)"
-        echo "NPM cache dir : $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get cache)"
+        echo "NodeJS version: $($AISTACK_RUNTIME_NODEJS_PATH --version)"
+        echo "NPM version: $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --version)"
+        echo "NPM cache dir: $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get cache)"
         local npm_userconfig="$(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get userconfig)"
         case "$npm_userconfig" in
             "undefined"|"")
@@ -156,17 +157,31 @@ aistack_info() {
     echo
 
     echo "--components management--"
-	echo "AISTACK_RUNTIME_TO_DETECT : $AISTACK_RUNTIME_TO_DETECT"
-	echo "AISTACK_RUNTIME_CORE : $AISTACK_RUNTIME_CORE"
-    echo "AISTACK_MODULE_TO_DETECT : $AISTACK_MODULE_TO_DETECT"
-	echo "AISTACK_MODULE_CORE : $AISTACK_MODULE_CORE"
-	echo "AISTACK_MODULE_CORE_BOOTSTRAP : $AISTACK_MODULE_CORE_BOOTSTRAP"
+	echo "AISTACK_RUNTIME_TO_DETECT: $AISTACK_RUNTIME_TO_DETECT"
+	echo "AISTACK_RUNTIME_CORE: $AISTACK_RUNTIME_CORE"
+    echo "AISTACK_MODULE_TO_DETECT: $AISTACK_MODULE_TO_DETECT"
+	echo "AISTACK_MODULE_CORE: $AISTACK_MODULE_CORE"
+	echo "AISTACK_MODULE_CORE_BOOTSTRAP: $AISTACK_MODULE_CORE_BOOTSTRAP"
     echo
-    echo "AISTACK_GENERIC_CONTEXT_ADD_RUNTIME : $AISTACK_GENERIC_CONTEXT_ADD_RUNTIME"
-    echo "AISTACK_GENERIC_CONTEXT_ADD_MODULE : $AISTACK_GENERIC_CONTEXT_ADD_MODULE"
+    echo "AISTACK_GENERIC_CONTEXT_ADD_RUNTIME: $AISTACK_GENERIC_CONTEXT_ADD_RUNTIME"
+    echo "AISTACK_GENERIC_CONTEXT_ADD_MODULE: $AISTACK_GENERIC_CONTEXT_ADD_MODULE"
     echo
-    echo "--module status--"
+	echo
+    echo "--runtimes status--"
     local var name p
+	while IFS= read -r var; do
+		case "$var" in
+			AISTACK_RUNTIME_*_AVAILABLE)
+                name="${var#AISTACK_RUNTIME_}"
+                name="${name%_AVAILABLE}"
+                printf '%s available : %s\n' "$name" "${!var}"
+                path_var="${var/_AVAILABLE/_PATH}"
+                printf '%s path : %s\n' "$name" "${!path_var}"
+                ;;
+		esac
+	done < <(compgen -v AISTACK_ | sort)
+	echo
+    echo "--modules status--"
 	while IFS= read -r var; do
 		case "$var" in
 			AISTACK_MODULE_*_AVAILABLE)
@@ -178,6 +193,7 @@ aistack_info() {
                 ;;
 		esac
 	done < <(compgen -v AISTACK_ | sort)
+	echo
     echo "--tools status--"
 	while IFS= read -r var; do
 		case "$var" in
@@ -200,72 +216,72 @@ aistack_info() {
 	echo "Antigravity CLI alternative glibc path AISTACK_INIT_FORCE_AGY_GBC: ${AISTACK_INIT_FORCE_AGY_GBC}"
 	echo "llmfit alternative glibc path AISTACK_INIT_FORCE_LLMFIT_GBC: ${AISTACK_INIT_FORCE_LLMFIT_GBC}"
     echo
-	echo "-- CURRENT SEARCH PATH --"
-    echo "PATH : $PATH"
+	#echo "-- CURRENT SEARCH PATH --"
+    #echo "PATH : $PATH"
 }
 
+aistack_init() {
+	# NOTE : aistack_install uninstall everything
+	aistack_install
+}
 
 aistack_install() {
-    # TODO : do we need to remove all ?
-    aistack_component_remove_all
+	aistack_uninstall
 
-    aistack_runtime_detect
-    aistack_module_detect
-    aistack_tool_detect
-    aistack_mcp_detect
-	# we need this folder for core install
-	mkdir -p "${AISTACK_ISOLATED_ROOT}"
+	# # we need this folder for core install
+	# mkdir -p "${AISTACK_ISOLATED_ROOT}"
 
-    aistack_component_core_install
+	aistack_initialize
+
+	# we need to reset all runtime and modules variables (available, path, ...)
+	aistack_runtime_detect
+	aistack_module_detect
+	aistack_tool_detect
+	aistack_mcp_detect
+
+	aistack_component_core_install
+
+	# NOTE: included in aistack_component_core_install
+	#aistack_runtime_detect
+	#aistack_module_detect
+
+	# NOTE: we do not have any tool or mcp installed yet
+	#		unless in the future some tools will be considered as core and installed with aistack_component_core_install ?)
+	#aistack_tool_detect
+	#aistack_mcp_detect
+
+	aistack_generic_context_file_generate
+	aistack_launcher_and_context_files_regenerate
+
 }
 
 aistack_uninstall() {
-    # TODO : check missing unregister functions in this list
-
 	echo "INFO : clean various PATHs for shells"
-	gemini_path_unregister_for_shell "all"
-	opencode_path_unregister_for_shell "all"
-	orla_path_unregister_for_shell "all"
-	bmad_path_unregister_for_shell "all"
-	#gsd_path_unregister_for_shell "all"
-	adk_path_unregister_for_shell "all"
-	asm_path_unregister_for_shell "all"
-	playwright_path_unregister_for_shell "all"
-	kilo_path_unregister_for_shell "all"
-	agy_path_unregister_for_shell "all"
-	llmfit_path_unregister_for_shell "all"
-    sktor_path_unregister_for_shell "all"
-	ciss_path_unregister_for_shell "all"
-    
-    # NOTE : because need lib_json which use json5 which needs nodesjs
-	if aistack_module_is_detected "json5"; then 
-		gemini_path_unregister_for_vs_terminal
-		opencode_path_unregister_for_vs_terminal
-		orla_path_unregister_for_vs_terminal
-		bmad_path_unregister_for_vs_terminal
-		#gsd_path_unregister_for_vs_terminal
-		adk_path_unregister_for_vs_terminal
-		asm_path_unregister_for_vs_terminal
-		playwright_path_unregister_for_vs_terminal
-		kilo_path_unregister_for_vs_terminal
-		agy_path_unregister_for_vs_terminal
-		llmfit_path_unregister_for_vs_terminal
-        sktor_path_unregister_for_vs_terminal
-		ciss_path_unregister_for_vs_terminal
-	else
-		echo "INFO : registred PATHs from vscode will not be cleaned because nodejs ecosystem is not available "
-	fi
+	aistack_shell_remove
+
+	echo "INFO : delete generated launcher and context files and folders"
+	aistack_launcher_and_context_files_remove
+	aistack_generic_context_file_remove
+	rm -Rf "${AISTACK_MCP_LAUNCHER_HOME}"
+    rm -Rf "${AISTACK_LAUNCHER_HOME}"
+	rm -Rf "${AISTACK_CONTEXT_HOME}"
 
 	echo "INFO : delete all components and runtimes"
+     # remove isolated component (runtimes, tools)
+    rm -Rf "${AISTACK_ISOLATED_ROOT}"
+    # remove component from stella framework
+    rm -Rf "${STELLA_APP_FEATURE_ROOT}"
 
-    aistack_component_remove_all
 
-	echo "INFO : delete tools and launchers"
-    rm -Rf "${AISTACK_MCP_LAUNCHER_HOME}"
-    rm -Rf "${AISTACK_LAUNCHER_HOME}"
+    echo "INFO : delete AIStack working directory"
+	rm -Rf "${STELLA_APP_WORK_ROOT}"
 
-    rm -Rf "${STELLA_APP_WORK_ROOT}"
-    rm -Rf "${AISTACK_NVM_CACHE}"
+	# NOTE: we intentionnaly keep cache
+	# TODO add an option to delete cache at install/uninstall
+	#echo "INFO : delete NVM cache"
+    #rm -Rf "${AISTACK_NVM_CACHE}"
+	#echo "INFO : delete all cache"
+	#rm -Rf "${STELLA_APP_CACHE_DIR}"
     
 }
 
@@ -403,11 +419,54 @@ aistack_generic_context_file_remove() {
     rm -f "${AISTACK_GENERIC_CONTEXT_FILE}"
 }
 
-aistack_launcher_regenerate() {
-	aistack_tool_launcher_regenerate
-	aistack_mcp_launcher_regenerate
+aistack_launcher_and_context_files_remove() {
+	aistack_tool_launcher_and_context_files_remove
+	aistack_mcp_launcher_and_context_files_remove
 }
 
+aistack_launcher_and_context_files_regenerate() {
+	aistack_tool_launcher_and_context_files_regenerate
+	aistack_mcp_launcher_and_context_files_regenerate
+}
+
+# remove all injected value in shell rc files
+aistack_shell_remove() {
+    # TODO: check missing unregister functions in this list
+
+	gemini_path_unregister_for_shell "all"
+	opencode_path_unregister_for_shell "all"
+	orla_path_unregister_for_shell "all"
+	bmad_path_unregister_for_shell "all"
+	#gsd_path_unregister_for_shell "all"
+	adk_path_unregister_for_shell "all"
+	asm_path_unregister_for_shell "all"
+	playwright_path_unregister_for_shell "all"
+	kilo_path_unregister_for_shell "all"
+	agy_path_unregister_for_shell "all"
+	llmfit_path_unregister_for_shell "all"
+    sktor_path_unregister_for_shell "all"
+	ciss_path_unregister_for_shell "all"
+
+	# NOTE: special case for openchamber to clean shell profile
+	openchamber_disconnect_aistack "all"
+
+    # NOTE: because need lib_json which use json5 which needs nodesjs
+	if aistack_module_is_detected "json5"; then
+		gemini_path_unregister_for_vs_terminal
+		opencode_path_unregister_for_vs_terminal
+		orla_path_unregister_for_vs_terminal
+		bmad_path_unregister_for_vs_terminal
+		#gsd_path_unregister_for_vs_terminal
+		adk_path_unregister_for_vs_terminal
+		asm_path_unregister_for_vs_terminal
+		playwright_path_unregister_for_vs_terminal
+		kilo_path_unregister_for_vs_terminal
+		agy_path_unregister_for_vs_terminal
+		llmfit_path_unregister_for_vs_terminal
+        sktor_path_unregister_for_vs_terminal
+		ciss_path_unregister_for_vs_terminal
+	fi
+}
 
 # --------------- RUNTIME MANAGEMENT -----------------------------
 # detect all installed managed runtimes
@@ -420,49 +479,12 @@ aistack_runtime_detect() {
         case "${r}" in
             "python")
                 python_is_installed
-                # if aistack_component_is_installed "python"; then
-                #     export AISTACK_RUNTIME_PYTHON_AVAILABLE="true"
-                #     export AISTACK_RUNTIME_PYTHON_PATH="${AISTACK_ISOLATED_ROOT}/miniforge3/bin/python"
-                #     # bin folder which contains python
-                #     export AISTACK_RUNTIME_PYTHON_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_PYTHON_PATH})"
-                #     # mamba module is always included in miniforge3 installation
-                #     export AISTACK_MODULE_MAMBA_AVAILABLE="true"
-                #     export AISTACK_MODULE_MAMBA_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/mamba"
-                #     export AISTACK_MODULE_MAMBA_SEARCH_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}"
-                #     # # modules that are installed at the same time as python runtime
-                #     # for ingredient in "uv pipx"; do
-                #     #     va="AISTACK_MODULE_${ingredient}_AVAILABLE"; vp="AISTACK_MODULE_${ingredient}_PATH";
-                #     #     if aistack_component_is_installed "${ingredient}"; then
-                #     #         printf -v "${va}" '%s' "true"; export ${va};
-                #     #         printf -v "${vp}" '%s' "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/${ingredient}"; export ${vp};
-                #     #     fi
-                #     # fi
-                # fi
                 ;;
             "nodejs")
                 node_is_installed
-                # if aistack_component_is_installed "nvm"; then
-                #     export AISTACK_MODULE_NVM_AVAILABLE="true"
-                #     if aistack_component_is_installed "nodejs"; then
-                #         export AISTACK_RUNTIME_NODEJS_AVAILABLE="true"
-                #         export AISTACK_RUNTIME_NODEJS_PATH="$(nvm which default)"
-                #         # bin folder which contains node
-                #         export AISTACK_RUNTIME_NODEJS_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_NODEJS_PATH})"
-                #         # npm module is always included in nodejs installation
-                #         export AISTACK_MODULE_NPM_AVAILABLE="true"
-                #         export AISTACK_MODULE_NPM_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/npm"
-                #         export AISTACK_MODULE_NPM_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
-                #     fi
-                # fi
                 ;;
             "bun")
                 bun_is_installed
-                # if aistack_component_is_installed "bun"; then
-                #     export AISTACK_RUNTIME_BUN_AVAILABLE="true"
-                #     export AISTACK_RUNTIME_BUN_PATH="${AISTACK_ISOLATED_ROOT}/bun/bun"
-                #     # bin folder which contains bun
-                #     export AISTACK_RUNTIME_BUN_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_BUN_PATH})"
-                # fi
                 ;;
 			"rust")
 				rust_is_installed
@@ -703,24 +725,48 @@ aistack_module_uninstall() {
 # --------------- TOOL MANAGEMENT -----------------------------
 
 
-aistack_tool_launcher_regenerate() (
 
-	adk_launcher_manage "refresh_if_exists"
-	agy_launcher_manage "refresh_if_exists"
-	asm_launcher_manage "refresh_if_exists"
-	playwright_launcher_manage "refresh_if_exists"
-	bmad_launcher_manage "refresh_if_exists"
-	cpa_launcher_manage "refresh_if_exists"
-	gemini_launcher_manage "refresh_if_exists"
-	gsd_launcher_manage "refresh_if_exists"
-	kilo_launcher_manage "refresh_if_exists"
-	opencode_launcher_manage "refresh_if_exists"
-	orla_launcher_manage "refresh_if_exists"
-	llmfit_launcher_manage "refresh_if_exists"
-	sktor_launcher_manage "refresh_if_exists"
-	ciss_launcher_manage "refresh_if_exists"
+aistack_tool_launcher_and_context_files_regenerate() (
+
+	adk_launcher_and_context_files_manage "refresh_if_exists"
+	agy_launcher_and_context_files_manage "refresh_if_exists"
+	asm_launcher_and_context_files_manage "refresh_if_exists"
+	playwright_launcher_and_context_files_manage "refresh_if_exists"
+	bmad_launcher_and_context_files_manage "refresh_if_exists"
+	cpa_launcher_and_context_files_manage "refresh_if_exists"
+	gemini_launcher_and_context_files_manage "refresh_if_exists"
+	gsd_launcher_and_context_files_manage "refresh_if_exists"
+	kilo_launcher_and_context_files_manage "refresh_if_exists"
+	opencode_launcher_and_context_files_manage "refresh_if_exists"
+	openchamber_launcher_and_context_files_manage "refresh_if_exists"
+	orla_launcher_and_context_files_manage "refresh_if_exists"
+	llmfit_launcher_and_context_files_manage "refresh_if_exists"
+	sktor_launcher_and_context_files_manage "refresh_if_exists"
+	ciss_launcher_and_context_files_manage "refresh_if_exists"
 
 )
+
+
+aistack_tool_launcher_and_context_files_remove() (
+
+	adk_launcher_and_context_files_manage "delete"
+	agy_launcher_and_context_files_manage "delete"
+	asm_launcher_and_context_files_manage "delete"
+	playwright_launcher_and_context_files_manage "delete"
+	bmad_launcher_and_context_files_manage "delete"
+	cpa_launcher_and_context_files_manage "delete"
+	gemini_launcher_and_context_files_manage "delete"
+	gsd_launcher_and_context_files_manage "delete"
+	kilo_launcher_and_context_files_manage "delete"
+	opencode_launcher_and_context_files_manage "delete"
+	openchamber_launcher_and_context_files_manage "delete"
+	orla_launcher_and_context_files_manage "delete"
+	llmfit_launcher_and_context_files_manage "delete"
+	sktor_launcher_and_context_files_manage "delete"
+	ciss_launcher_and_context_files_manage "delete"
+
+)
+
 
 
 # tools detect
@@ -750,7 +796,12 @@ aistack_mcp_detect() {
 }
 
 
-aistack_mcp_launcher_regenerate() (
+aistack_mcp_launcher_and_context_files_regenerate() (
+	# NOTE : for now, we do not use any launcher for mcp server
+	:
+)
+
+aistack_mcp_launcher_and_context_files_remove() (
 	# NOTE : for now, we do not use any launcher for mcp server
 	:
 )
@@ -802,6 +853,7 @@ aistack_component_core_install() {
         aistack_runtime_require "${r}"
     done
 
+	# NOTE: aistack_runtime_require include aistack_runtime_detect call
     #aistack_runtime_detect
 	
 	echo "- Install internal core mandatories modules for AIStack"
@@ -809,9 +861,6 @@ aistack_component_core_install() {
         aistack_component_install "${m}"
         aistack_module_detect
     done
-    
-
-  	aistack_generic_context_file_generate
 
 }
 
@@ -937,19 +986,15 @@ aistack_component_install() {
 }
 
 
-# remove tools, managed runtime and modules
-aistack_component_remove_all() {
-	aistack_generic_context_file_remove
+# # remove tools, managed runtime and modules
+# aistack_component_remove_all() {
+#     # remove isolated component (runtimes, tools)
+#     rm -Rf "${AISTACK_ISOLATED_ROOT}"
+#     # remove component from stella framework
+#     rm -Rf "${STELLA_APP_FEATURE_ROOT}"
 
-    # remove isolated vomponent (tuntimes, tools, component)
-    rm -Rf "${AISTACK_ISOLATED_ROOT}"
-    # remove component from stella framework
-    rm -Rf "${STELLA_APP_FEATURE_ROOT}"
-
-
-
-    # NOTE : we keep cache folder
-}
+#     # NOTE : we keep cache folder
+# }
 
 
 
@@ -1233,7 +1278,7 @@ remove_dir_with_exceptions() {
 path_register_for_shell() {
     local name="$1"
 	local path_to_add="$2"
-    local shell_name="$3"
+    local shell_name_list="${3:-all}"
 
     local rc_file
 	local err=0
@@ -1243,15 +1288,10 @@ path_register_for_shell() {
         return 1
     fi
 
-	if [ -z "$shell_name" ]; then
-        echo "ERROR: No shell name provided."
-        return 1
-    fi
-
     local BEGIN_MARK="# >>> aistack-${name}-path >>>"
     local END_MARK="# <<< aistack-${name}-path <<<"
 
-	[ "$shell_name" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name"
+	[ "$shell_name_list" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name_list"
 
 	for s in $shell_list; do
 		# TODO : for bash also modify $HOME/.bash_profile ?
@@ -1293,18 +1333,33 @@ path_register_for_shell() {
 	return $err
 }
 
+
 # remove path
 # use 'all' to unregister to all known shell
 path_unregister_for_shell() {
     local name="$1"
-    local shell_name="$2"
+    local shell_name_list="${2:-all}"
+
+	if unregister_for_shell "aistack-${name}-path" "${shell_name_list}"; then
+		echo "- unregister ${name} PATH for shell ${shell_name_list}"
+	else
+		return 1
+	fi
+}
+
+
+# remove a bloc from shell rc file
+# use 'all' to unregister to all known shell
+unregister_for_shell() {
+    local bloc_name="$1"
+    local shell_name_list="${2:-all}"
     local rc_file
 
-    local BEGIN_MARK="# >>> aistack-${name}-path >>>"
-    local END_MARK="# <<< aistack-${name}-path <<<"
+    local BEGIN_MARK="# >>> ${bloc_name} >>>"
+    local END_MARK="# <<< ${bloc_name} <<<"
 
     local shell_list
-    [ "$shell_name" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name"
+    [ "$shell_name_list" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name_list"
 
     for s in $shell_list; do
         [ "$s" = "bash" ] && rc_file="$HOME/.bashrc"
@@ -1320,11 +1375,11 @@ path_unregister_for_shell() {
                         $0 == end { skip=0; next } !skip 
                     ' "$rc_file" > "$tmp_file" && mv "$tmp_file" "$rc_file"
                     rm -f "$tmp_file"
-    				echo "- unregister $name PATH for shell $s"
                 fi
                 ;;
             *) 
                 echo "ERROR : unsupported shell : $s"
+				return 1
                 ;;
         esac
     done

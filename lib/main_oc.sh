@@ -10,7 +10,7 @@ case "${sub_command}" in
             opencode_settings_configure
             vscode_settings_configure "opencode"
             
-            opencode_launcher_manage
+            opencode_launcher_and_context_files_manage
 
             echo "You should register it's path into a spacific supported shell OR vscode terminal"
             echo "aistack oc register all|bash|zsh|fish"
@@ -26,7 +26,7 @@ case "${sub_command}" in
         opencode_path_unregister_for_shell "all"
         opencode_path_unregister_for_vs_terminal
 
-        opencode_launcher_manage "delete"
+        opencode_launcher_and_context_files_manage "delete"
         ;;
     configure)
         echo "Configuring Opencode CLI"
@@ -77,7 +77,7 @@ case "${sub_command}" in
         ;;
 
     launch)
-        #opencode_launcher_manage
+        #opencode_launcher_and_context_files_manage
 		if opencode_is_installed; then
 			local folder=
 			if [ -n "$1" ] && [ "$1" != "--" ]; then

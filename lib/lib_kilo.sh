@@ -139,7 +139,7 @@ kilo_launch() {
     )
 }
 
-kilo_launcher_manage() {
+kilo_launcher_and_context_files_manage() {
     local action="${1:-create}"
 
     case $action in
@@ -171,7 +171,7 @@ kilo_launcher_manage() {
 			;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_KILO_LAUNCHER_FILE}" ] && ( kilo_launcher_manage "delete"; kilo_launcher_manage "create" )
+			[ -f "${AISTACK_KILO_LAUNCHER_FILE}" ] && ( kilo_launcher_and_context_files_manage "delete"; kilo_launcher_and_context_files_manage "create" )
 			;;
 	esac
     
@@ -394,7 +394,7 @@ kilo_generate_cpa_key() {
     echo "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" > "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE"
 
     # each time an api key is generated we need to refrech the launcher to update env vars
-    kilo_launcher_manage "create"
+    kilo_launcher_and_context_files_manage "create"
 }
 
 kilo_unregister_cpa_key() {

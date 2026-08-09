@@ -179,7 +179,7 @@ cpa_daemon_logs() {
 # 	cpa_daemon_up "$@"
 # }
 
-cpa_launcher_manage() {
+cpa_launcher_and_context_files_manage() {
 	local action="${1:-create}"
 
 	case ${action} in
@@ -211,7 +211,7 @@ cpa_launcher_manage() {
 			;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_CLIPROXYAPI_LAUNCHER_FILE}" ] && ( cpa_launcher_manage "delete"; cpa_launcher_manage "create" )
+			[ -f "${AISTACK_CLIPROXYAPI_LAUNCHER_FILE}" ] && ( cpa_launcher_and_context_files_manage "delete"; cpa_launcher_and_context_files_manage "create" )
 			;;
 	esac
 }

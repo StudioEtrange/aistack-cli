@@ -9,7 +9,7 @@ case "${sub_command}" in
             echo "Configuring bmad"
             bmad_settings_configure
 
-            bmad_launcher_manage
+            bmad_launcher_and_context_files_manage
 
             echo "You should register it's path into a spacific supported shell OR vscode terminal"
             echo "aistack bmad register all|bash|zsh|fish"
@@ -24,7 +24,7 @@ case "${sub_command}" in
         bmad_path_unregister_for_shell "all"
         bmad_path_unregister_for_vs_terminal
 
-        bmad_launcher_manage "delete"
+        bmad_launcher_and_context_files_manage "delete"
         ;;
     register)
         echo "Registering bmad launcher in PATH for $1"
@@ -49,7 +49,7 @@ case "${sub_command}" in
         esac
         ;;
     launch)
-        #bmad_launcher_manage
+        #bmad_launcher_and_context_files_manage
 		if bmad_is_installed; then
 			[ "$1" = "--" ] && shift
 
