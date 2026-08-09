@@ -257,7 +257,7 @@ aistack_install() {
 
 aistack_uninstall() {
 	echo "INFO : clean various PATHs and values from shell rc files"
-	aistack_shell_remove
+	aistack_shell_rc_files_purge
 
 	echo "INFO : delete generated launcher and context files and folders"
 	aistack_launcher_and_context_files_remove
@@ -430,7 +430,7 @@ aistack_launcher_and_context_files_regenerate() {
 }
 
 # remove all injected value in shell rc files
-aistack_shell_remove() {
+aistack_shell_rc_files_purge() {
 	path_unregister_all_for_shell
 
 	# NOTE: special case for openchamber to clean shell profile

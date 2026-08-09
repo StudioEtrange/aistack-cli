@@ -129,7 +129,7 @@ EOF
 	assert_success
 }
 
-@test "aistack_shell_remove unregisters wildcard PATH blocks" {
+@test "aistack_shell_rc_files_purge unregisters wildcard PATH blocks" {
 	local test_home="${BATS_TEST_TMPDIR}/home"
 	mkdir -p "${test_home}"
 	cat > "${test_home}/.bashrc" <<'EOF'
@@ -147,7 +147,7 @@ EOF
 		return 1
 	}
 
-	HOME="${test_home}" run aistack_shell_remove
+	HOME="${test_home}" run aistack_shell_rc_files_purge
 
 	assert_success
 	run grep -F "aistack-gemini-path" "${test_home}/.bashrc"
