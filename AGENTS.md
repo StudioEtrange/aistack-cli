@@ -152,20 +152,18 @@ A task is considered complete when:
 
 ## 6. Testing
 
-### Regular test
-Before directly testing any aistack command, do not forget to init AIStack at least once.
-
-```bash
-./aistack init
-```
 
 ### Unit test suit
-To launch unit tests suit, use `./test/launch.sh <domain tested|all>`.
+To launch unit tests suit, use `./test/launch.sh <domain tested|all> [<regex test filter>]`.
 **WARN** : do NOT execute several `./test/launch.sh` in parallel.
+
+Use `<regex test filter>` to target specific tests.
 
 ```bash
 ./test/launch_test.sh json
+./test/launch_test.sh json "json_tweak_value_of_list"
 ./test/launch_test.sh yaml
+./test/launch_test.sh yaml "yaml_get_key"
 ```
 
 ### Testing Policy

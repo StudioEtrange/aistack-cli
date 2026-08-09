@@ -15,7 +15,7 @@ usage() {
 #$STELLA_API require "bats" "bats" "INTERNAL"
 $STELLA_API get_feature "bats"
 
-function init_aistack_test_env() {
+init_aistack_test_env() {
 	# create a temporary working directory for tests
 	mkdir -p "$STELLA_APP_WORK_ROOT"
 
@@ -52,6 +52,7 @@ function init_aistack_test_env() {
 	aistack_tool_detect 1>/dev/null 2>&1
 	aistack_mcp_detect 1>/dev/null 2>&1
 	
+
 	aistack_generic_context_file_generate 1>/dev/null 2>&1
 	aistack_launcher_and_context_files_regenerate 1>/dev/null 2>&1
 
@@ -60,9 +61,11 @@ function init_aistack_test_env() {
 	#( aistack_core_install 1>/dev/null 2>&1 )
 	aistack_component_core_install
 	aistack_component_core_is_detected
+
+	
 }
 
-function test_launch_bats() {
+test_launch_bats() {
 	local domain="$1"
 	# regular expression that will match tests functions names
 	local filter="$2"
