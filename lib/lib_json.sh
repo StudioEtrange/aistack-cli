@@ -392,13 +392,15 @@ json_set_key_into_file() {
 # cat input.json | json_del_key <key_path>
 # json_del_key <key_path> < input.json
 #
+# Return 1 without producing output when the key is absent
+#
 # echo '{"a":{"b":{"c": "value","d":"value"}}}' | json_del_key "a.b.c"
 json_del_key() {
 	local key_path="${1}"
 	local jq_path
 
 	if [ -z "${key_path}" ]; then
-		echo "ERROR: JSON key path to remove is empty" >&2
+		echo "ERROR: JSON path to remove is an empty string" >&2
 		return 1
 	fi
 
@@ -419,17 +421,62 @@ json_del_key() {
 	'
 }
 
+# Delete a key from a JSON stream only when its value is empty.
+# Empty values are null, an empty string, an empty array, or an empty object.
+# Return 1 without producing output when the key is absent.
+# Return 2 without producing output when its value is not empty.
+#
+# json_del_key_if_empty <key_path> < input.json
+# cat input.json | json_del_key_if_empty <key_path>
+json_del_key_if_empty() {
+	local key_path="${1}"
+	local jq_path
+
+	if [ -z "${key_path}" ]; then
+		echo "ERROR: JSON path to remove is an empty string" >&2
+		return 1
+	fi
+
+	jq_path="$(build_jq_array_from_path "${key_path}")" || return 1
+
+	jq -e --argjson path "${jq_path}" '
+		def path_exists($path):
+			try (
+				getpath($path[0:-1])
+				| has($path[-1])
+			) catch false;
+
+		def value_is_empty:
+			. == null
+			or . == ""
+			or . == []
+			or . == {};
+
+		if (path_exists($path) | not) then
+			"" | halt_error(1)
+		elif (getpath($path) | value_is_empty) then
+			delpaths([$path])
+		else
+			"" | halt_error(2)
+		end
+	'
+}
+
 # delete a json key from a file
-# json_del_key_from_file <file> <key_path>
+# json_del_key_from_file <file> <key_path> [<mode>]
+#
+# mode IF_EMPTY: del key from file only when its value is empty.
 #
 # json_del_key_from_file "input.json" ".a.b.c"
+# json_del_key_from_file "input.json" ".a.b.c" "IF_EMPTY"
 json_del_key_from_file() {
 	local target_file="${1}"
 	local key_path="${2}"
-	local tmp_file
+	local mode="${3:-}"
+	local tmp_file rc
 
 	if [ -z "${key_path}" ]; then
-		echo "ERROR: JSON key path to remove is empty" >&2
+		echo "ERROR: JSON path to remove is an empty string" >&2
 		return 1
 	fi
 
@@ -445,10 +492,25 @@ json_del_key_from_file() {
 		return 1
 	}
 
-	if ! json_del_key "${key_path}" < "${target_file}" > "${tmp_file}"; then
-		rm -f "${tmp_file}"
-		return 1
-	fi
+	case "$mode" in
+		"IF_EMPTY")
+			json_del_key_if_empty "${key_path}" < "${target_file}" > "${tmp_file}"
+			rc=$?
+			if [ "${rc}" -ne 0 ]; then
+				rm -f "${tmp_file}"
+				return "${rc}"
+			fi
+		;;
+		*)
+			json_del_key "${key_path}" < "${target_file}" > "${tmp_file}"
+			rc=$?
+			if [ "${rc}" -ne 0 ]; then
+				rm -f "${tmp_file}"
+				return "${rc}"
+			fi
+		;;
+	esac
+
 
 	if ! mv "${tmp_file}" "${target_file}"; then
 		echo "ERROR: unable to replace JSON file: ${target_file}" >&2

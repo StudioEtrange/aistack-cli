@@ -10,6 +10,7 @@ teardown() {
     true
 }
 
+
 # GENERIC -------------------------------------------------------------------
 @test "build_jq_expr_from_path" {
 	
@@ -577,6 +578,166 @@ EOF
 
 
 
+@test "json_del_key_if_empty fails when the key is absent" {
+	run json_del_key_if_empty "a.missing" <<'EOF'
+{
+  "a": {
+    "preserved": "value"
+  }
+}
+EOF
+
+	assert_failure
+	assert_equal "$status" "1"
+	assert_output ""
+}
+
+@test "json_del_key_if_empty removes a null value" {
+	run json_del_key_if_empty "a.target" <<'EOF'
+{
+  "a": {
+    "target": null,
+    "preserved": "value"
+  }
+}
+EOF
+
+	assert_success
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "preserved": "value"
+  }
+}
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "json_del_key_if_empty removes an empty string" {
+	run json_del_key_if_empty "a.target" <<'EOF'
+{
+  "a": {
+    "target": "",
+    "preserved": "value"
+  }
+}
+EOF
+
+	assert_success
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "preserved": "value"
+  }
+}
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "json_del_key_if_empty removes an empty object" {
+	run json_del_key_if_empty "a.target" <<'EOF'
+{
+  "a": {
+    "target": {},
+    "preserved": "value"
+  }
+}
+EOF
+
+	assert_success
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "preserved": "value"
+  }
+}
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "json_del_key_if_empty removes an empty array" {
+	run json_del_key_if_empty "a.target" <<'EOF'
+{
+  "a": {
+    "target": [],
+    "preserved": "value"
+  }
+}
+EOF
+
+	assert_success
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "preserved": "value"
+  }
+}
+EOF
+	)
+	assert_output "$expected"
+}
+
+@test "json_del_key_if_empty keeps non-empty and scalar values" {
+	local value
+
+	for value in '"value"' '[1]' '{"key":"value"}' 'false' '0'; do
+		run json_del_key_if_empty "target" <<EOF
+{
+  "target": ${value}
+}
+EOF
+
+		assert_failure
+		assert_equal "$status" "2"
+		assert_output ""
+	done
+}
+
+@test "json_del_key_if_empty removes an empty value in a pipeline" {
+	json_del_key_if_empty_pipeline() {
+		printf '%s\n' "${1}" \
+			| json_del_key_if_empty "${2}" \
+			| jq -c .
+	}
+
+	run json_del_key_if_empty_pipeline \
+		'{"a":{"target":[],"preserved":"value"}}' \
+		"a.target"
+
+	assert_success
+	assert_output '{"a":{"preserved":"value"}}'
+}
+
+@test "json_del_key_if_empty stops a pipeline for a non-empty value" {
+
+	json_del_key_if_empty_pipeline() {
+		printf '%s\n' "${1}" \
+			| json_del_key_if_empty "${2}" \
+			| jq -c .
+	}
+
+	json_del_key_if_empty_pipefail_pipeline() {
+		set -o pipefail
+		json_del_key_if_empty_pipeline "${1}" "${2}"
+	}
+
+	run json_del_key_if_empty_pipefail_pipeline \
+		'{"a":{"target":"value"}}' \
+		"a.target"
+
+	assert_failure
+	assert_equal "$status" "2"
+	assert_output ""
+}
+
+
+
+
+
+
 
 
 @test "json_del_key_from_file1" {
@@ -674,6 +835,58 @@ EOF
 	assert_equal "$(cat "$tmp")" "$expected"
 
 	rm -f "$tmp"
+}
+
+@test "json_del_key_from_file IF_EMPTY removes empty values" {
+	local value
+	local tmp
+
+	for value in 'null' '""' '{}' '[]'; do
+		tmp="$(mktemp)"
+		cat > "$tmp" <<EOF
+{
+  "target": ${value},
+  "preserved": "value"
+}
+EOF
+
+		run json_del_key_from_file "$tmp" "target" "IF_EMPTY"
+
+		assert_success
+		assert_equal "$(jq -c . "$tmp")" '{"preserved":"value"}'
+		rm -f "$tmp"
+	done
+}
+
+@test "json_del_key_from_file IF_EMPTY keeps an absent key" {
+	local tmp
+	local original='{"preserved":"value"}'
+	tmp="$(mktemp)"
+	printf '%s\n' "$original" > "$tmp"
+
+	run json_del_key_from_file "$tmp" "missing" "IF_EMPTY"
+
+	assert_failure
+	assert_equal "$(cat "$tmp")" "$original"
+	rm -f "$tmp"
+}
+
+@test "json_del_key_from_file IF_EMPTY keeps non-empty values" {
+	local value
+	local tmp
+	local original
+
+	for value in '"value"' '[1]' '{"key":"value"}' 'false' '0'; do
+		tmp="$(mktemp)"
+		original="{\"target\":${value}}"
+		printf '%s\n' "$original" > "$tmp"
+
+		run json_del_key_from_file "$tmp" "target" "IF_EMPTY"
+
+		assert_failure
+		assert_equal "$(cat "$tmp")" "$original"
+		rm -f "$tmp"
+	done
 }
 
 
