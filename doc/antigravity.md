@@ -39,7 +39,7 @@ Uninstall:
 ```
 
 
-## About tools commands deprecated commands
+## About tools commands deprecated commands from Gemini CLI
 
 In Antigravity CLI, the `/tools` command from the legacy Gemini CLI has been split and replaced by more specialized commands to better manage Antigravity's modular and secure architecture: 
 

@@ -1,6 +1,87 @@
 # Agent Topics
 
-* file specification : https://agents.md/
+* AGENTS.md file specification : https://agents.md/
+
+
+## Agent Anatomy
+
+```
+X Agent UI
+┌────────────────────────────────────┐
+│ CLI/Desktop/Web interface          │
+│                                    │
+│  X Agent                           │
+│  ┌──────────────────────────────┐  │
+│  │ X Agent harness              │  │
+│  │  ├─ agent loop               │  │
+│  │  ├─ orchestration            │  │
+│  │  ├─ context management       │  │
+│  │  ├─ tool management          │  │
+│  │  └─ skill management         │  │
+│  │                              │  │
+│  │ + LLM                        │  │
+│  │ + tools                      │  │
+│  │ + skills                     │  │
+│  │ + instructions / context     │  │
+│  └──────────────────────────────┘  │
+└────────────────────────────────────┘
+
+X = Copilot, Opencode, Claude Code, ...
+X Agent         = The agent
+X Agent UI      = user interface UI (CLI/Desktop/Web)
+X Agent harness = orchestration/runtime layer that hosts, runs and controls the agent
+LLM             = model used by X Agent
+```
+
+## Acronym
+
+* A2A: Agent to Agent
+  * agent ↔ agent 
+  * detail: X Agent ↔ A2A interface/endpoint ↔ A2A interface/endpoint ↔ X Agent
+  * ie: Travel Planning Agent ↔ Flight Booking Agent
+  * https://a2a-protocol.org/
+  * A2A is for agent-to-agent communication: as a universal, decentralized standard, A2A lets independent agents — including those using MCP — discover each other, delegate tasks, and share results.
+
+* MCP: Model Context Protocol
+  * agent ↔ tools 
+  * detail: X Agent (= MCP Host) ↔ MCP Client ↔  MCP Server
+  * ie: Antigravity CLI ↔ MCP GitHub Server
+  * https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro
+  * MCP is for agent-to-tool communication: it standardizes how an agent connects to its tools, APIs, and resources to get information.
+
+  ```
+  X Agent (= MCP Host)
+  ├── X Agent harness
+  └── MCP Client ─── MCP ─── MCP Server (remote or local)
+                                  ├── tools
+                                  ├── resources
+                                  └── prompts
+  ```
+
+
+* AHP: Agent Host Protocol
+  * client(s) ↔ Agent Host persistant ↔ agent harness
+  * detail: client(s) ↔ Agent Host ↔ X Agent harness
+  * ie: VS Code ↔ VS Code Agent Host ↔ Copilot CLI agent harness
+  * https://microsoft.github.io/agent-host-protocol/
+  * standard of how clients (an AHP client like vscode) connect to a persistent agent runtime to manage and interact with agent sessions.
+
+* ACP: Agent Client Protocol
+  * IDE/editor ↔ coding agent
+  * detail: IDE/editor ↔ X Agent
+  * ie: JetBrains IDE ↔ Gemini CLI
+  * https://agentclientprotocol.com/
+  * standard of how editors and other clients connect to coding agents, exchange prompts and context, stream responses, and invoke agent capabilities.
+
+* ADK: Agent Development Kit
+  * https://adk.dev/
+  * The Agent Development Kit (ADK) for Python, TypeScript, Go, Java, and Kotlin, is a flexible and modular framework for developing and deploying AI agents.
+  * complex sample using agents built in Python, Node, GO and Rust with native libraries or with ADK and communicating with A2A and connected to a cli (antigravity-cli or gemini-cli) with MCP
+    * https://medium.com/google-cloud/cross-language-a2a-agent-benchmarking-with-antigravity-cli-ff8689b1d264
+    * https://medium.com/google-cloud/cross-language-a2a-agent-benchmarking-with-gemini-3-and-gemini-cli-930eb3fd8507
+    * https://github.com/xbill9/a2a-benchmark
+
+
 
 ## Ressources
 
@@ -10,7 +91,7 @@
   * Web IDE + services - 15k stars 1,8k forks - last activity april 26
   * The open-source managed agents platform. Turn coding agents into real teammates — assign tasks, track progress, compound skills.
 
-* agent framework or methods :
+* agent framework or orchestration methods :
   * superpowers
     * https://github.com/obra/superpowers/tree/main
   * BMAD

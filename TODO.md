@@ -46,6 +46,8 @@
 
 * add a way to disable feature management in stella framework, to gain speed.
 
+* fix ciss and sktor on macos
+
 * when install ciss on macos, rustup is installed on the system cache 
   ```
   ls -al /Users/nomorgan/Library/Caches/puccinialin 
@@ -79,9 +81,6 @@
   * complete local stack installer
   * Open WebUI, llama-server, Whisper, Kokoro, ComfyUI, Qdrant, SearXNG, n8n, ...
   * install.sh genere des conf avec des virgules au lieu de points . à contourner en relançant l'installeur avec LC_ALL=C : `LC_ALL=C ./install.sh`
-
-* CyberStrikeAI
-  * https://github.com/Ed1s0nZ/CyberStrikeAI
 
 
 
@@ -227,6 +226,16 @@
   * open source model that detect privacy data
   * best work on english text
 
+* Security
+  * CyberStrikeAI
+    * https://github.com/Ed1s0nZ/CyberStrikeAI
+
+  * PentAGI
+    * autonomous AI Agents system capable of performing complex penetration testing tasks
+    * built-in suite of 20+ professional security tools including nmap, metasploit, sqlmap, and more.
+    * https://github.com/vxcontrol/pentagi
+    * https://pentagi.com/
+    * requires docker and docker compose
 
 * Text To Speech
   * Qwen3-TTS
