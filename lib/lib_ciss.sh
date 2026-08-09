@@ -1,10 +1,18 @@
 ciss_init() {
+	# cisco ai skill scanner launcher
 	export AISTACK_CISS_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/ciss"
 	mkdir -p "${AISTACK_CISS_LAUNCHER_HOME}"
+	export AISTACK_CISS_LAUNCHER_FILE="${AISTACK_CISS_LAUNCHER_HOME}/skill-scanner"
 
+	# cisco ai skill scanner context
 	export AISTACK_CISS_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/ciss"
 	mkdir -p "${AISTACK_CISS_CONTEXT_HOME}"
 	export AISTACK_CISS_CONTEXT_FILE="${AISTACK_CISS_CONTEXT_HOME}/ciss_context.sh"
+	# any variables needed to run this component or used by _launch function
+	# NOTE: do not need to declare those variables:
+	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
+	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
+	export AISTACK_CISS_CONTEXT_EXPORT_VARIABLES=""
 
 	export AISTACK_CLIPROXYAPI_KEY_FOR_CISS_FILE="${AISTACK_CISS_CONTEXT_HOME}/cpa_key_for_ciss"
 	[ -f "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS_FILE}" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_CISS="$(cat "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS_FILE}")"
@@ -20,14 +28,23 @@ ciss_init() {
 	export AISTACK_MODEL_PROVIDER_URL_FOR_CISS_FILE="${AISTACK_CISS_CONTEXT_HOME}/model_provider_url_for_ciss"
 	[ -f "${AISTACK_MODEL_PROVIDER_URL_FOR_CISS_FILE}" ] && export AISTACK_MODEL_PROVIDER_URL_FOR_CISS="$(cat "${AISTACK_MODEL_PROVIDER_URL_FOR_CISS_FILE}")"
 
+	# cisco ai skill scanner requirement - those will be installed and presence checked to run the current component
+	# NOTE:	those search path will be injected in context file
 	export AISTACK_CISS_RUNTIME_REQUIRED="python"
 	export AISTACK_CISS_MODULE_REQUIRED=""
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_CISS_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_CISS_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_CISS_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_CISS_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
 }
 
-# return 0: installed; 1: not installed; 2: missing runtime
+# test if cisco ai skill scanner is installed
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
 ciss_is_installed() {
 	local r m
 	export AISTACK_CISS_TOOL_AVAILABLE="false"
+	export AISTACK_CISS_TOOL_PATH=""
 	for r in ${AISTACK_CISS_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_CISS_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner" ] || return 1
@@ -43,7 +60,7 @@ ciss_install() {
 		aistack_runtime_require "${r}"
 	done
 
-	for m in ${AISTACK_ASM_MODULE_REQUIRED}; do 
+	for m in ${AISTACK_CISS_MODULE_REQUIRED}; do
 		echo "INFO: CISS require ${m} managed module"
 		aistack_module_require "${m}"
 	done
@@ -53,12 +70,12 @@ ciss_install() {
 			-1|0) 
 				# yara-x is available for glibc 2.17 with yara-x<1.0.2 but cisco-ai-skill-scanner 2.x needs yara-x=>1.10
 				# need to build it and install it before cisco-ai-skill-scanner
-				python_yara_x_package_build_install
+				python_yara_x_package_build_install || return $?
 				;;
 		esac
 	fi
 
-	python_uv_package_install "cisco-ai-skill-scanner"
+	python_uv_package_install "cisco-ai-skill-scanner" || return $?
 	ciss_is_installed
 	return $?
 }
@@ -68,8 +85,9 @@ ciss_install() {
 
 ciss_uninstall() {
 	if ciss_is_installed; then
-		python_uv_package_uninstall "cisco-ai-skill-scanner"
-		ciss_is_installed
+		python_uv_package_uninstall "cisco-ai-skill-scanner" || return $?
+		ciss_is_installed && return 1
+		return 0
 	else
 		echo "WARN: not installed or missing a required managed runtime ${AISTACK_CISS_RUNTIME_REQUIRED}"
 	fi
@@ -97,16 +115,17 @@ ciss_path_unregister_for_vs_terminal() {
 	vscode_path_unregister_for_vs_terminal "skill-scanner" "${AISTACK_CISS_LAUNCHER_HOME}"
 }
 
-ciss_launch_export_variables="AISTACK_GENERIC_CONTEXT_FILE AISTACK_CISS_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
 ciss_launch() {
-	. "${AISTACK_GENERIC_CONTEXT_FILE}"
-	. "${AISTACK_CISS_CONTEXT_FILE}"
+	(
+		[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"
+		[ -f "${AISTACK_CISS_CONTEXT_FILE}" ] && . "${AISTACK_CISS_CONTEXT_FILE}"
 
-	if [ "$#" -gt 0 ]; then
-		"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner" "$@"
-	else
-		"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner"
-	fi
+		if [ "$#" -gt 0 ]; then
+			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner" "$@"
+		else
+			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner"
+		fi
+	)
 }
 
 ciss_launcher_manage() {
@@ -115,25 +134,31 @@ ciss_launcher_manage() {
 	case "${action}" in
 		create)
 			if ciss_is_installed; then
-				aistack_ciss_context_file_generate
+				# GENERATE CONTEXT FILE ----
+				ciss_context_file_generate
+
+				# GENERATE LAUNCHER FILE ----
 				{
 					echo '#!/bin/sh'
-					for v in ${ciss_launch_export_variables}; do
-						printf '[ -n "$%s" ] && export %s="$%s" || export %s=%s\n' "$v" "$v" "$v" "$v" "$(shell_quote_posix "${!v}")"
-					done
+
+					printf 'export %s=%s\n' "AISTACK_GENERIC_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_GENERIC_CONTEXT_FILE}")"
+					printf 'export %s=%s\n' "AISTACK_CISS_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_CISS_CONTEXT_FILE}")"
+
 					declare -f ciss_launch
-					echo 'ciss_launch "$@"'
-				} > "${AISTACK_CISS_LAUNCHER_HOME}/skill-scanner"
-				chmod +x "${AISTACK_CISS_LAUNCHER_HOME}/skill-scanner"
+
+					echo ciss_launch \"\$@\"
+				} > "${AISTACK_CISS_LAUNCHER_FILE}"
+
+				chmod +x "${AISTACK_CISS_LAUNCHER_FILE}"
 			fi
 			;;
 		delete)
 			rm -Rf "${AISTACK_CISS_LAUNCHER_HOME}"
 			mkdir -p "${AISTACK_CISS_LAUNCHER_HOME}"
-			aistack_ciss_context_file_remove
+			ciss_context_file_generate_remove
 			;;
 		refresh_if_exists)
-			[ -f "${AISTACK_CISS_LAUNCHER_HOME}/skill-scanner" ] && (ciss_launcher_manage "delete"; ciss_launcher_manage "create")
+			[ -f "${AISTACK_CISS_LAUNCHER_FILE}" ] && ( ciss_launcher_manage "delete"; ciss_launcher_manage "create" )
 			;;
 	esac
 }
@@ -142,6 +167,9 @@ ciss_info() {
 	echo "CISS available: ${AISTACK_CISS_TOOL_AVAILABLE}"
 	echo "CISS path: ${AISTACK_CISS_TOOL_PATH}"
 	echo "CISS needed managed runtime: ${AISTACK_CISS_RUNTIME_REQUIRED}"
+	echo "CISS needed managed module: ${AISTACK_CISS_MODULE_REQUIRED}"
+	echo "CISS launcher: ${AISTACK_CISS_LAUNCHER_FILE}"
+	echo "CISS context file: ${AISTACK_CISS_CONTEXT_FILE}"
 	echo
 	echo "CISS LLM informations"
 	echo "- from CLIProxyAPI"
@@ -164,7 +192,9 @@ ciss_settings_remove() {
 	rm -Rf "${AISTACK_CISS_CONTEXT_HOME}"
 }
 
-aistack_ciss_context_file_generate() {
+ciss_context_file_generate() {
+	local m r list_path
+
 	echo '#!/bin/sh' > "${AISTACK_CISS_CONTEXT_FILE}"
 	
 	if [ -n "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS}" ]; then  
@@ -193,10 +223,18 @@ aistack_ciss_context_file_generate() {
 		fi
 	fi
 
+	# VARIABLES
+	aistack_context_file_export_variables "${AISTACK_CISS_CONTEXT_FILE}" "${AISTACK_CISS_CONTEXT_EXPORT_VARIABLES}"
+
+	# PATH
+	for r in ${AISTACK_CISS_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_CISS_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	aistack_context_file_export_path "${AISTACK_CISS_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
+
 	chmod +x "${AISTACK_CISS_CONTEXT_FILE}"
 }
 
-aistack_ciss_context_file_remove() {
+ciss_context_file_generate_remove() {
 	rm -f "${AISTACK_CISS_CONTEXT_FILE}"
 }
 
