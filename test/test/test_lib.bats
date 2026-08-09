@@ -57,3 +57,103 @@ setup() {
 	assert_success
 	assert_output "${value}"
 }
+
+@test "unregister_for_shell removes one exact block" {
+	local test_home="${BATS_TEST_TMPDIR}/home"
+	mkdir -p "${test_home}"
+	cat > "${test_home}/.bashrc" <<'EOF'
+before
+# >>> aistack-gemini-path >>>
+export PATH="/gemini:$PATH"
+# <<< aistack-gemini-path <<<
+# >>> aistack-opencode-path >>>
+export PATH="/opencode:$PATH"
+# <<< aistack-opencode-path <<<
+after
+EOF
+
+	HOME="${test_home}" run unregister_for_shell "aistack-gemini-path" "bash"
+
+	assert_success
+	run grep -F "aistack-gemini-path" "${test_home}/.bashrc"
+	assert_failure
+	run grep -F "aistack-opencode-path" "${test_home}/.bashrc"
+	assert_success
+}
+
+@test "unregister_for_shell removes all matching wildcard blocks" {
+	local test_home="${BATS_TEST_TMPDIR}/home"
+	mkdir -p "${test_home}"
+	cat > "${test_home}/.bashrc" <<'EOF'
+before
+# >>> aistack-gemini-path >>>
+export PATH="/gemini:$PATH"
+# <<< aistack-gemini-path <<<
+# >>> aistack-opencode-path >>>
+export PATH="/opencode:$PATH"
+# <<< aistack-opencode-path <<<
+# >>> aistack-openchamber-connect >>>
+connect openchamber
+# <<< aistack-openchamber-connect <<<
+after
+EOF
+
+	HOME="${test_home}" run unregister_for_shell "aistack-*-path" "bash"
+
+	assert_success
+	run grep -F "aistack-gemini-path" "${test_home}/.bashrc"
+	assert_failure
+	run grep -F "aistack-opencode-path" "${test_home}/.bashrc"
+	assert_failure
+	run grep -F "aistack-openchamber-connect" "${test_home}/.bashrc"
+	assert_success
+	run grep -F "before" "${test_home}/.bashrc"
+	assert_success
+	run grep -F "after" "${test_home}/.bashrc"
+	assert_success
+}
+
+@test "unregister_for_shell does not rewrite a file without matching blocks" {
+	local test_home="${BATS_TEST_TMPDIR}/home"
+	local modified_before
+	mkdir -p "${test_home}"
+	printf '%s\n' "unchanged" > "${test_home}/.bashrc"
+	touch -t 202001010101 "${test_home}/.bashrc"
+	modified_before="$(stat -f '%m' "${test_home}/.bashrc" 2>/dev/null || stat -c '%Y' "${test_home}/.bashrc")"
+
+	HOME="${test_home}" run unregister_for_shell "aistack-*-path" "bash"
+
+	assert_success
+	assert_equal "$(stat -f '%m' "${test_home}/.bashrc" 2>/dev/null || stat -c '%Y' "${test_home}/.bashrc")" "${modified_before}"
+	run grep -F "unchanged" "${test_home}/.bashrc"
+	assert_success
+}
+
+@test "aistack_shell_remove unregisters wildcard PATH blocks" {
+	local test_home="${BATS_TEST_TMPDIR}/home"
+	mkdir -p "${test_home}"
+	cat > "${test_home}/.bashrc" <<'EOF'
+# >>> aistack-gemini-path >>>
+export PATH="/gemini:$PATH"
+# <<< aistack-gemini-path <<<
+# >>> aistack-opencode-path >>>
+export PATH="/opencode:$PATH"
+# <<< aistack-opencode-path <<<
+# >>> aistack-openchamber-connect >>>
+connect openchamber
+# <<< aistack-openchamber-connect <<<
+EOF
+	aistack_module_is_detected() {
+		return 1
+	}
+
+	HOME="${test_home}" run aistack_shell_remove
+
+	assert_success
+	run grep -F "aistack-gemini-path" "${test_home}/.bashrc"
+	assert_failure
+	run grep -F "aistack-opencode-path" "${test_home}/.bashrc"
+	assert_failure
+	run grep -F "aistack-openchamber-connect" "${test_home}/.bashrc"
+	assert_failure
+}

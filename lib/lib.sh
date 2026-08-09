@@ -256,7 +256,7 @@ aistack_install() {
 }
 
 aistack_uninstall() {
-	echo "INFO : clean various PATHs for shells"
+	echo "INFO : clean various PATHs and values from shell rc files"
 	aistack_shell_remove
 
 	echo "INFO : delete generated launcher and context files and folders"
@@ -431,21 +431,7 @@ aistack_launcher_and_context_files_regenerate() {
 
 # remove all injected value in shell rc files
 aistack_shell_remove() {
-    # TODO: check missing unregister functions in this list
-
-	gemini_path_unregister_for_shell "all"
-	opencode_path_unregister_for_shell "all"
-	orla_path_unregister_for_shell "all"
-	bmad_path_unregister_for_shell "all"
-	#gsd_path_unregister_for_shell "all"
-	adk_path_unregister_for_shell "all"
-	asm_path_unregister_for_shell "all"
-	playwright_path_unregister_for_shell "all"
-	kilo_path_unregister_for_shell "all"
-	agy_path_unregister_for_shell "all"
-	llmfit_path_unregister_for_shell "all"
-    sktor_path_unregister_for_shell "all"
-	ciss_path_unregister_for_shell "all"
+	path_unregister_all_for_shell
 
 	# NOTE: special case for openchamber to clean shell profile
 	openchamber_disconnect_aistack "all"
@@ -986,18 +972,6 @@ aistack_component_install() {
 }
 
 
-# # remove tools, managed runtime and modules
-# aistack_component_remove_all() {
-#     # remove isolated component (runtimes, tools)
-#     rm -Rf "${AISTACK_ISOLATED_ROOT}"
-#     # remove component from stella framework
-#     rm -Rf "${STELLA_APP_FEATURE_ROOT}"
-
-#     # NOTE : we keep cache folder
-# }
-
-
-
 
 
 # --------------- SPECIFIC INSTALLER -----------------------------
@@ -1088,6 +1062,9 @@ stella_feature_installed() {
         return 2
     fi
 }
+
+# --------------- SHELL RC FILE MANAGEMENT -----------------------------
+
 
 
 # --------------- VARIOUS -----------------------------
@@ -1274,6 +1251,8 @@ remove_dir_with_exceptions() {
         -exec rm -rf -- {} +
 }
 
+
+
 # add a PATH env variable by configuring shell rc files
 path_register_for_shell() {
     local name="$1"
@@ -1333,7 +1312,6 @@ path_register_for_shell() {
 	return $err
 }
 
-
 # remove path
 # use 'all' to unregister to all known shell
 path_unregister_for_shell() {
@@ -1347,43 +1325,123 @@ path_unregister_for_shell() {
 	fi
 }
 
+path_unregister_all_for_shell() {
+    local shell_name_list="${1:-all}"
+	unregister_for_shell "aistack-*-path" "${shell_name_list}"
+}
 
 # remove a bloc from shell rc file
+# bloc_name supports shell-style '*' and '?' wildcards
 # use 'all' to unregister to all known shell
 unregister_for_shell() {
-    local bloc_name="$1"
-    local shell_name_list="${2:-all}"
-    local rc_file
+	local bloc_name="${1}"
+	local shell_name_list="${2:-all}"
+	local shell_list
+	local rc_file
+	local tmp_file
+	local s
 
-    local BEGIN_MARK="# >>> ${bloc_name} >>>"
-    local END_MARK="# <<< ${bloc_name} <<<"
+	[ -n "${bloc_name}" ] || {
+		echo "ERROR: block name is empty" >&2
+		return 1
+	}
 
-    local shell_list
-    [ "$shell_name_list" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name_list"
+	[ "${shell_name_list}" = "all" ] \
+		&& shell_list="bash zsh fish" \
+		|| shell_list="${shell_name_list}"
 
-    for s in $shell_list; do
-        [ "$s" = "bash" ] && rc_file="$HOME/.bashrc"
-        [ "$s" = "zsh" ] && rc_file="$HOME/.zshrc"
-        [ "$s" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"
-
-        case "$s" in
-            "bash"|"zsh"|"fish")
-                if [ -f "$rc_file" ]; then
-                    local tmp_file="$(mktemp)"
-                    awk -v begin="$BEGIN_MARK" -v end="$END_MARK" ' 
-                        $0 == begin { skip=1; next } 
-                        $0 == end { skip=0; next } !skip 
-                    ' "$rc_file" > "$tmp_file" && mv "$tmp_file" "$rc_file"
-                    rm -f "$tmp_file"
-                fi
-                ;;
-            *) 
-                echo "ERROR : unsupported shell : $s"
+	for s in ${shell_list}; do
+		case "${s}" in
+			"bash")
+				rc_file="${HOME}/.bashrc"
+				;;
+			"zsh")
+				rc_file="${HOME}/.zshrc"
+				;;
+			"fish")
+				rc_file="${HOME}/.config/fish/config.fish"
+				;;
+			*)
+				echo "ERROR: unsupported shell: ${s}"
 				return 1
-                ;;
-        esac
-    done
+				;;
+		esac
+
+		[ -f "${rc_file}" ] || continue
+
+		if ! awk -v block_pattern="${bloc_name}" '
+			function glob_matches(value, pattern, regex) {
+				regex = pattern
+				gsub(/[][\\.^$()+{}|]/, "\\\\&", regex)
+				gsub(/[*]/, ".*", regex)
+				gsub(/[?]/, ".", regex)
+				return value ~ ("^" regex "$")
+			}
+
+			/^# >>> .* >>>$/ {
+				block_name = $0
+				sub(/^# >>> /, "", block_name)
+				sub(/ >>>$/, "", block_name)
+				if (glob_matches(block_name, block_pattern)) {
+					found = 1
+					exit
+				}
+			}
+
+			END { exit found ? 0 : 1 }
+		' "${rc_file}"; then
+			continue
+		fi
+
+		tmp_file="$(mktemp "${rc_file}.aistack.XXXXXX")" || {
+			echo "ERROR: unable to create temporary file for ${rc_file}" >&2
+			return 1
+		}
+
+		if awk -v block_pattern="${bloc_name}" '
+			function glob_matches(value, pattern, regex) {
+				regex = pattern
+				gsub(/[][\\.^$()+{}|]/, "\\\\&", regex)
+				gsub(/[*]/, ".*", regex)
+				gsub(/[?]/, ".", regex)
+				return value ~ ("^" regex "$")
+			}
+
+			/^# >>> .* >>>$/ {
+				block_name = $0
+				sub(/^# >>> /, "", block_name)
+				sub(/ >>>$/, "", block_name)
+				if (glob_matches(block_name, block_pattern)) {
+					skip = 1
+					next
+				}
+			}
+
+			skip && /^# <<< .* <<<$/ {
+				block_name = $0
+				sub(/^# <<< /, "", block_name)
+				sub(/ <<<$/, "", block_name)
+				if (glob_matches(block_name, block_pattern)) {
+					skip = 0
+					next
+				}
+			}
+
+			!skip
+		' "${rc_file}" > "${tmp_file}"; then
+			mv "${tmp_file}" "${rc_file}" || {
+				rm -f "${tmp_file}"
+				return 1
+			}
+		else
+			rm -f "${tmp_file}"
+			return 1
+		fi
+	done
 }
+
+
+# --------------- GLIBC MANAGEMENT -----------------------------
 
 glibc_version() {
 	[ "${STELLA_CURRENT_PLATFORM}" = "darwin" ] && return 0
