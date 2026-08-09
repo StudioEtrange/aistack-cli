@@ -1066,193 +1066,6 @@ stella_feature_installed() {
 # --------------- SHELL RC FILE MANAGEMENT -----------------------------
 
 
-
-# --------------- VARIOUS -----------------------------
-
-# return 0 if list contains items, else 1
-# list_contains "aa bb xx" "bb"
-# echo $? ==> 0
-# list_contains "aa bb xx" "b"
-# echo $? ==> 1
-# list_contains "aa bb xx" "bb xx"
-# echo $? ==> 0
-# list_contains "aa bb xx" "aa xx"
-# echo $? ==> 1
-# https://stackoverflow.com/a/20473191/5027535
-# in a test : 
-# if list_contains "aa bb xx" "bb"; then
-# fi
-list_contains() {
-	local _list="$1"
-	local _item="$2"
-	[ "$_list" = "" ] && return 1
-	[[ "$_list" =~ (^|[[:space:]])"$_item"($|[[:space:]]) ]]
-}
-
-
-# TODO : use this every where ?
-# test if a binary is reachable in current PATH context
-check_binary() {
-	local b="${1}"
-	command -v "${b}" >/dev/null 2>&1
-}
-
-# NOT used
-get_platform() {
-	local os_arch=""
-	local platform=""
-
-	case "${STELLA_CURRENT_PLATFORM}" in
-		linux)
-			[ "${STELLA_CURRENT_CPU_FAMILY}" = "intel" ] && os_arch="linux_amd64"
-            [ "${STELLA_CURRENT_CPU_FAMILY}" = "arm" ] && os_arch="linux_arm64"
-			platform="${os_arch}"
-			if [ -f /lib/libc.musl-x86_64.so.1 ] || [ -f /lib/libc.musl-aarch64.so.1 ] || ldd /bin/ls 2>&1 | grep -q musl; then
-				platform="${platform}_musl"
-			fi
-			;;
-		darwin)
-            [ "${STELLA_CURRENT_CPU_FAMILY}" = "intel" ] && os_arch="darwin_amd64"
-            [ "${STELLA_CURRENT_CPU_FAMILY}" = "arm" ] && os_arch="darwin_arm64"
-			platform="${os_arch}"
-			;;
-		*)
-			echo "ERROR: Unsupported architecture: ${STELLA_CURRENT_CPU_FAMILY}" >&2
-			return 1
-			;;
-	esac
-
-	printf '%s' "${platform}"
-}
-
-# Generate a self-signed certificate
-# @param {string} $1 - key file path
-# @param {string} $2 - cert file path
-# @param {string} $3 - CN (optional, default to localhost)
-generate_self_signed_cert() {
-    local key_path="$1"
-    local cert_path="$2"
-    local cn="${3:-localhost}"
-
-    if ! command -v openssl >/dev/null 2>&1; then
-        echo "ERROR: openssl is not installed." >&2
-        return 1
-    fi
-
-    echo "Generating self-signed certificate..."
-    openssl req -x509 -newkey rsa:2048 -keyout "$key_path" -out "$cert_path" -days 365 -nodes -subj "/CN=$cn"
-    if [ $? -ne 0 ]; then
-        echo "ERROR: Failed to generate self-signed certificate." >&2
-        return 1
-    fi
-    echo "Self-signed certificate generated successfully at $cert_path expires in 365 days"
-}
-
-
-process_kill_by_port() {
-    local port="$1"
-    local pid
-
-	if [ -z "$port" ]; then
-        echo "ERROR: missing port"
-        return 1
-    fi
-
-    case "$port" in
-        ''|*[!0-9]*)
-            echo "ERROR: invalid port: $port"
-            return 1
-            ;;
-    esac
-
-    if command -v lsof >/dev/null 2>&1; then
-        pid=$(lsof -t -i:"$port" 2>/dev/null)
-    fi
-
-	if [ "${STELLA_CURRENT_PLATFORM}" = "linux" ]; then
-
-		# Older Linux fallback only
-		if [ "$pid" = "" ]; then
-			if command -v netstat >/dev/null 2>&1; then
-				# WARN to get PID or process name with netstat, we need to be root user
-				pid=$(netstat -ltnp 2>/dev/null | awk -v port=":$port$" '$4 ~ port {split($7, a, "/"); print a[1]; exit}')
-			fi
-		fi
-	fi
-
-    if [ -n "$pid" ]; then
-        # lsof can return multiple PIDs (as a newline-separated string), so we loop
-        for p in $pid; do
-            echo "Killing process on port $port with PID $p"
-            kill -9 "$p"
-        done
-    else
-        echo "ERROR: lsof nor netstat able to find process."
-        return 1
-    fi
-}
-
-# TODO write unit test
-shell_quote_posix() {
-    printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
-}
-
-github_get_latest_release() {
-    local repo="$1" # i.e StudioEtrange/aistack-cli
-
-    local api_url="https://api.github.com/repos/${repo}/releases/latest"
-
-    local latest_tag
-    latest_tag=$(curl -sLk "$api_url" | yq -r .tag_name)
-
-    if [ $? -ne 0 ]; then
-        echo "ERROR: Failed to fetch release information from GitHub." >&2
-        return 1
-    fi
-
-    if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
-        echo "ERROR: Could not fetch the latest version from GitHub." >&2
-        return 1
-    fi
-
-    echo -n "$latest_tag"
-}
-
-# Sample:
-# remove_dir_except_names "$HOME/.gemini" \
-#     "antigravity-cli" \
-#	  "GEMINI.md" \
-#  	  "settings.json"
-remove_dir_with_exceptions() {
-    local target_dir="$1"
-    shift
-
-    if [ -z "$target_dir" ]; then
-        echo "ERROR: missing target_dir" >&2
-        return 1
-    fi
-
-    if [ "$#" -eq 0 ]; then
-        echo "ERROR: missing names to keep" >&2
-        return 1
-    fi
-
-    [ -d "$target_dir" ] || return 0
-
-    local find_args=()
-    local keep_name
-
-    for keep_name in "$@"; do
-        find_args+=( ! -name "$keep_name" )
-    done
-
-    find "$target_dir" -mindepth 1 -maxdepth 1 \
-        "${find_args[@]}" \
-        -exec rm -rf -- {} +
-}
-
-
-
 # add a PATH env variable by configuring shell rc files
 path_register_for_shell() {
     local name="$1"
@@ -1576,3 +1389,190 @@ glibc_binary_compat() {
 	"$STELLA_API" link_to_glibc_binary_compat "${binary}" "${search_folder}" "${custom_glibc_runtime_path}"
 
 }
+
+
+# --------------- VARIOUS -----------------------------
+
+# return 0 if list contains items, else 1
+# list_contains "aa bb xx" "bb"
+# echo $? ==> 0
+# list_contains "aa bb xx" "b"
+# echo $? ==> 1
+# list_contains "aa bb xx" "bb xx"
+# echo $? ==> 0
+# list_contains "aa bb xx" "aa xx"
+# echo $? ==> 1
+# https://stackoverflow.com/a/20473191/5027535
+# in a test : 
+# if list_contains "aa bb xx" "bb"; then
+# fi
+list_contains() {
+	local _list="$1"
+	local _item="$2"
+	[ "$_list" = "" ] && return 1
+	[[ "$_list" =~ (^|[[:space:]])"$_item"($|[[:space:]]) ]]
+}
+
+
+# TODO : use this every where ?
+# test if a binary is reachable in current PATH context
+check_binary() {
+	local b="${1}"
+	command -v "${b}" >/dev/null 2>&1
+}
+
+# NOT used
+get_platform() {
+	local os_arch=""
+	local platform=""
+
+	case "${STELLA_CURRENT_PLATFORM}" in
+		linux)
+			[ "${STELLA_CURRENT_CPU_FAMILY}" = "intel" ] && os_arch="linux_amd64"
+            [ "${STELLA_CURRENT_CPU_FAMILY}" = "arm" ] && os_arch="linux_arm64"
+			platform="${os_arch}"
+			if [ -f /lib/libc.musl-x86_64.so.1 ] || [ -f /lib/libc.musl-aarch64.so.1 ] || ldd /bin/ls 2>&1 | grep -q musl; then
+				platform="${platform}_musl"
+			fi
+			;;
+		darwin)
+            [ "${STELLA_CURRENT_CPU_FAMILY}" = "intel" ] && os_arch="darwin_amd64"
+            [ "${STELLA_CURRENT_CPU_FAMILY}" = "arm" ] && os_arch="darwin_arm64"
+			platform="${os_arch}"
+			;;
+		*)
+			echo "ERROR: Unsupported architecture: ${STELLA_CURRENT_CPU_FAMILY}" >&2
+			return 1
+			;;
+	esac
+
+	printf '%s' "${platform}"
+}
+
+# Generate a self-signed certificate
+# @param {string} $1 - key file path
+# @param {string} $2 - cert file path
+# @param {string} $3 - CN (optional, default to localhost)
+generate_self_signed_cert() {
+    local key_path="$1"
+    local cert_path="$2"
+    local cn="${3:-localhost}"
+
+    if ! command -v openssl >/dev/null 2>&1; then
+        echo "ERROR: openssl is not installed." >&2
+        return 1
+    fi
+
+    echo "Generating self-signed certificate..."
+    openssl req -x509 -newkey rsa:2048 -keyout "$key_path" -out "$cert_path" -days 365 -nodes -subj "/CN=$cn"
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to generate self-signed certificate." >&2
+        return 1
+    fi
+    echo "Self-signed certificate generated successfully at $cert_path expires in 365 days"
+}
+
+
+process_kill_by_port() {
+    local port="$1"
+    local pid
+
+	if [ -z "$port" ]; then
+        echo "ERROR: missing port"
+        return 1
+    fi
+
+    case "$port" in
+        ''|*[!0-9]*)
+            echo "ERROR: invalid port: $port"
+            return 1
+            ;;
+    esac
+
+    if command -v lsof >/dev/null 2>&1; then
+        pid=$(lsof -t -i:"$port" 2>/dev/null)
+    fi
+
+	if [ "${STELLA_CURRENT_PLATFORM}" = "linux" ]; then
+
+		# Older Linux fallback only
+		if [ "$pid" = "" ]; then
+			if command -v netstat >/dev/null 2>&1; then
+				# WARN to get PID or process name with netstat, we need to be root user
+				pid=$(netstat -ltnp 2>/dev/null | awk -v port=":$port$" '$4 ~ port {split($7, a, "/"); print a[1]; exit}')
+			fi
+		fi
+	fi
+
+    if [ -n "$pid" ]; then
+        # lsof can return multiple PIDs (as a newline-separated string), so we loop
+        for p in $pid; do
+            echo "Killing process on port $port with PID $p"
+            kill -9 "$p"
+        done
+    else
+        echo "ERROR: lsof nor netstat able to find process."
+        return 1
+    fi
+}
+
+# TODO write unit test
+shell_quote_posix() {
+    printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+}
+
+github_get_latest_release() {
+    local repo="$1" # i.e StudioEtrange/aistack-cli
+
+    local api_url="https://api.github.com/repos/${repo}/releases/latest"
+
+    local latest_tag
+    latest_tag=$(curl -sLk "$api_url" | yq -r .tag_name)
+
+    if [ $? -ne 0 ]; then
+        echo "ERROR: Failed to fetch release information from GitHub." >&2
+        return 1
+    fi
+
+    if [ -z "$latest_tag" ] || [ "$latest_tag" = "null" ]; then
+        echo "ERROR: Could not fetch the latest version from GitHub." >&2
+        return 1
+    fi
+
+    echo -n "$latest_tag"
+}
+
+# Sample:
+# remove_dir_except_names "$HOME/.gemini" \
+#     "antigravity-cli" \
+#	  "GEMINI.md" \
+#  	  "settings.json"
+remove_dir_with_exceptions() {
+    local target_dir="$1"
+    shift
+
+    if [ -z "$target_dir" ]; then
+        echo "ERROR: missing target_dir" >&2
+        return 1
+    fi
+
+    if [ "$#" -eq 0 ]; then
+        echo "ERROR: missing names to keep" >&2
+        return 1
+    fi
+
+    [ -d "$target_dir" ] || return 0
+
+    local find_args=()
+    local keep_name
+
+    for keep_name in "$@"; do
+        find_args+=( ! -name "$keep_name" )
+    done
+
+    find "$target_dir" -mindepth 1 -maxdepth 1 \
+        "${find_args[@]}" \
+        -exec rm -rf -- {} +
+}
+
+
