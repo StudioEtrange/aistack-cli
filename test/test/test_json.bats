@@ -540,11 +540,28 @@ EOF
   }
 }
 EOF
+	assert_failure
+	assert_output ""
+
+}
+
+@test "json_del_key removes an existing null value" {
+
+	run json_del_key "a.b.c" <<'EOF'
+{
+  "a": {
+    "b": {
+      "c": null,
+      "d": "value"
+    }
+  }
+}
+EOF
+	assert_success
 	expected=$(cat <<'EOF'
 {
   "a": {
     "b": {
-      "c": "value",
       "d": "value"
     }
   }
@@ -621,21 +638,42 @@ EOF
 EOF
 
 	run json_del_key_from_file "$tmp" "a.w.d"
- 	assert_failure
- 	expected=$( cat <<'EOF'
+	assert_failure
+	expected='{ "a": { "b": { "c": "value", "d": "value" }}}'
+	assert_equal "$(cat "$tmp")" "$expected"
+
+	rm -f $tmp
+}
+
+@test "json_del_key_from_file removes an existing null value" {
+
+	tmp="$(mktemp)"
+	cat >"$tmp" <<'EOF'
 {
   "a": {
     "b": {
-      "c": "value",
+      "c": null,
       "d": "value"
     }
   }
 }
 EOF
- 	)
- 	assert_equal "$(cat "$tmp")" "$expected"
 
-	rm -f $tmp
+	run json_del_key_from_file "$tmp" "a.b.c"
+	assert_success
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "b": {
+      "d": "value"
+    }
+  }
+}
+EOF
+	)
+	assert_equal "$(cat "$tmp")" "$expected"
+
+	rm -f "$tmp"
 }
 
 
@@ -644,20 +682,91 @@ EOF
 
 
 
-@test "sanitize_json" {
-	
+@test "sanitize_json sanitizes a JSON string argument" {
 	run sanitize_json '{ "to" :"a",}'
+
 	expected=$(cat <<'EOF'
 {
   "to": "a"
 }
 EOF
-)
+	)
+	assert_success
 	assert_output "$expected"
 
-	run sanitize_json '{ "to" :"a",}'
+}
+
+@test "sanitize_json sanitizes JSON from stdin" {
+	run sanitize_json - <<'EOF'
+{
+  // JSON5 comment
+  unquoted: 'value',
+  enabled: true,
+}
+EOF
+
+	expected=$(cat <<'EOF'
+{
+  "unquoted": "value",
+  "enabled": true
+}
+EOF
+	)
+	assert_success
 	assert_output "$expected"
 
+}
+
+@test "sanitize_json sanitizes a file in place" {
+	local tmp
+	tmp="$(mktemp)"
+	cat > "$tmp" <<'EOF'
+{
+  list: [
+    1,
+    2,
+  ],
+}
+EOF
+
+	run sanitize_json "$tmp"
+
+	expected=$(cat <<'EOF'
+{
+  "list": [
+    1,
+    2
+  ]
+}
+EOF
+	)
+	assert_success
+	assert_output ""
+	assert_equal "$(cat "$tmp")" "$expected"
+	rm -f "$tmp"
+
+}
+
+@test "sanitize_json rejects an invalid string" {
+	run sanitize_json '{ invalid:'
+
+	assert_failure
+	refute_output ""
+
+}
+
+@test "sanitize_json leaves an invalid file unchanged" {
+	local tmp
+	local original='{ invalid:'
+	tmp="$(mktemp)"
+	printf '%s\n' "$original" > "$tmp"
+
+	run sanitize_json "$tmp"
+
+	assert_failure
+	assert_output --partial "ERROR : failed to sanitize json from $tmp"
+	assert_equal "$(cat "$tmp")" "$original"
+	rm -f "$tmp"
 }
 
 

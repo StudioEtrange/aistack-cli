@@ -394,12 +394,29 @@ json_set_key_into_file() {
 #
 # echo '{"a":{"b":{"c": "value","d":"value"}}}' | json_del_key "a.b.c"
 json_del_key() {
-    local key_path="$1"
-    local jq_path
-    if [ ! -t 0 ]; then
-        jq_path="$(build_jq_array_from_path "$key_path")" || return 1
-        jq "delpaths([$jq_path])"
-    fi
+	local key_path="${1}"
+	local jq_path
+
+	if [ -z "${key_path}" ]; then
+		echo "ERROR: JSON key path to remove is empty" >&2
+		return 1
+	fi
+
+	jq_path="$(build_jq_array_from_path "${key_path}")" || return 1
+
+	jq -e --argjson path "${jq_path}" '
+		def path_exists($path):
+			try (
+				getpath($path[0:-1])
+				| has($path[-1])
+			) catch false;
+
+		if path_exists($path) then
+			delpaths([$path])
+		else
+			empty
+		end
+	'
 }
 
 # delete a json key from a file
@@ -407,40 +424,39 @@ json_del_key() {
 #
 # json_del_key_from_file "input.json" ".a.b.c"
 json_del_key_from_file() {
-    local target_file="$1"
-    local key_path="$2"
+	local target_file="${1}"
+	local key_path="${2}"
+	local tmp_file
 
+	if [ -z "${key_path}" ]; then
+		echo "ERROR: JSON key path to remove is empty" >&2
+		return 1
+	fi
 
-    if [ -z "$key_path" ]; then
-        echo "ERROR : json key path to remove empty"
-        exit 1
-    fi
-    if [ ! -s "$target_file" ]; then
-        echo "WARN : file not found $target_file"
-        return 0
-    fi
+	if [ ! -s "${target_file}" ]; then
+		echo "WARN: file not found or empty: ${target_file}" >&2
+		return 0
+	fi
 
-    test_and_fix_json_file "$target_file"
+	test_and_fix_json_file "${target_file}" || return 1
 
-    if ! json_has_path "$key_path" < "$target_file"; then
-        sanitize_json "$target_file"
-        # key not found
-        return 1
-    fi
-   
-    local tmp_file="$(mktemp)"
-    json_del_key "$key_path" < "$target_file" > "$tmp_file"
+	tmp_file="$(mktemp "${target_file}.tmp.XXXXXX")" || {
+		echo "ERROR: unable to create temporary file for ${target_file}" >&2
+		return 1
+	}
 
-    if [ $? -ne 0 ]; then
-        echo "ERROR : processing with jq"
-        rm -f "$tmp_file"
-        exit 1
-    else
-        mv "$tmp_file" "$target_file"
-        rm -f "$tmp_file"
-    fi
+	if ! json_del_key "${key_path}" < "${target_file}" > "${tmp_file}"; then
+		rm -f "${tmp_file}"
+		return 1
+	fi
 
-    sanitize_json "$target_file"
+	if ! mv "${tmp_file}" "${target_file}"; then
+		echo "ERROR: unable to replace JSON file: ${target_file}" >&2
+		rm -f "${tmp_file}"
+		return 1
+	fi
+
+	return 0
 }
 
 
