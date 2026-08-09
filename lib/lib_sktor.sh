@@ -204,47 +204,48 @@ sktor_settings_remove() {
     rm -Rf "${AISTACK_SKTOR_CONTEXT_HOME}"
 }
 
-
-
 sktor_context_file_generate() {
-	local m r list_path
+	local m r 
+    local list_path=""
 
 	# GENERATE CONTEXT FILE ----
 	echo '#!/bin/sh' > "${AISTACK_SKTOR_CONTEXT_FILE}"
 	chmod +x "${AISTACK_SKTOR_CONTEXT_FILE}"
 
-    if cpa_is_configured; then
-        if [ -n "${AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR}" ]; then  
-            if [ -n "${AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR}" ]; then
-                {
-                    echo 'export SKILLSPECTOR_PROVIDER="openai"'
-                    echo 'export OPENAI_API_KEY="'${AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR}'"'
-                    echo 'export OPENAI_BASE_URL="'$(cpa_settings_get_api_endpoint)'"'
-                    echo 'export SKILLSPECTOR_MODEL="'${AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR}'"'
-                    [ -f "${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}" ] && echo 'export SKILLSPECTOR_MODEL_REGISTRY="'${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}'"'
-                } >> "${AISTACK_SKTOR_CONTEXT_FILE}"
+
+    if [ -n "${AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR}" ]; then  
+        if [ -n "${AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR}" ]; then
+            if cpa_is_configured; then
+                (
+                    export SKILLSPECTOR_PROVIDER="openai"
+                    export OPENAI_API_KEY="${AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR}"
+                    export OPENAI_BASE_URL="$(cpa_settings_get_api_endpoint)"
+                    export SKILLSPECTOR_MODEL="${AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR}"
+                    [ -f "${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}" ] && export SKILLSPECTOR_MODEL_REGISTRY="${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}"
+	                
+                    aistack_context_file_export_variables "${AISTACK_SKTOR_CONTEXT_FILE}" "SKILLSPECTOR_PROVIDER OPENAI_API_KEY OPENAI_BASE_URL SKILLSPECTOR_MODEL SKILLSPECTOR_MODEL_REGISTRY"
+                )
             fi
         fi
-    fi
-
-    if [ -n "${AISTACK_MODEL_KEY_FOR_SKTOR}" ]; then  
+    elif [ -n "${AISTACK_MODEL_KEY_FOR_SKTOR}" ]; then  
         if [ -n "${AISTACK_MODEL_ID_FOR_SKTOR}" ]; then
-            {
-                echo 'export SKILLSPECTOR_PROVIDER="'${AISTACK_MODEL_PROVIDER_FOR_SKTOR}'"'
+            ( 
+                export SKILLSPECTOR_PROVIDER="${AISTACK_MODEL_PROVIDER_FOR_SKTOR}"
                 # NOTE : see https://github.com/nvidia/skillspector#llm-analysis for specific variables
-                case $AISTACK_MODEL_PROVIDER_FOR_SKTOR in
-                    openai)
-                        echo 'export OPENAI_API_KEY="'${AISTACK_MODEL_KEY_FOR_SKTOR}'"'
-                        echo 'export OPENAI_BASE_URL="'${AISTACK_MODEL_PROVIDER_URL_FOR_SKTOR}'"'
-                    ;;
-                    anthropic)
-                        echo 'export ANTHROPIC_API_KEY="'${AISTACK_MODEL_KEY_FOR_SKTOR}'"'
-                    ;;
-
+                case "${AISTACK_MODEL_PROVIDER_FOR_SKTOR}" in
+                    "openai")
+                        export OPENAI_API_KEY="${AISTACK_MODEL_KEY_FOR_SKTOR}"
+                        export OPENAI_BASE_URL="${AISTACK_MODEL_PROVIDER_URL_FOR_SKTOR}"
+                        ;;
+                    "anthropic")
+                        export ANTHROPIC_API_KEY="${AISTACK_MODEL_KEY_FOR_SKTOR}"
+                        ;;
                 esac
-                echo 'export SKILLSPECTOR_MODEL="'${AISTACK_MODEL_ID_FOR_SKTOR}'"'
-                [ -f "${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}" ] && echo 'export SKILLSPECTOR_MODEL_REGISTRY="'${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}'"'
-            } >> "${AISTACK_SKTOR_CONTEXT_FILE}"
+                export SKILLSPECTOR_MODEL="${AISTACK_MODEL_ID_FOR_SKTOR}"
+                [ -f "${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}" ] && export SKILLSPECTOR_MODEL_REGISTRY="${AISTACK_SKILLSPECTOR_MODEL_REGISTRY}"
+            
+                aistack_context_file_export_variables "${AISTACK_SKTOR_CONTEXT_FILE}" "SKILLSPECTOR_PROVIDER OPENAI_API_KEY OPENAI_BASE_URL ANTHROPIC_API_KEY SKILLSPECTOR_MODEL SKILLSPECTOR_MODEL_REGISTRY"
+            )
         fi
     fi
 
