@@ -222,6 +222,27 @@ vscode_path_unregister_for_vs_terminal() {
 }
 
 
+# remove all registered path in vscode terminal
+vscode_path_unregister_all_for_vs_terminal() {
+	# TODO; check this list is complete
+	# NOTE: because need lib_json which use json5 which needs nodesjs
+	if aistack_module_is_detected "json5"; then
+		gemini_path_unregister_for_vs_terminal
+		opencode_path_unregister_for_vs_terminal
+		orla_path_unregister_for_vs_terminal
+		bmad_path_unregister_for_vs_terminal
+		#gsd_path_unregister_for_vs_terminal
+		adk_path_unregister_for_vs_terminal
+		asm_path_unregister_for_vs_terminal
+		playwright_path_unregister_for_vs_terminal
+		kilo_path_unregister_for_vs_terminal
+		agy_path_unregister_for_vs_terminal
+		llmfit_path_unregister_for_vs_terminal
+        sktor_path_unregister_for_vs_terminal
+		ciss_path_unregister_for_vs_terminal
+	fi
+}
+
 # ADD vscode cli PATH to local binary 'code' CLI OR path to remote-cli binary 'code'
 #       for vscode integrated terminal
 vscode_path_register_cli_for_vs_terminal() {
@@ -334,20 +355,31 @@ vscode_settings_remove_path_for_vs_terminal() {
 # by setting PATH env var at each integrated terminal launch
 vscode_settings_tweak_path_for_vs_terminal() {
     local path="${1}"
-    # ALWAYS_PREPEND add path or move it at the beginning position
+    # ALWAYS_PREPEND add path or move it at the begining position
     # ALWAYS_POSTPEND add path or move it at the end position
-    # PREPEND_IF_NOT_EXISTS add path at the beginning position only if not already present
+    # PREPEND_IF_NOT_EXISTS add path at the begining position only if not already present
     # POSTPEND_IF_NOT_EXISTS add path at the end position only if not already present
+    # REMOVE remove all occurences of a path
+    # REMOVE_REGEXP remove all occurences of an regexp path expression
     local mode="${2:-ALWAYS_PREPEND}" 
-
-    # if PATH value become "" or null, remove it completely or vscode will set PATH env var to empty string value
+    
+    # NOTE: if PATH value become "" or null, remove it completely or vscode will set PATH env var to empty string value
 
     json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.linux.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"
-    [ "$(vscode_get_config '.terminal\.integrated\.env\.linux.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.linux.PATH'
-    
+	case $mode in
+		REMOVE|REMOVE_REGEXP)
+			json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.linux.PATH' "IF_EMPTY" || :
+			# [ "$(vscode_get_config '.terminal\.integrated\.env\.linux.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.linux.PATH'
+			;;
+	esac
+	
     json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.osx.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"
-    [ "$(vscode_get_config '.terminal\.integrated\.env\.osx.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.osx.PATH'
-
+	case $mode in
+		REMOVE|REMOVE_REGEXP)
+			json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.osx.PATH' "IF_EMPTY" || :
+			#[ "$(vscode_get_config '.terminal\.integrated\.env\.osx.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.osx.PATH'
+			;;
+	esac
 }
 
 # extension management ------------------------

@@ -256,8 +256,8 @@ aistack_install() {
 }
 
 aistack_uninstall() {
-	echo "INFO : clean various PATHs and values from shell rc files"
-	aistack_shell_rc_files_purge
+	echo "INFO : clean various PATHs and values registered for shell"
+	aistack_shell_purge
 
 	echo "INFO : delete generated launcher and context files and folders"
 	aistack_launcher_and_context_files_remove
@@ -429,29 +429,14 @@ aistack_launcher_and_context_files_regenerate() {
 	aistack_mcp_launcher_and_context_files_regenerate
 }
 
-# remove all injected value in shell rc files
-aistack_shell_rc_files_purge() {
+# remove all injected value in shell rc files and vscide
+aistack_shell_purge() {
 	path_unregister_all_for_shell
 
 	# NOTE: special case for openchamber to clean shell profile
 	openchamber_disconnect_aistack "all"
 
-    # NOTE: because need lib_json which use json5 which needs nodesjs
-	if aistack_module_is_detected "json5"; then
-		gemini_path_unregister_for_vs_terminal
-		opencode_path_unregister_for_vs_terminal
-		orla_path_unregister_for_vs_terminal
-		bmad_path_unregister_for_vs_terminal
-		#gsd_path_unregister_for_vs_terminal
-		adk_path_unregister_for_vs_terminal
-		asm_path_unregister_for_vs_terminal
-		playwright_path_unregister_for_vs_terminal
-		kilo_path_unregister_for_vs_terminal
-		agy_path_unregister_for_vs_terminal
-		llmfit_path_unregister_for_vs_terminal
-        sktor_path_unregister_for_vs_terminal
-		ciss_path_unregister_for_vs_terminal
-	fi
+    vscode_path_unregister_all_for_vs_terminal
 }
 
 # --------------- RUNTIME MANAGEMENT -----------------------------
