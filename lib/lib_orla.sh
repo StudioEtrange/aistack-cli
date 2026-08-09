@@ -1,34 +1,48 @@
 orla_init() {
-    # aistack path for orla
-    export AISTACK_ORLA_CONFIG_HOME="${HOME}/.orla"
-    mkdir -p "${AISTACK_ORLA_CONFIG_HOME}"
+	# orla specific variables
+	export AISTACK_ORLA_CONFIG_HOME="${HOME}/.orla"
+	mkdir -p "${AISTACK_ORLA_CONFIG_HOME}"
+	export AISTACK_ORLA_CONFIG_FILE="${AISTACK_ORLA_CONFIG_HOME}/orla.yaml"
+	export ORLA_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/orla"
+	mkdir -p "${ORLA_FEAT_INSTALL_ROOT}"
 
-    export AISTACK_ORLA_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/orla"
-    mkdir -p "${AISTACK_ORLA_LAUNCHER_HOME}"
+	# cpa key for orla to connect to cpa backend
+	export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE="${AISTACK_ORLA_CONFIG_HOME}/cpa_key_for_orla"
+	[ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE")"
 
+	# orla launcher
+	export AISTACK_ORLA_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/orla"
+	mkdir -p "${AISTACK_ORLA_LAUNCHER_HOME}"
+	export AISTACK_ORLA_LAUNCHER_FILE="${AISTACK_ORLA_LAUNCHER_HOME}/orla"
 
-    # orla specific paths
-    export AISTACK_ORLA_CONFIG_FILE="${AISTACK_ORLA_CONFIG_HOME}/orla.yaml"
-    
-    # cpa key for orla to connect to cpa backend
-    export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE="${AISTACK_ORLA_CONFIG_HOME}/cpa_key_for_orla"
-    [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_ORLA="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_ORLA_FILE")"
+	# orla context
+	export AISTACK_ORLA_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/orla"
+	mkdir -p "${AISTACK_ORLA_CONTEXT_HOME}"
+	export AISTACK_ORLA_CONTEXT_FILE="${AISTACK_ORLA_CONTEXT_HOME}/orla_context.sh"
+	# any variables needed to run this component or used by _launch function
+	# NOTE: do not need to declare those variables:
+	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
+	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
+	export AISTACK_ORLA_CONTEXT_EXPORT_VARIABLES="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
 
-    export ORLA_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/orla"
-    mkdir -p "${ORLA_FEAT_INSTALL_ROOT}"
-
+	# orla requirement - those will be installed and presence checked to run the current component
+	# NOTE:	those search path will be injected in context file
 	export AISTACK_ORLA_RUNTIME_REQUIRED=""
 	export AISTACK_ORLA_MODULE_REQUIRED=""
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_ORLA_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_ORLA_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_ORLA_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_ORLA_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
 
-    
 }
 
+# test if orla is installed
 # return 0 : is installed
 # return 1 : tool is not installed
 # return 2 : missing runtime
 orla_is_installed() {
 	local r m
 	export AISTACK_ORLA_TOOL_AVAILABLE="false"
+	export AISTACK_ORLA_TOOL_PATH=""
 	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_ORLA_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${ORLA_FEAT_INSTALL_ROOT}/orla" ] || return 1
@@ -45,52 +59,56 @@ orla_is_installed() {
 # - ORLA_FEAT_INSTALL_ROOT: The directory where cliproxyapi will be installed.
 orla_install() {
 	local r m
-    local version="$1"
-    
-    if [ -z "$version" ] || [ "$version" = "latest" ]; then
-        echo "No version provided, fetching the latest version..."
-        version=$(github_get_latest_release "dorcha-inc/orla")
-        echo "latest version is ${version}"
-    fi
+	local version="$1"
 
-	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED}; do 
+	if [ -z "$version" ] || [ "$version" = "latest" ]; then
+		echo "No version provided, fetching the latest version..."
+		version="$(github_get_latest_release "dorcha-inc/orla")" || return $?
+		[ -n "${version}" ] || { echo "ERROR: Failed to retrieve latest Orla version"; return 1; }
+		echo "latest version is ${version}"
+	fi
+
+	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED}; do
 		echo "INFO: Orla require ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
-	for m in $AISTACK_ORLA_MODULE_REQUIRED; do 
+	for m in ${AISTACK_ORLA_MODULE_REQUIRED}; do
 		echo "INFO: Orla require ${m} managed module"
 		aistack_module_require "${m}"
 	done
 
-    local os_arch
-    case "$STELLA_CURRENT_PLATFORM" in
-        linux)
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="linux-amd64"
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="linux-arm64"
-            ;;
-        darwin)
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="darwin-amd64"
-            [ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="darwin-arm64"
-            ;;
-    esac
-    local filename="orla-${os_arch}.tar.gz"
-    local download_url="https://github.com/dorcha-inc/orla/releases/download/${version}/${filename}"
+	local os_arch
+	case "$STELLA_CURRENT_PLATFORM" in
+		linux)
+			[ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="linux-amd64"
+			[ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="linux-arm64"
+			;;
+		darwin)
+			[ "$STELLA_CURRENT_CPU_FAMILY" = "intel" ] && os_arch="darwin-amd64"
+			[ "$STELLA_CURRENT_CPU_FAMILY" = "arm" ] && os_arch="darwin-arm64"
+			;;
+	esac
+	[ -n "${os_arch}" ] || { echo "ERROR: Unsupported platform or CPU family: ${STELLA_CURRENT_PLATFORM}/${STELLA_CURRENT_CPU_FAMILY}"; return 1; }
 
-    echo "Downloading and installing Orla ${version} from ${download_url} to ${ORLA_FEAT_INSTALL_ROOT}..."
+	local filename="orla-${os_arch}.tar.gz"
+	local download_url="https://github.com/dorcha-inc/orla/releases/download/${version}/${filename}"
+
+	echo "Downloading and installing Orla ${version} from ${download_url} to ${ORLA_FEAT_INSTALL_ROOT}..."
 	# DEST_ERASE allow to uninstall before install
-	$STELLA_API get_resource "Orla" "${download_url}" "HTTP_ZIP" "$ORLA_FEAT_INSTALL_ROOT" "DEST_ERASE"
-    echo "Orla installed successfully."
+	"${STELLA_API}" get_resource "Orla" "${download_url}" "HTTP_ZIP" "${ORLA_FEAT_INSTALL_ROOT}" "DEST_ERASE" || return $?
+	echo "Orla installed successfully."
 
 	orla_is_installed
-    return $?
+	return $?
 }
  
 orla_uninstall() {
 	if orla_is_installed; then
 		echo "Uninstalling Orla from ${ORLA_FEAT_INSTALL_ROOT}..."
-		rm -Rf "${ORLA_FEAT_INSTALL_ROOT}"
+		rm -Rf "${ORLA_FEAT_INSTALL_ROOT}" || return $?
 		echo "Orla uninstalled successfully."
-		orla_is_installed
+		orla_is_installed && return 1
+		return 0
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_ORLA_RUNTIME_REQUIRED"
 	fi
@@ -98,7 +116,6 @@ orla_uninstall() {
 
 
 
-# add gemini launcher in path for shell
 orla_path_register_for_shell() {
     local shell_name="$1"
 	if orla_is_installed; then
@@ -119,71 +136,84 @@ orla_path_unregister_for_vs_terminal() {
 }
 
 
-orla_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_GENERIC_CONTEXT_FILE AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
 orla_launch() {
-    set -- "$@"
+	(
+		[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"
+		[ -f "${AISTACK_ORLA_CONTEXT_FILE}" ] && . "${AISTACK_ORLA_CONTEXT_FILE}"
 
-    if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
-        set -- "$@" --config "$AISTACK_ORLA_CONFIG_FILE"
-    fi
+		if [ -f "${AISTACK_ORLA_CONFIG_FILE}" ]; then
+			set -- "$@" --config "${AISTACK_ORLA_CONFIG_FILE}"
+		fi
 
-    (
-        . "${AISTACK_GENERIC_CONTEXT_FILE}"
-
-        if [ "$#" -gt 0 ]; then
-            "${ORLA_FEAT_INSTALL_ROOT}/orla" "$@"
-        else
-            "${ORLA_FEAT_INSTALL_ROOT}/orla"
-        fi
-    )
+		if [ "$#" -gt 0 ]; then
+			"${ORLA_FEAT_INSTALL_ROOT}/orla" "$@"
+		else
+			"${ORLA_FEAT_INSTALL_ROOT}/orla"
+		fi
+	)
 }
 
 orla_launcher_manage() {
-    local action="${1:-create}"
+	local action="${1:-create}"
 
-    case $action in
-
-        create)
-            # echo "Create an Orla launcher"
-            # rm -f "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
-            # # launcher based on a symbolic link
-            # ln -fsv "${ORLA_FEAT_INSTALL_ROOT}/orla" "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
-
+	case $action in
+		create)
 			if orla_is_installed; then
-				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-				# and executed by the default /bin/sh on the current system
+				# GENERATE CONTEXT FILE ----
+				orla_context_file_generate
+
+				# GENERATE LAUNCHER FILE ----
 				{
 					echo '#!/bin/sh'
-					for v in $orla_launch_export_variables; do
-						printf '[ -n "$%s" ] && export %s="$%s" || export %s=%s\n' "$v" "$v" "$v" "$v" "$(shell_quote_posix "${!v}")"
-					done
+
+					printf 'export %s=%s\n' "AISTACK_GENERIC_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_GENERIC_CONTEXT_FILE}")"
+					printf 'export %s=%s\n' "AISTACK_ORLA_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_ORLA_CONTEXT_FILE}")"
 
 					declare -f orla_launch
 
 					echo orla_launch \"\$@\"
-				} > "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+				} > "${AISTACK_ORLA_LAUNCHER_FILE}"
 
-				chmod +x "${AISTACK_ORLA_LAUNCHER_HOME}/orla"
+				chmod +x "${AISTACK_ORLA_LAUNCHER_FILE}"
 			fi
-            ;;
+			;;
 
-        delete)
-            rm -Rf "${AISTACK_ORLA_LAUNCHER_HOME}"
-            mkdir -p "${AISTACK_ORLA_LAUNCHER_HOME}"
-            ;;
+		delete)
+			rm -Rf "${AISTACK_ORLA_LAUNCHER_HOME}"
+			mkdir -p "${AISTACK_ORLA_LAUNCHER_HOME}"
+			orla_context_file_generate_remove
+			;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_ORLA_LAUNCHER_HOME}/orla" ] && ( orla_launcher_manage "delete"; orla_launcher_manage "create" )
+			[ -f "${AISTACK_ORLA_LAUNCHER_FILE}" ] && ( orla_launcher_manage "delete"; orla_launcher_manage "create" )
 			;;
-    esac
-    
+	esac
+}
+
+orla_context_file_generate() {
+	# GENERATE CONTEXT FILE ----
+	echo '#!/bin/sh' > "${AISTACK_ORLA_CONTEXT_FILE}"
+	chmod +x "${AISTACK_ORLA_CONTEXT_FILE}"
+
+	# VARIABLES
+	aistack_context_file_export_variables "${AISTACK_ORLA_CONTEXT_FILE}" "${AISTACK_ORLA_CONTEXT_EXPORT_VARIABLES}"
+
+	# PATH
+	local m r list_path
+	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_ORLA_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	aistack_context_file_export_path "${AISTACK_ORLA_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
+}
+
+orla_context_file_generate_remove() {
+	rm -f "${AISTACK_ORLA_CONTEXT_FILE}"
 }
 
 
 
 orla_info() {
     if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
-        echo "CLIProxyAPI configuration file : $AISTACK_ORLA_CONFIG_FILE"
+		echo "Orla configuration file : $AISTACK_ORLA_CONFIG_FILE"
 
         echo "Orla API endpoint : $(orla_settings_get_api_endpoint)"
 
@@ -197,6 +227,10 @@ orla_info() {
 	echo "Orla available : $AISTACK_ORLA_TOOL_AVAILABLE"
 	echo "Orla path : $AISTACK_ORLA_TOOL_PATH"
 	echo "Orla needed managed runtime : $AISTACK_ORLA_RUNTIME_REQUIRED"
+	echo "Orla needed managed module : $AISTACK_ORLA_MODULE_REQUIRED"
+	echo "Orla install root : $ORLA_FEAT_INSTALL_ROOT"
+	echo "Orla launcher : $AISTACK_ORLA_LAUNCHER_FILE"
+	echo "Orla context file : $AISTACK_ORLA_CONTEXT_FILE"
 
 	echo
 }
@@ -204,10 +238,9 @@ orla_info() {
 
 orla_show_config() {
 	if [ -f "$AISTACK_ORLA_CONFIG_FILE" ]; then
-		echo "Current Orla configuration file : $AISTACK_ORLA_CONFIG_FILE"
 		cat "$AISTACK_ORLA_CONFIG_FILE"
 	else
-		echo "No Orla configuration file found."
+		echo "No Orla configuration file found. ($AISTACK_ORLA_CONFIG_FILE)"
 	fi
 }
 
@@ -411,5 +444,4 @@ orla_connect_cpa() {
     esac
 
 }
-
 

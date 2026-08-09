@@ -1,22 +1,38 @@
 kilo_init() {
-    # aistack path for kilo code
+    # kilo code specific variables
     export AISTACK_KILO_CONFIG_HOME="${HOME}/.config/kilo"
     mkdir -p "${AISTACK_KILO_CONFIG_HOME}"
-
-    export AISTACK_KILO_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/kilo"
-    mkdir -p "${AISTACK_KILO_LAUNCHER_HOME}"
-
-    # kilo code specific paths
     # The Kilo CLI is a fork of OpenCode and supports the same configuration options
     # KILO_CONFIG takes precedence over the global configuration file.
     [ -z "${KILO_CONFIG}" ] && export AISTACK_KILO_CONFIG_FILE="${AISTACK_KILO_CONFIG_HOME}/kilo.jsonc" || export AISTACK_KILO_CONFIG_FILE="${KILO_CONFIG}"
-    
+
     # cpa key for kilo to connect to cpa backend
     export AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE="${AISTACK_KILO_CONFIG_HOME}/cpa_key_for_kc"
     [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_KILO="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE")"
 
+
+	# kilo code launcher
+    export AISTACK_KILO_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/kilo"
+    mkdir -p "${AISTACK_KILO_LAUNCHER_HOME}"
+	export AISTACK_KILO_LAUNCHER_FILE="${AISTACK_KILO_LAUNCHER_HOME}/kilo"
+
+	# kilo code context
+	export AISTACK_KILO_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/kilo"
+	mkdir -p "${AISTACK_KILO_CONTEXT_HOME}"
+	export AISTACK_KILO_CONTEXT_FILE="${AISTACK_KILO_CONTEXT_HOME}/kilo_context.sh"
+	# any variables needed to run this component or used by _launch function
+	# NOTE: do not need to declare those variables:
+	#		AISTACK_KILO_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
+	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
+	export AISTACK_KILO_CONTEXT_EXPORT_VARIABLES="AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
+
+	# kilo code requirements
 	export AISTACK_KILO_RUNTIME_REQUIRED="nodejs"
 	export AISTACK_KILO_MODULE_REQUIRED=""
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_KILO_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_KILO_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_KILO_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_KILO_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
+
 }
 
 # return 0 : is installed
@@ -25,6 +41,7 @@ kilo_init() {
 kilo_is_installed() {
 	local r m
 	export AISTACK_KILO_TOOL_AVAILABLE="false"
+	export AISTACK_KILO_TOOL_PATH=""
 	for r in ${AISTACK_KILO_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_KILO_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/kilo" ] || return 1
@@ -53,10 +70,10 @@ kilo_install() {
 			done
 			
             echo "Installing Kilo Code CLI ${version}"
-			node_package_install "@kilocode/cli${version}"
+			node_package_install "@kilocode/cli${version}" || return $?
             #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
             kilo_is_installed
-            return $?
+			return $?
 			;;
         "extension")
             vscode_extension_manage "kilocode.Kilo-Code" "install"
@@ -73,9 +90,10 @@ kilo_uninstall() {
         "cli")
 			if kilo_is_installed; then
 				echo "Uninstalling Kilo Code CLI"
-				node_package_uninstall "@kilocode/cli"
+				node_package_uninstall "@kilocode/cli" || return $?
 				#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
-				kilo_is_installed
+				kilo_is_installed && return 1
+				return 0
 			else
 				echo "WARN : not installed or missing a required managed runtime $AISTACK_KILO_RUNTIME_REQUIRED"
 			fi
@@ -108,10 +126,10 @@ kilo_path_unregister_for_vs_terminal() {
 }
 
 
-kilo_launch_export_variables="AISTACK_CLIPROXYAPI_KEY_FOR_KILO AISTACK_GENERIC_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 kilo_launch() {
     (
-        . "${AISTACK_GENERIC_CONTEXT_FILE}"
+        [ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"
+		[ -f "${AISTACK_KILO_CONTEXT_FILE}" ] && . "${AISTACK_KILO_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
             "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo" "$@"
@@ -125,44 +143,70 @@ kilo_launcher_manage() {
     local action="${1:-create}"
 
     case $action in
-
-        create)
+		create)
 			if kilo_is_installed; then
-				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-				# and executed by the default /bin/sh on the current system
+				# GENERATE CONTEXT FILE ----
+				kilo_context_file_generate
+
+				# GENERATE LAUNCHER FILE ----
 				{
 					echo '#!/bin/sh'
-					for v in $kilo_launch_export_variables; do
-						printf '[ -n "$%s" ] && export %s="$%s" || export %s=%s\n' "$v" "$v" "$v" "$v" "$(shell_quote_posix "${!v}")"
-					done
+
+					printf 'export %s=%s\n' "AISTACK_GENERIC_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_GENERIC_CONTEXT_FILE}")"
+					printf 'export %s=%s\n' "AISTACK_KILO_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_KILO_CONTEXT_FILE}")"
 
 					declare -f kilo_launch
 
 					echo kilo_launch \"\$@\"
-				} > "${AISTACK_KILO_LAUNCHER_HOME}/kilo"
-				chmod +x "${AISTACK_KILO_LAUNCHER_HOME}/kilo"
-			fi
-            ;;
+				} > "${AISTACK_KILO_LAUNCHER_FILE}"
 
-        delete)
-            rm -Rf "${AISTACK_KILO_LAUNCHER_HOME}"
+				chmod +x "${AISTACK_KILO_LAUNCHER_FILE}"
+			fi
+			;;
+
+		delete)
+			rm -Rf "${AISTACK_KILO_LAUNCHER_HOME}"
             mkdir -p "${AISTACK_KILO_LAUNCHER_HOME}"
-            ;;
+			kilo_context_file_generate_remove
+			;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_KILO_LAUNCHER_HOME}/kilo" ] && ( kilo_launcher_manage "delete"; kilo_launcher_manage "create" )
+			[ -f "${AISTACK_KILO_LAUNCHER_FILE}" ] && ( kilo_launcher_manage "delete"; kilo_launcher_manage "create" )
 			;;
-    esac
+	esac
     
+}
+
+
+kilo_context_file_generate() {
+	# GENERATE CONTEXT FILE ----
+	echo '#!/bin/sh' > "${AISTACK_KILO_CONTEXT_FILE}"
+	chmod +x "${AISTACK_KILO_CONTEXT_FILE}"
+
+	# VARIABLES
+	aistack_context_file_export_variables "${AISTACK_KILO_CONTEXT_FILE}" "${AISTACK_KILO_CONTEXT_EXPORT_VARIABLES}"
+	
+	# PATH
+	local m r list_path
+	for r in ${AISTACK_KILO_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_KILO_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	aistack_context_file_export_path "${AISTACK_KILO_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
+}
+
+kilo_context_file_generate_remove() {
+	rm -f "${AISTACK_KILO_CONTEXT_FILE}"
 }
 
 
 kilo_info() {
     echo "Configuration file : $AISTACK_KILO_CONFIG_FILE"
 	echo
-	echo "KILO available : $AISTACK_KILO_TOOL_AVAILABLE"
-	echo "KILO path : $AISTACK_KILO_TOOL_PATH"
-	echo "KILO needed managed runtime : $AISTACK_KILO_RUNTIME_REQUIRED"
+	echo "Kilo Code available : $AISTACK_KILO_TOOL_AVAILABLE"
+	echo "Kilo Code path : $AISTACK_KILO_TOOL_PATH"
+	echo "Kilo Code needed managed runtime : $AISTACK_KILO_RUNTIME_REQUIRED"
+	echo "Kilo Code needed managed module : $AISTACK_KILO_MODULE_REQUIRED"
+	echo "Kilo Code launcher : $AISTACK_KILO_LAUNCHER_FILE"
+	echo "Kilo Code context file : $AISTACK_KILO_CONTEXT_FILE"
 	echo
     [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)" || \
         echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)"
@@ -170,7 +214,6 @@ kilo_info() {
 
 kilo_show_config() {
     if [ -f "$AISTACK_KILO_CONFIG_FILE" ]; then
-        echo "Current configuration file : $AISTACK_KILO_CONFIG_FILE"
         cat "$AISTACK_KILO_CONFIG_FILE"
     else
         echo "No configuration file found. ($AISTACK_KILO_CONFIG_FILE)"
@@ -188,7 +231,8 @@ kilo_settings_configure() {
 
 kilo_settings_remove() {
     kilo_unregister_cpa_key
-    rm -Rf "$AISTACK_KILO_CONFIG_HOME"
+    rm -Rf "${AISTACK_KILO_CONFIG_HOME}"
+	rm -f "${AISTACK_KILO_CONFIG_FILE}"
 }
 
 kilo_remove_config() {
@@ -273,8 +317,12 @@ kilo_register_provider() {
     kilo_set_config "provider.${provider_id}.npm" "\"$provider_type\""
     kilo_set_config "provider.${provider_id}.name" "\"$provider_display_name\""
     kilo_set_config "provider.${provider_id}.options.baseURL" "\"$endpoint\""
-    [ -n "$api_key" ] && kilo_set_config "provider.${provider_id}.options.apiKey" "\"$api_key\""
-    [ -n "$api_key_env_var" ] && kilo_set_config "provider.${provider_id}.options.apiKey" "\"{env:$api_key_env_var}\""
+    if [ -n "$api_key" ]; then
+		kilo_set_config "provider.${provider_id}.options.apiKey" "\"$api_key\""
+	fi
+    if [ -n "$api_key_env_var" ]; then
+		kilo_set_config "provider.${provider_id}.options.apiKey" "\"{env:$api_key_env_var}\""
+	fi
 }
 
 kilo_register_model() {
@@ -308,6 +356,7 @@ kilo_register_model() {
     
     [ -n "$limit_context" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.limit.context" "${limit_context}"
     [ -n "$limit_output" ] && kilo_set_config "provider.${provider_id}.models.${model_id}.limit.output" "${limit_output}"
+	return 0
 }
 
 # set a default model in kilo config

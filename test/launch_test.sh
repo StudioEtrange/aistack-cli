@@ -45,12 +45,13 @@ function init_aistack_test_env() {
 
 	# initialize aistack paths (see in file aistack)
 	aistack_initialize 1>/dev/null 2>&1
+	
 	aistack_runtime_detect 1>/dev/null 2>&1
 	aistack_module_detect 1>/dev/null 2>&1
-	aistack_generic_context_file_generate 1>/dev/null 2>&1
-
 	aistack_tool_detect 1>/dev/null 2>&1
 	aistack_mcp_detect 1>/dev/null 2>&1
+	
+	aistack_generic_context_file_generate 1>/dev/null 2>&1
 	aistack_launcher_regenerate 1>/dev/null 2>&1
 
 	# install core requirements

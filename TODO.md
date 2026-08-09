@@ -46,6 +46,14 @@
 
 * add a way to disable feature management in stella framework, to gain speed.
 
+* when install ciss on macos, rustup is installed on the system cache 
+  ```
+  ls -al /Users/nomorgan/Library/Caches/puccinialin 
+  drwxr-xr-x    9 nomorgan  staff   288 Aug  8 09:49 cargo
+  drwxr-xr-x    7 nomorgan  staff   224 Jun 30 23:01 rustup
+  drwxr-xr-x    4 nomorgan  staff   128 Aug  8 09:48 rustup-init
+  ```
+
 ## TO EXPLORE
 
 * ghostdesk

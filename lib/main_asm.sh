@@ -25,6 +25,7 @@ case "${sub_command}" in
 		asm_path_unregister_for_vs_terminal
 
 		asm_launcher_manage "delete"
+		# TODO delete asm context file here ?
 		;;
 	configure)
 		echo "Configuring asm"
@@ -55,6 +56,9 @@ case "${sub_command}" in
 				asm_path_unregister_for_shell "$1"
 				;;
 		esac
+		;;
+	info)
+		asm_info
 		;;
 	show-config)
 		asm_show_config

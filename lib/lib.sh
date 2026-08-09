@@ -3,6 +3,8 @@
 # initialize global variables and folders
 aistack_initialize() {
 
+	export AISTACK_MANAGED_ENV="1"
+
     # components ---
     # runtime lists
     export AISTACK_RUNTIME_TO_DETECT="python nodejs bun rust"
@@ -22,12 +24,19 @@ aistack_initialize() {
     # remove from AISTACK_MODULE_CORE any items from AISTACK_MODULE_CORE_BOOTSTRAP
     AISTACK_MODULE_CORE="$($STELLA_API filter_list_with_list "${AISTACK_MODULE_CORE}" "${AISTACK_MODULE_CORE_BOOTSTRAP}")"
 
-    # add search path of runtimes and modules to a generic context file used when a tool is launched
+	# export variables and theirs values to a generic context file used when a tool is launched
+	AISTACK_GENERIC_CONTEXT_EXPORT_VARIABLES="AISTACK_MANAGED_ENV"
+
+    # export search path of runtimes and modules, only if they are installed, to a generic context file used when a tool is launched
 	# NOTE : there is no AISTACK_GENERIC_CONTEXT_ADD_TOOL because each tool can be registered in shell wight "register" command
-    #export AISTACK_GENERIC_CONTEXT_ADD_RUNTIME="nodejs bun python"
+    # WARN : the content of AISTACK_RUNTIME_CORE/MODULE_CORE is not AUTOMATICLY exported and added in AISTACK_GENERIC_CONTEXT_ADD_RUNTIME/ADD_MODULE
+	#				AISTACK_RUNTIME_CORE/MODULE_CORE is what is required by aistack itself
+	#				AISTACK_GENERIC_CONTEXT_ADD_RUNTIME/ADD_MODULE is what is made available to tools, only if they are installed
+	#export AISTACK_GENERIC_CONTEXT_ADD_RUNTIME="nodejs bun python"
     #export AISTACK_GENERIC_CONTEXT_ADD_MODULE="yq jq"
-    [ -n "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_RUNTIME"
-    [ -n "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}" ] || $STELLA_API get_app_property "AISTACK" "TOOL_CONTEXT_ADD_MODULE"
+    [ -n "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}" ] || $STELLA_API get_app_property "AISTACK" "GENERIC_CONTEXT_ADD_RUNTIME"
+    [ -n "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}" ] || $STELLA_API get_app_property "AISTACK" "GENERIC_CONTEXT_ADD_MODULE"
+
 
     # paths ---
     export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
@@ -43,7 +52,7 @@ aistack_initialize() {
 
     export AISTACK_CONTEXT_HOME="${STELLA_APP_WORK_ROOT}/context"
     mkdir -p "${AISTACK_CONTEXT_HOME}"
-    export AISTACK_GENERIC_CONTEXT_FILE="${AISTACK_CONTEXT_HOME}/tool_context.sh"
+    export AISTACK_GENERIC_CONTEXT_FILE="${AISTACK_CONTEXT_HOME}/generic_context.sh"
 
     export AISTACK_GLIBC_CURRENT_VERSION="$(glibc_version)"
 	glibc_alternative_system
@@ -260,7 +269,7 @@ aistack_uninstall() {
     
 }
 
-
+# --------------- CONTEXT MANAGEMENT -----------------------------
 # inject into current aistack path, the search path of a list of runtimes
 aistack_context_load_runtime_path() {
     local runtime_list="$1"
@@ -269,9 +278,9 @@ aistack_context_load_runtime_path() {
     for r in ${runtime_list}; do
         va="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
         vp="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
-        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
+        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && [ -d "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
     done
-    export PATH="${list_path}:${PATH}"
+    [ -n "${list_path}" ] && export PATH="${list_path}:${PATH}"
 }
 
 # inject into current aistack path, the search path of a list of module
@@ -282,34 +291,112 @@ aistack_context_load_module_path() {
     for m in ${module_list}; do
         va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
         vp="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
-        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
+        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && [ -d "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
     done
-    export PATH="${list_path}:${PATH}"
+    [ -n "${list_path}" ] && export PATH="${list_path}:${PATH}"
 }
 
-# create files that centralize components and runtime PATH
+# VARIABLE_LIST : consider list_path as variables names to append to path list PATH=${VAR}:$PATH
+# VALUE_LIST : consider list_path as raw path to append to path list PATH=/foo/bar:$PATH
+aistack_context_file_export_path() {
+	local f="$1"
+	local list_path="$2"
+	local mode="${3:-VALUE_LIST}"
+
+	local p list_path_to_export variable_list_to_export
+
+	case "$mode" in
+		"VARIABLE_LIST")
+			for p in ${list_path}; do
+				if [ -d "${!p}" ]; then
+					variable_list_to_export="${p} ${variable_list_to_export}"
+					list_path_to_export="$($STELLA_API path_append_to_list "${list_path_to_export}" "\${${p}}" "ALWAYS_PREPEND")"
+				fi
+			done
+			;;
+		"VALUE_LIST")
+			for p in ${list_path}; do
+				if [ -d "${p}" ]; then
+					list_path_to_export="$($STELLA_API path_append_to_list "${list_path_to_export}" "${p}" "ALWAYS_PREPEND")"
+				fi
+			done
+			;;
+	esac
+
+	# export variable used in VARIABLE_LIST
+	[ -n "${variable_list_to_export}" ] && aistack_context_file_export_variables "${f}" "${variable_list_to_export}"
+
+	# export PATH
+	[ -n "${list_path_to_export}" ] && echo "export PATH=\"${list_path_to_export}:\${PATH}\"" >> "${f}"
+}
+
+
+# TODO : add type tool support ?
+# add a runtime or module path into a context file
+#		VARIABLE_LIST : add variable name to path list PATH=${VAR}:$PATH
+# 		VALUE_LIST : add real path to path list PATH=/foo/bar:$PATH
+aistack_context_path_add_component() {
+	local type="$1"
+	local name="$2"
+	local mode="${3:-VALUE_LIST}"
+
+	local path_to_add
+	# NOTE : we do not check with if folder exists with, it will be checked later in aistack_context_file_export_path
+	case "${type}" in
+		"runtime")
+			va="AISTACK_RUNTIME_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
+        	vp="AISTACK_RUNTIME_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
+		;;
+		"module")
+			va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
+        	vp="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
+		;;
+	esac
+
+	case "$mode" in
+		"VALUE_LIST")
+			[ "${!va}" = "true" ] && [ -n "${!vp}" ] && path_to_add="${!vp}"
+		;;
+		"VARIABLE_LIST")
+			[ "${!va}" = "true" ] && [ -n "${vp}" ] && path_to_add="${vp}"
+		;;
+	esac
+
+	[ -n "${path_to_add}" ] && echo "${path_to_add}"
+}
+
+# add an export section of variable in a context file
+aistack_context_file_export_variables() {
+	local f="$1"
+	local variable_list="$2"
+	local v
+
+	{
+		for v in ${variable_list}; do
+			printf '[ -n "$%s" ] || %s=%s; export %s\n' "$v" "$v" "$(shell_quote_posix "${!v}")" "$v"
+		done
+	} >> "${f}"
+}
+
+
 aistack_generic_context_file_generate() {
-    local m r va vp list_path
+    local m r list_path
 
+	# GENERATE CONTEXT FILE ----
     echo '#!/bin/sh' > "${AISTACK_GENERIC_CONTEXT_FILE}"
+	chmod +x "${AISTACK_GENERIC_CONTEXT_FILE}"
 
-    # add to tool run context runtime search path
+	# VARIABLES
+	aistack_context_file_export_variables "${AISTACK_GENERIC_CONTEXT_FILE}" "${AISTACK_GENERIC_CONTEXT_EXPORT_VARIABLES}"
+	
+	# PATH
     for r in ${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}; do
-        va="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
-        vp="AISTACK_RUNTIME_$(printf '%s' "${r}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
-        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
+		list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") "${list_path}""
     done
-
-    # add to tool run context module search path
     for m in ${AISTACK_GENERIC_CONTEXT_ADD_MODULE}; do
-        va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
-        vp="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
-        [ "${!va}" = "true" ] && [ -n "${!vp}" ] && list_path="$($STELLA_API path_append_to_list "${list_path}" "${!vp}" "ALWAYS_PREPEND")"
+		list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") "${list_path}""
     done
-
-    
-    [ -n "${list_path}" ] && echo "export PATH=\"${list_path}:\${PATH}\"" >> "${AISTACK_GENERIC_CONTEXT_FILE}"
-    chmod +x "${AISTACK_GENERIC_CONTEXT_FILE}"
+	aistack_context_file_export_path "${AISTACK_GENERIC_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 
 aistack_generic_context_file_remove() {
@@ -1083,6 +1170,7 @@ process_kill_by_port() {
     fi
 }
 
+# TODO write unit test
 shell_quote_posix() {
     printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
 }

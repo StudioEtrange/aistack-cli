@@ -1,18 +1,25 @@
 sktor_init() {
+	# skillspector launcher
+	export AISTACK_SKTOR_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/sktor"
+	mkdir -p "${AISTACK_SKTOR_LAUNCHER_HOME}"
+	export AISTACK_SKTOR_LAUNCHER_FILE="${AISTACK_SKTOR_LAUNCHER_HOME}/skillspector"
 
-    export AISTACK_SKTOR_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/sktor"
-    mkdir -p "${AISTACK_SKTOR_LAUNCHER_HOME}"
-
+	# skillspector context
 	export AISTACK_SKTOR_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/sktor"
-    mkdir -p "${AISTACK_SKTOR_CONTEXT_HOME}"
+	mkdir -p "${AISTACK_SKTOR_CONTEXT_HOME}"
 	export AISTACK_SKTOR_CONTEXT_FILE="${AISTACK_SKTOR_CONTEXT_HOME}/sktor_context.sh"
+	# any variables needed to run this component or used by _launch function
+	# NOTE: do not need to declare those variables:
+	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
+	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
+	export AISTACK_SKTOR_CONTEXT_EXPORT_VARIABLES=""
 
-	# cpa key for sktor to connect to cpa backend
-    # conntext folder will also contains CPA key
-    export AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR_FILE="${AISTACK_SKTOR_CONTEXT_HOME}/cpa_key_for_sktor"
-    [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR_FILE")"
-    export AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR_FILE="${AISTACK_SKTOR_CONTEXT_HOME}/cpa_model_for_sktor"
-    [ -f "$AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR_FILE" ] && export AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR="$(cat "$AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR_FILE")"
+	# cpa key for skillspector to connect to cpa backend
+	# context folder will also contain CPA key
+	export AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR_FILE="${AISTACK_SKTOR_CONTEXT_HOME}/cpa_key_for_sktor"
+	[ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR_FILE")"
+	export AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR_FILE="${AISTACK_SKTOR_CONTEXT_HOME}/cpa_model_for_sktor"
+	[ -f "$AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR_FILE" ] && export AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR="$(cat "$AISTACK_CLIPROXYAPI_MODEL_FOR_SKTOR_FILE")"
 
     export AISTACK_MODEL_KEY_FOR_SKTOR_FILE="${AISTACK_SKTOR_CONTEXT_HOME}/model_key_for_sktor"
     [ -f "$AISTACK_MODEL_KEY_FOR_SKTOR_FILE" ] && export AISTACK_MODEL_KEY_FOR_SKTOR="$(cat "$AISTACK_MODEL_KEY_FOR_SKTOR_FILE")"
@@ -23,10 +30,12 @@ sktor_init() {
     export AISTACK_MODEL_PROVIDER_URL_FOR_SKTOR_FILE="${AISTACK_SKTOR_CONTEXT_HOME}/model_provider_url_for_sktor"
     [ -f "$AISTACK_MODEL_PROVIDER_URL_FOR_SKTOR_FILE" ] && export AISTACK_MODEL_PROVIDER_URL_FOR_SKTOR="$(cat "$AISTACK_MODEL_PROVIDER_URL_FOR_SKTOR_FILE")"
 
+	export AISTACK_SKILLSPECTOR_MODEL_REGISTRY="${AISTACK_SKTOR_CONTEXT_HOME}/model_registry.yaml"
 
-    export AISTACK_SKILLSPECTOR_MODEL_REGISTRY="${AISTACK_SKTOR_CONTEXT_HOME}/model_registry.yaml"
-
-    export AISTACK_SKTOR_RUNTIME_REQUIRED="python"
+	# skillspector requirement - those will be installed and presence checked to run the current component
+	# NOTE:	those search path will be injected in context file
+	export AISTACK_SKTOR_RUNTIME_REQUIRED="python"
+	export AISTACK_SKTOR_MODULE_REQUIRED=""
 	if [ ! "${STELLA_CURRENT_PLATFORM}" = "darwin" ]; then
 		# if we are on glibc2.17 we need to build tiktoken with rust compiler
 		case $(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.17") in
@@ -37,15 +46,21 @@ sktor_init() {
 				;;
 		esac
 	fi
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_SKTOR_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_SKTOR_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_SKTOR_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_SKTOR_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
 }
 
+# test if skillspector is installed
 # return 0 : is installed
 # return 1 : tool is not installed
 # return 2 : missing runtime
 sktor_is_installed() {
-	local r
+	local r m
 	export AISTACK_SKTOR_TOOL_AVAILABLE="false"
+	export AISTACK_SKTOR_TOOL_PATH=""
 	for r in ${AISTACK_SKTOR_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_SKTOR_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skillspector" ] || return 1
 	export AISTACK_SKTOR_TOOL_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skillspector"
 	export AISTACK_SKTOR_TOOL_AVAILABLE="true"
@@ -55,24 +70,29 @@ sktor_is_installed() {
 
 
 sktor_install() {
-	local r
+	local r m
 
-	for r in ${AISTACK_SKTOR_RUNTIME_REQUIRED}; do 
-		echo "Require needed ${r} managed runtime"
+	for r in ${AISTACK_SKTOR_RUNTIME_REQUIRED}; do
+		echo "INFO: skillspector require ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
+	for m in ${AISTACK_SKTOR_MODULE_REQUIRED}; do
+		echo "INFO: skillspector require ${m} managed module"
+		aistack_module_require "${m}"
+	done
 
-    echo "Installing skillspector"
-	python_uv_package_install 'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git'
+	echo "Installing skillspector"
+	python_uv_package_install 'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git' || return $?
 	
 	sktor_is_installed
-    return $?
+	return $?
 }
  
 sktor_uninstall() {
 	if sktor_is_installed; then
-		python_uv_package_uninstall 'skillspector[mcp]'
-		sktor_is_installed
+		python_uv_package_uninstall 'skillspector[mcp]' || return $?
+		sktor_is_installed && return 1
+		return 0
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_SKTOR_RUNTIME_REQUIRED"
 	fi
@@ -98,55 +118,52 @@ sktor_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "skillspector" "${AISTACK_SKTOR_LAUNCHER_HOME}"
 }
 
-sktor_launch_export_variables="AISTACK_GENERIC_CONTEXT_FILE AISTACK_SKTOR_CONTEXT_FILE AISTACK_RUNTIME_PYTHON_SEARCH_PATH"
 sktor_launch() {
+	(
+		[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"
+		[ -f "${AISTACK_SKTOR_CONTEXT_FILE}" ] && . "${AISTACK_SKTOR_CONTEXT_FILE}"
 
-    . "${AISTACK_GENERIC_CONTEXT_FILE}"
-
-	. "${AISTACK_SKTOR_CONTEXT_FILE}"
-
-    if [ "$#" -gt 0 ]; then
-        "$AISTACK_RUNTIME_PYTHON_SEARCH_PATH/skillspector" "$@"
-    else
-        "$AISTACK_RUNTIME_PYTHON_SEARCH_PATH/skillspector"
-    fi
+		if [ "$#" -gt 0 ]; then
+			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skillspector" "$@"
+		else
+			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skillspector"
+		fi
+	)
 }
 
-# we need to geenrate sktor context file at the same time as launcher
 sktor_launcher_manage() {
     local action="${1:-create}"
 
     case ${action} in
-        create)
+		create)
 			if sktor_is_installed; then
-                aistack_sktor_context_file_generate
+				# GENERATE CONTEXT FILE ----
+				sktor_context_file_generate
 
-                
-				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-				# and executed by the default /bin/sh on the current system
+				# GENERATE LAUNCHER FILE ----
 				{
 					echo '#!/bin/sh'
-					for v in $sktor_launch_export_variables; do
-						printf '[ -n "$%s" ] && export %s="$%s" || export %s=%s\n' "$v" "$v" "$v" "$v" "$(shell_quote_posix "${!v}")"
-					done
+
+					printf 'export %s=%s\n' "AISTACK_GENERIC_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_GENERIC_CONTEXT_FILE}")"
+					printf 'export %s=%s\n' "AISTACK_SKTOR_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_SKTOR_CONTEXT_FILE}")"
 
 					declare -f sktor_launch
 
 					echo sktor_launch \"\$@\"
-				} > "${AISTACK_SKTOR_LAUNCHER_HOME}/skillspector"
+				} > "${AISTACK_SKTOR_LAUNCHER_FILE}"
 
-				chmod +x "${AISTACK_SKTOR_LAUNCHER_HOME}/skillspector"
+				chmod +x "${AISTACK_SKTOR_LAUNCHER_FILE}"
 			fi
             ;;
 
         delete)
-            rm -Rf "${AISTACK_SKTOR_LAUNCHER_HOME}"
+			rm -Rf "${AISTACK_SKTOR_LAUNCHER_HOME}"
 			mkdir -p "${AISTACK_SKTOR_LAUNCHER_HOME}"
-            aistack_sktor_context_file_remove
+			sktor_context_file_generate_remove
             ;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_SKTOR_LAUNCHER_HOME}/skillspector" ] && ( sktor_launcher_manage "delete"; sktor_launcher_manage "create" )
+			[ -f "${AISTACK_SKTOR_LAUNCHER_FILE}" ] && ( sktor_launcher_manage "delete"; sktor_launcher_manage "create" )
 			;;
     esac
 }
@@ -157,6 +174,9 @@ sktor_info() {
 	echo "SKTOR available : ${AISTACK_SKTOR_TOOL_AVAILABLE}"
 	echo "SKTOR path : ${AISTACK_SKTOR_TOOL_PATH}"
 	echo "SKTOR needed managed runtime : ${AISTACK_SKTOR_RUNTIME_REQUIRED}"
+	echo "SKTOR needed managed module : ${AISTACK_SKTOR_MODULE_REQUIRED}"
+	echo "SKTOR launcher : ${AISTACK_SKTOR_LAUNCHER_FILE}"
+	echo "SKTOR context file : ${AISTACK_SKTOR_CONTEXT_FILE}"
 	echo
     
     echo "SKTOR LLM informations"
@@ -186,10 +206,12 @@ sktor_settings_remove() {
 
 
 
-aistack_sktor_context_file_generate() {
-    local m r va vp list_path
+sktor_context_file_generate() {
+	local m r list_path
 
-    echo '#!/bin/sh' > "${AISTACK_SKTOR_CONTEXT_FILE}"
+	# GENERATE CONTEXT FILE ----
+	echo '#!/bin/sh' > "${AISTACK_SKTOR_CONTEXT_FILE}"
+	chmod +x "${AISTACK_SKTOR_CONTEXT_FILE}"
 
     if cpa_is_configured; then
         if [ -n "${AISTACK_CLIPROXYAPI_KEY_FOR_SKTOR}" ]; then  
@@ -226,12 +248,18 @@ aistack_sktor_context_file_generate() {
         fi
     fi
 
+	# VARIABLES
+	aistack_context_file_export_variables "${AISTACK_SKTOR_CONTEXT_FILE}" "${AISTACK_SKTOR_CONTEXT_EXPORT_VARIABLES}"
     
-	chmod +x "${AISTACK_SKTOR_CONTEXT_FILE}"
+	# PATH
+	for r in ${AISTACK_SKTOR_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_SKTOR_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	aistack_context_file_export_path "${AISTACK_SKTOR_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
+
 }
 
-aistack_sktor_context_file_remove() {
-    rm -f "${AISTACK_SKTOR_CONTEXT_FILE}"
+sktor_context_file_generate_remove() {
+	rm -f "${AISTACK_SKTOR_CONTEXT_FILE}"
 }
 
 
@@ -381,4 +409,3 @@ sktor_connect_cpa() {
     sktor_register_model "CPA" "${selected_model}" "" "" "${context_length}" "${max_output_tokens}"
 
 }
-

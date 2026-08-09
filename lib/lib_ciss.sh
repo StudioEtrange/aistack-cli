@@ -21,13 +21,15 @@ ciss_init() {
 	[ -f "${AISTACK_MODEL_PROVIDER_URL_FOR_CISS_FILE}" ] && export AISTACK_MODEL_PROVIDER_URL_FOR_CISS="$(cat "${AISTACK_MODEL_PROVIDER_URL_FOR_CISS_FILE}")"
 
 	export AISTACK_CISS_RUNTIME_REQUIRED="python"
+	export AISTACK_CISS_MODULE_REQUIRED=""
 }
 
 # return 0: installed; 1: not installed; 2: missing runtime
 ciss_is_installed() {
-	local r
+	local r m
 	export AISTACK_CISS_TOOL_AVAILABLE="false"
 	for r in ${AISTACK_CISS_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_CISS_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner" ] || return 1
 	export AISTACK_CISS_TOOL_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner"
 	export AISTACK_CISS_TOOL_AVAILABLE="true"
@@ -35,12 +37,16 @@ ciss_is_installed() {
 }
 
 ciss_install() {
-	local r
+	local r m
 	for r in ${AISTACK_CISS_RUNTIME_REQUIRED}; do
-		echo "Require needed ${r} managed runtime"
+		echo "INFO: CISS require ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
 
+	for m in ${AISTACK_ASM_MODULE_REQUIRED}; do 
+		echo "INFO: CISS require ${m} managed module"
+		aistack_module_require "${m}"
+	done
 
 	if [ ! "${STELLA_CURRENT_PLATFORM}" = "darwin" ]; then
 		case $(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.17") in

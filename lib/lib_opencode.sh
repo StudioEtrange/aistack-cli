@@ -1,33 +1,51 @@
 opencode_init() {
-    # oc specific paths
-    export AISTACK_OPENCODE_CONFIG_HOME="$HOME/.config/opencode"
-    mkdir -p "${AISTACK_OPENCODE_CONFIG_HOME}"
-    #You can also specify a custom config file path using the OPENCODE_CONFIG environment variable. This takes precedence over the global and project configs.
-    [ "$OPENCODE_CONFIG" = "" ] && export AISTACK_OPENCODE_CONFIG_FILE="$AISTACK_OPENCODE_CONFIG_HOME/opencode.json" || export AISTACK_OPENCODE_CONFIG_FILE="$OPENCODE_CONFIG"
+	# opencode specific variables
+	export AISTACK_OPENCODE_CONFIG_HOME="${HOME}/.config/opencode"
+	mkdir -p "${AISTACK_OPENCODE_CONFIG_HOME}"
+	# OPENCODE_CONFIG takes precedence over the global and project configurations.
+	[ -z "${OPENCODE_CONFIG}" ] && export AISTACK_OPENCODE_CONFIG_FILE="${AISTACK_OPENCODE_CONFIG_HOME}/opencode.json" || export AISTACK_OPENCODE_CONFIG_FILE="${OPENCODE_CONFIG}"
 
-    # cpa key for opencode to connect to cpa backend
-    export AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE="${AISTACK_OPENCODE_CONFIG_HOME}/cpa_key_for_oc"
-    [ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE")"
+	# cpa key for opencode to connect to cpa backend
+	export AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE="${AISTACK_OPENCODE_CONFIG_HOME}/cpa_key_for_oc"
+	[ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE")"
 
-    # aistack path for oc
-    export AISTACK_OPENCODE_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/opencode"
-    mkdir -p "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+	# opencode launcher
+	export AISTACK_OPENCODE_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/opencode"
+	mkdir -p "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+	export AISTACK_OPENCODE_LAUNCHER_FILE="${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
 
+	# opencode context
+	export AISTACK_OPENCODE_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/opencode"
+	mkdir -p "${AISTACK_OPENCODE_CONTEXT_HOME}"
+	export AISTACK_OPENCODE_CONTEXT_FILE="${AISTACK_OPENCODE_CONTEXT_HOME}/opencode_context.sh"
+	# any variables needed to run this component or used by _launch function
+	# NOTE: do not need to declare those variables:
+	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
+	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
+	export AISTACK_OPENCODE_CONTEXT_EXPORT_VARIABLES="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE"
+
+	# opencode requirement - those will be installed and presence checked to run the current component
+	# NOTE:	those search path will be injected in context file
 	export AISTACK_OPENCODE_RUNTIME_REQUIRED="nodejs"
 	export AISTACK_OPENCODE_MODULE_REQUIRED=""
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_OPENCODE_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_OPENCODE_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_OPENCODE_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_OPENCODE_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
 
 }
 
+# test if opencode is installed
 # return 0 : is installed
 # return 1 : tool is not installed
 # return 2 : missing runtime
 opencode_is_installed() {
 	local r m
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="false"
-	for r in $AISTACK_OPENCODE_RUNTIME_REQUIRED; do aistack_runtime_is_detected "${r}" || return 2; done
+	export AISTACK_OPENCODE_TOOL_PATH=""
+	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode" ] || return 1
-	export AISTACK_OPENCODE_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode"
+	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode" ] || return 1
+	export AISTACK_OPENCODE_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode"
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="true"
 
 	# variable used by some other tools (like openchamber)
@@ -37,37 +55,37 @@ opencode_is_installed() {
 
 opencode_install() {
 	local r m
-    local version="$1"
-    [ -z "${version}" ] && version="@latest"
+	local version="$1"
+	[ -z "${version}" ] && version="@latest"
 
-	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED}; do 
+	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED}; do
 		echo "INFO: OpenCode require ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
 
-	for m in ${AISTACK_ASM_MODULE_REQUIRED}; do 
+	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED}; do
 		echo "INFO: OpenCode require ${m} managed module"
 		aistack_module_require "${m}"
 	done
 
-    echo "Installing Opencode CLI"
-	node_package_install --allow-scripts=opencode-ai opencode-ai${version}
+	echo "Installing Opencode CLI ${version}"
+	node_package_install --allow-scripts=opencode-ai "opencode-ai${version}" || return $?
 
 	opencode_is_installed
-    return $?
+	return $?
 }
 
 opencode_uninstall() {
 	if opencode_is_installed; then
-		node_package_uninstall "opencode-ai"
-		opencode_is_installed
+		node_package_uninstall "opencode-ai" || return $?
+		opencode_is_installed && return 1
+		return 0
 	else
 		echo "WARN : not installed or missing a required managed runtime $AISTACK_OPENCODE_RUNTIME_REQUIRED"
 	fi
 }
 
 
-# add opencode launcher in path for shell
 opencode_path_register_for_shell() {
     local shell_name="$1"
 	if opencode_is_installed; then
@@ -87,62 +105,72 @@ opencode_path_unregister_for_vs_terminal() {
     vscode_path_unregister_for_vs_terminal "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}"
 }
 
-opencode_launch_variables="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE AISTACK_GENERIC_CONTEXT_FILE AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
 opencode_launch() {
-    (
-        . "${AISTACK_GENERIC_CONTEXT_FILE}"
+	(
+		[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"
+		[ -f "${AISTACK_OPENCODE_CONTEXT_FILE}" ] && . "${AISTACK_OPENCODE_CONTEXT_FILE}"
 
-        if [ "$#" -gt 0 ]; then
-            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode" "$@"
-        else
-            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/opencode"
-        fi
-    )
+		if [ "$#" -gt 0 ]; then
+			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode" "$@"
+		else
+			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode"
+		fi
+	)
 }
 
 opencode_launcher_manage() {
     local action="${1:-create}"
 
-    case $action in
-        create)
-            # echo '#!/bin/sh' > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-            # echo ". ${AISTACK_GENERIC_CONTEXT_FILE}" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-            # echo "opencode \$@" >> "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-            # chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-
-            # launcher based on a symbolic link - test link does not exist OR is not valid
-            # if [ ! -L "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ] || [ ! -e "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ]; then
-            #     echo "Create an opencode launcher"
-            #     ln -fsv "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
-            # fi
-
+	case $action in
+		create)
 			if opencode_is_installed; then
-				# create a compatible POSIX shell script to be called from bash, zsn, fish and wo on
-				# and executed by the default /bin/sh on the current system
+				# GENERATE CONTEXT FILE ----
+				opencode_context_file_generate
+
+				# GENERATE LAUNCHER FILE ----
 				{
 					echo '#!/bin/sh'
-					for v in $opencode_launch_variables; do
-						printf '[ -n "$%s" ] && export %s="$%s" || export %s=%s\n' "$v" "$v" "$v" "$v" "$(shell_quote_posix "${!v}")"
-					done
+
+					printf 'export %s=%s\n' "AISTACK_GENERIC_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_GENERIC_CONTEXT_FILE}")"
+					printf 'export %s=%s\n' "AISTACK_OPENCODE_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_OPENCODE_CONTEXT_FILE}")"
 
 					declare -f opencode_launch
 
 					echo opencode_launch \"\$@\"
-				} > "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+				} > "${AISTACK_OPENCODE_LAUNCHER_FILE}"
 
-				chmod +x "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode"
+				chmod +x "${AISTACK_OPENCODE_LAUNCHER_FILE}"
 			fi
             ;;
 
         delete)
-            rm -Rf "${AISTACK_OPENCODE_LAUNCHER_HOME}"
-            mkdir -p "${AISTACK_OPENCODE_LAUNCHER_HOME}"
+			rm -f "${AISTACK_OPENCODE_LAUNCHER_FILE}"
+			opencode_context_file_generate_remove
             ;;
 	
 		refresh_if_exists)
-			[ -f "${AISTACK_OPENCODE_LAUNCHER_HOME}/opencode" ] && ( opencode_launcher_manage "delete"; opencode_launcher_manage "create" )
+			[ -f "${AISTACK_OPENCODE_LAUNCHER_FILE}" ] && ( opencode_launcher_manage "delete"; opencode_launcher_manage "create" )
 			;;
     esac
+}
+
+opencode_context_file_generate() {
+	# GENERATE CONTEXT FILE ----
+	echo '#!/bin/sh' > "${AISTACK_OPENCODE_CONTEXT_FILE}"
+	chmod +x "${AISTACK_OPENCODE_CONTEXT_FILE}"
+
+	# VARIABLES
+	aistack_context_file_export_variables "${AISTACK_OPENCODE_CONTEXT_FILE}" "${AISTACK_OPENCODE_CONTEXT_EXPORT_VARIABLES}"
+
+	# PATH
+	local m r list_path
+	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	aistack_context_file_export_path "${AISTACK_OPENCODE_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
+}
+
+opencode_context_file_generate_remove() {
+	rm -f "${AISTACK_OPENCODE_CONTEXT_FILE}"
 }
 
 opencode_settings_configure() {
@@ -158,15 +186,17 @@ opencode_info() {
 	echo "OPENCODE available : $AISTACK_OPENCODE_TOOL_AVAILABLE"
 	echo "OPENCODE path : $AISTACK_OPENCODE_TOOL_PATH"
 	echo "OPENCODE needed managed runtime : $AISTACK_OPENCODE_RUNTIME_REQUIRED"
+	echo "OPENCODE needed managed module : $AISTACK_OPENCODE_MODULE_REQUIRED"
+	echo "OPENCODE launcher : $AISTACK_OPENCODE_LAUNCHER_FILE"
+	echo "OPENCODE context file : $AISTACK_OPENCODE_CONTEXT_FILE"
 	echo
     [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE)" || \
         echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE)"
 }
 
 opencode_show_config() {
-    if [ -f "$AISTACK_OPENCODE_CONFIG_FILE" ]; then
-        echo "Current configuration file : $AISTACK_OPENCODE_CONFIG_FILE"
-        cat "$AISTACK_OPENCODE_CONFIG_FILE"
+	if [ -f "$AISTACK_OPENCODE_CONFIG_FILE" ]; then
+		cat "$AISTACK_OPENCODE_CONFIG_FILE"
     else
         echo "No configuration file found. ($AISTACK_OPENCODE_CONFIG_FILE)"
     fi
@@ -222,11 +252,15 @@ opencode_register_provider() {
 
     opencode_remove_config "provider.${provider_id}"
 
-    opencode_set_config "provider.${provider_id}.npm" "\"$provider_type\""
-    opencode_set_config "provider.${provider_id}.name" "\"$provider_display_name\""
-    opencode_set_config "provider.${provider_id}.options.baseURL" "\"$endpoint\""
-    [ -n "$api_key" ] && opencode_set_config "provider.${provider_id}.options.apiKey" "\"$api_key\""
-    [ -n "$api_key_env_var" ] && opencode_set_config "provider.${provider_id}.options.apiKey" "\"{env:$api_key_env_var}\""
+	opencode_set_config "provider.${provider_id}.npm" "\"$provider_type\""
+	opencode_set_config "provider.${provider_id}.name" "\"$provider_display_name\""
+	opencode_set_config "provider.${provider_id}.options.baseURL" "\"$endpoint\""
+	if [ -n "$api_key" ]; then
+		opencode_set_config "provider.${provider_id}.options.apiKey" "\"$api_key\""
+	fi
+	if [ -n "$api_key_env_var" ]; then
+		opencode_set_config "provider.${provider_id}.options.apiKey" "\"{env:$api_key_env_var}\""
+	fi
 }
 
 opencode_register_model() {
@@ -255,8 +289,9 @@ opencode_register_model() {
     [ -n "$reasoning" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.reasoning" "$reasoning"
     [ -n "$tool_call" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.tool_call" "$tool_call"
 
-    [ -n "$limit_context" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.limit.context" "$limit_context"
-    [ -n "$limit_output" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.limit.output" "$limit_output"
+	[ -n "$limit_context" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.limit.context" "$limit_context"
+	[ -n "$limit_output" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.limit.output" "$limit_output"
+	return 0
 }
 
 # set a default model in opencode config

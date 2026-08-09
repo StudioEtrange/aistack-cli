@@ -34,9 +34,8 @@ aistack_initialize
 
 aistack_runtime_detect
 aistack_module_detect
-
-aistack_generic_context_file_generate
-
 aistack_tool_detect
 aistack_mcp_detect
+
+aistack_generic_context_file_generate
 aistack_launcher_regenerate
