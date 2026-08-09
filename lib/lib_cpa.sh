@@ -142,6 +142,9 @@ cpa_daemon_up() {
 	# fi
     #cpa_daemon_down
 
+	# TODO ? clean alone zombie
+	# process_kill_by_port 8317
+
     if [ -f "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" ]; then
         set -- --config "${AISTACK_CLIPROXYAPI_CONFIG_FILE}" "$@"
     fi
