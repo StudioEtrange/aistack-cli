@@ -584,11 +584,11 @@ merge_json_file() {
 }
 
 json_tweak_value_of_list_into_file() {
-    local key_path="$1"
-    local value="$2"
-    local separator="$3"
-    local target_file="$4"
-    local mode="${5:-ALWAYS_PREPEND}"
+	local key_path="${1}"
+	local value="${2}"
+	local separator="${3}"
+	local target_file="${4}"
+	local mode="${5:-ALWAYS_PREPEND}"
 
     if [ "$#" -lt 4 ]; then
         echo "ERROR : argument missing"
@@ -758,141 +758,142 @@ json_escape_string_containing_char() {
 }
 
 
+# modify alements of a key that is a list
+# we not use bash function json_escape_string_containing_char, to avoid jq calls
+# mode:
+# ALWAYS_PREPEND add value or move it at the begining position
+# ALWAYS_POSTPEND add value or move it at the end position
+# PREPEND_IF_NOT_EXISTS add value at the begining position only if not already present
+# POSTPEND_IF_NOT_EXISTS add value at the end position only if not already present
+# REMOVE remove all occurences of a fix expression
+# REMOVE_REGEXP remove all occurences of an regexp expression
 json_tweak_value_of_list() {
-    local key_path="$1"
-    local value="$2"
-    local separator="$3" # separator of values in the list
-    local mode="${4:-ALWAYS_PREPEND}"
-	local input_file ret
-    # ALWAYS_PREPEND add value or move it at the begining position
-    # ALWAYS_POSTPEND add value or move it at the end position
-    # PREPEND_IF_NOT_EXISTS add value at the begining position only if not already present
-    # POSTPEND_IF_NOT_EXISTS add value at the end position only if not already present
-    # REMOVE remove all occurences of a fix expression
-    # REMOVE_REGEXP remove all occurences of an regexp expression
-
-    if [ "$#" -lt 3 ]; then
-        echo "ERROR : argument missing"
-        exit 1
-    fi
-
-    if [ -z "$key_path" ]; then
-        echo "ERROR : json key path empty"
-        exit 1
-    fi
-
-    if [ -z "$separator" ]; then
-        echo "ERROR : value separator is empty"
-        exit 1
-    fi
+	local key_path="${1}"
+	local value="${2}"
+	local separator="${3}" # separator of values in the list
+	local mode="${4:-ALWAYS_PREPEND}"
+	local alt_character=$'\x1f'
+	local protected_value
+	local jq_path
+	local input_source="-"
+	local ret
     
-	if [ ! -t 0 ]; then
-		input_file="$(mktemp)" || {
-			echo "ERROR : unable to create temporary JSON file" >&2
-			return 1
-		}
-		cat > "$input_file"
+	if [ "$#" -lt 3 ]; then
+		echo "ERROR : argument missing"
+		return 1
 	fi
 
-	# string is empty
-	if [ -z "$value" ]; then
-		if [ -n "$input_file" ] && [ -s "$input_file" ]; then
-			jq . "$input_file"
-			ret=$?
+	if [ -z "${key_path}" ]; then
+		echo "ERROR : json key path empty"
+		return 1
+	fi
+
+	if [ -z "${separator}" ]; then
+		echo "ERROR : value separator is empty"
+		return 1
+	fi
+
+	jq_path="$(build_jq_array_from_path "${key_path}")" || return 1
+	protected_value="${value//"${separator}"/${alt_character}}"
+	[ -t 0 ] && input_source="/dev/null"
+
+	jq -s \
+		--arg separator "${separator}" \
+		--arg value "${value}" \
+		--arg protected_value "${protected_value}" \
+		--arg mode "${mode}" \
+		--argjson key_path "${jq_path}" '
+		def protect_value($raw; $protected):
+			if type == "string" then
+				split($raw) | join($protected)
+			else
+				.
+			end;
+
+		def restore_value($raw; $protected):
+			if type == "string" then
+				split($protected) | join($raw)
+			else
+				.
+			end;
+
+		def split_list:
+			if type != "string" or . == "" then
+				[]
+			else
+				split($separator)
+			end;
+
+		def remove_value($parts; $item):
+			$parts | map(select(. != "" and . != $item));
+
+		def prepend_value($parts; $item):
+			([$item] + remove_value($parts; $item))
+			| join($separator);
+
+		def append_value($parts; $item):
+			(remove_value($parts; $item) + [$item])
+			| join($separator);
+
+		def prepend_if_missing($parts; $item):
+			if $parts | index($item) then
+				$parts | join($separator)
+			else
+				([$item] + $parts) | join($separator)
+			end;
+
+		def append_if_missing($parts; $item):
+			if $parts | index($item) then
+				$parts | join($separator)
+			else
+				($parts + [$item]) | join($separator)
+			end;
+
+		def remove_exact($parts; $item):
+			remove_value($parts; $item)
+			| join($separator);
+
+		def remove_regexp($parts; $pattern):
+			$parts
+			| map(select(. != "" and (test($pattern) | not)))
+			| join($separator);
+
+		def tweak($item):
+			if . == null or . == "" then
+				if ($mode | startswith("REMOVE")) then . else $item end
+			elif $mode == "ALWAYS_PREPEND" then
+				prepend_value(split_list; $item)
+			elif $mode == "ALWAYS_POSTPEND" then
+				append_value(split_list; $item)
+			elif $mode == "PREPEND_IF_NOT_EXISTS" then
+				prepend_if_missing(split_list; $item)
+			elif $mode == "POSTPEND_IF_NOT_EXISTS" then
+				append_if_missing(split_list; $item)
+			elif $mode == "REMOVE" then
+				remove_exact(split_list; $item)
+			elif $mode == "REMOVE_REGEXP" then
+				remove_regexp(split_list; $item)
+			else
+				.
+			end;
+
+		(if length == 0 then {} else .[0] end)
+		| if $value == "" then
+			.
+		elif $mode == "REMOVE_REGEXP" then
+			setpath($key_path; (getpath($key_path) | tweak($value)))
 		else
-			jq -n '{}'
-			ret=$?
-		fi
-		[ -n "$input_file" ] && rm -f "$input_file"
-		return "$ret"
-	fi
-
-    local jq_path
-    jq_path="$(build_jq_array_from_path "$key_path")" || return 1
-
-    # escape value if it contains separator
-    local escaped_value="$(json_escape_string_containing_char "$value" "$separator" "GET_ESCAPED_VALUE")"
-
-
-	if [ -n "$input_file" ] && [ -s "$input_file" ]; then
-		json_escape_string_containing_char "$value" "$separator" "ESCAPE" < "$input_file"
-	else
-		json_escape_string_containing_char "$value" "$separator" "ESCAPE" < /dev/null
-	fi \
-		| jq --arg separator "$separator" --arg value "$escaped_value" --arg mode "$mode" --argjson key_path "$jq_path" '
-    
-            # split by "$separator"
-            def split_by_separator:
-                if (type!="string") or (.=="") then 
-                    []
-                else 
-                    ( . | split($separator) )
-                end;
-            
-            def process:
-                if ($mode | startswith("REMOVE") | not) then
-                    if . == null or . == "" then
-                        $value
-                    else
-                        if $mode == "ALWAYS_PREPEND" then
-                            ( split_by_separator
-                                | map(select(. != "" and . != $value))
-                                | [$value] + .
-                                | join($separator)
-                            )
-                        elif $mode == "ALWAYS_POSTPEND" then
-                            ( split_by_separator
-                                | map(select(. != "" and . != $value))
-                                | . + [$value]
-                                | join($separator)
-                            )
-                        elif $mode == "PREPEND_IF_NOT_EXISTS" then
-                            (split_by_separator) as $parts |
-                            if ($parts | index($value)) then 
-                                . 
-                            else 
-                                ( [$value] + $parts | join($separator) ) 
-                            end
-                        elif $mode == "POSTPEND_IF_NOT_EXISTS" then
-                            (split_by_separator) as $parts |
-                            if ($parts | index($value)) then 
-                                . 
-                            else 
-                                ($parts + [$value] | join($separator)) 
-                            end
-                        else
-                            .
-                        end
-                    end
-                else
-                    if . == null or . == "" then
-                        .
-                    else
-                        if $mode == "REMOVE" then
-                            ( split_by_separator
-                                | map(select(. != "" and . != $value))
-                                | join($separator)
-                            )
-                        elif $mode == "REMOVE_REGEXP" then
-                            ( split_by_separator
-                                | map(select(. != "" and (. | test($value) | not)))
-                                | join($separator)
-                            )
-                        else
-                            .
-                        end
-                    end
-                end;
-
-            # update target path
-            . as $doc
-            | (getpath($key_path)) as $cur
-            | setpath($key_path; ($cur | process))
-        ' \
-        | json_escape_string_containing_char "$value" "$separator" "RESTORE"
+			setpath(
+				$key_path;
+				(getpath($key_path)
+					| protect_value($value; $protected_value)
+					| tweak($protected_value)
+					| restore_value($value; $protected_value))
+			)
+		end
+	' "${input_source}"
 	ret=$?
 
-	[ -n "$input_file" ] && rm -f "$input_file"
 	if [ "$ret" -ne 0 ]; then
         echo "ERROR json_tweak_value_of_list"
         return 1

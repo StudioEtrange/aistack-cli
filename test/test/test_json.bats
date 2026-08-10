@@ -1422,6 +1422,49 @@ EOF
 	assert_output "$expected"
 }
 
+@test "json_tweak_value_of_list accepts an empty pipeline with an empty value" {
+	json_tweak_value_of_list_empty_pipeline() {
+		printf '%s' '' \
+			| json_tweak_value_of_list ".PATH" "" ":" "ALWAYS_PREPEND"
+	}
+
+	run json_tweak_value_of_list_empty_pipeline
+
+	assert_success
+	assert_output '{}'
+}
+
+@test "json_tweak_value_of_list creates a value from an empty pipeline" {
+	json_tweak_value_of_list_empty_pipeline() {
+		printf '%s' '' \
+			| json_tweak_value_of_list ".PATH" "AA" ":" "POSTPEND_IF_NOT_EXISTS"
+	}
+
+	run json_tweak_value_of_list_empty_pipeline
+
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA"
+}
+EOF
+	)
+	assert_success
+	assert_output "$expected"
+}
+
+@test "json_tweak_value_of_list forwards an empty pipeline result downstream" {
+	json_tweak_value_of_list_empty_pipeline() {
+		printf '%s' '' \
+			| json_tweak_value_of_list ".terminal.env.PATH" "AA" ":" "ALWAYS_PREPEND" \
+			| jq -c .
+	}
+
+	run json_tweak_value_of_list_empty_pipeline
+
+	assert_success
+	assert_output '{"terminal":{"env":{"PATH":"AA"}}}'
+}
+
 @test "json_tweak_value_of_list1" {
 
   run json_tweak_value_of_list ".PATH" "AA" ":" "POSTPEND_IF_NOT_EXISTS"
@@ -1498,6 +1541,58 @@ EOF
 EOF
   )
 
+	assert_output "$expected"
+}
+
+@test "json_tweak_value_of_list always postpends and moves an existing value" {
+	run json_tweak_value_of_list ".PATH" "BB" ":" "ALWAYS_POSTPEND" <<'EOF'
+{"PATH":"BB:AA:CC:BB","preserved":true}
+EOF
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA:CC:BB",
+  "preserved": true
+}
+EOF
+	)
+
+	assert_success
+	assert_output "$expected"
+}
+
+@test "json_tweak_value_of_list supports a nested key path" {
+	run json_tweak_value_of_list ".terminal.env.PATH" "AA" ":" "ALWAYS_PREPEND" <<'EOF'
+{"terminal":{"env":{"PATH":"BB:CC"}},"preserved":"value"}
+EOF
+	expected=$(cat <<'EOF'
+{
+  "terminal": {
+    "env": {
+      "PATH": "AA:BB:CC"
+    }
+  },
+  "preserved": "value"
+}
+EOF
+	)
+
+	assert_success
+	assert_output "$expected"
+}
+
+@test "json_tweak_value_of_list initializes a null target value" {
+	run json_tweak_value_of_list ".PATH" "AA" ":" "POSTPEND_IF_NOT_EXISTS" <<'EOF'
+{"PATH":null,"preserved":false}
+EOF
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA",
+  "preserved": false
+}
+EOF
+	)
+
+	assert_success
 	assert_output "$expected"
 }
 
@@ -1583,6 +1678,41 @@ EOF
   )
 
   assert_success
+	assert_output "$expected"
+}
+
+@test "json_tweak_value_of_list removes values matching a regexp" {
+	run json_tweak_value_of_list ".PATH" '^BB-[0-9]+$' ":" "REMOVE_REGEXP" <<'EOF'
+{"PATH":"AA:BB-1:CC:BB-22:BB-X","preserved":"BB-1"}
+EOF
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA:CC:BB-X",
+  "preserved": "BB-1"
+}
+EOF
+	)
+
+	assert_success
+	assert_output "$expected"
+}
+
+@test "json_tweak_value_of_list preserves non-target fields containing the value" {
+	run json_tweak_value_of_list ".PATH" 'BB:CC' ":" "REMOVE" <<'EOF'
+{"PATH":"AA:BB:CC:DD","description":"keep BB:CC here","nested":{"value":"BB:CC"}}
+EOF
+	expected=$(cat <<'EOF'
+{
+  "PATH": "AA:DD",
+  "description": "keep BB:CC here",
+  "nested": {
+    "value": "BB:CC"
+  }
+}
+EOF
+	)
+
+	assert_success
 	assert_output "$expected"
 }
 
@@ -1689,6 +1819,64 @@ EOF
 	assert_success
 	assert_equal "$(cat "$tmp")" "$expected"
 	rm -f "$tmp"
+}
+
+@test "json_tweak_value_of_list_into_file keeps an existing file on failure" {
+	local tmp
+	local original='{"PATH":"AA:BB","preserved":true}'
+	tmp="$(mktemp)"
+	printf '%s\n' "${original}" > "${tmp}"
+
+	run json_tweak_value_of_list_into_file ".PATH" '[' ":" "${tmp}" "REMOVE_REGEXP"
+
+	assert_failure
+	assert_equal "$(cat "${tmp}")" "${original}"
+	rm -f "${tmp}"
+}
+
+@test "json_tweak_value_of_list_into_file keeps a JSON5 file on failure" {
+	local tmp
+	local original
+	tmp="$(mktemp)"
+	cat > "${tmp}" <<'EOF'
+{
+  // Keep the original JSON5 formatting on failure.
+  PATH: 'AA:BB',
+}
+EOF
+	original="$(cat "${tmp}")"
+
+	run json_tweak_value_of_list_into_file ".PATH" '[' ":" "${tmp}" "REMOVE_REGEXP"
+
+	assert_failure
+	assert_equal "$(cat "${tmp}")" "${original}"
+	rm -f "${tmp}"
+}
+
+@test "json_tweak_value_of_list_into_file does not create a target on failure" {
+	local root
+	local target
+	root="$(mktemp -d)"
+	target="${root}/missing/config.json"
+
+	run json_tweak_value_of_list_into_file "." "AA" ":" "${target}" "ALWAYS_PREPEND"
+
+	assert_failure
+	[ ! -e "${target}" ]
+	rm -rf "${root}"
+}
+
+@test "json_tweak_value_of_list_into_file creates a missing target after success" {
+	local root
+	local target
+	root="$(mktemp -d)"
+	target="${root}/missing/config.json"
+
+	run json_tweak_value_of_list_into_file ".PATH" "AA" ":" "${target}" "ALWAYS_PREPEND"
+
+	assert_success
+	assert_equal "$(jq -c . "${target}")" '{"PATH":"AA"}'
+	rm -rf "${root}"
 }
 
 
