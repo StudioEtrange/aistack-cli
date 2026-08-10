@@ -27,8 +27,8 @@ To see complete commands use `aistack help`.
 
 | Core Commands | Description |
 | - | - |
-| **init** | Install/Reinstall dependencies |
-| **uninstall** | Remove any tools and dependencies managed by AIStack |
+| **init [reinstall]** | Refresh installation while preserving installed tools. Use `reinstall` for a fresh installation. |
+| **uninstall** | Remove any tools and components and registered commands in shell managed by AIStack |
 | **help** | Display help message |
 | **info** | Display various AIStack information and configuration |
 | **shell** | Enter a sub-shell with the `aistack` environment and paths configured |
@@ -38,7 +38,6 @@ Managed runtimes can be installed or removed independently. Rust uses the offici
 ```bash
 ./aistack runtime add rust
 ./aistack rustc --version
-./aistack cargo --version
 ./aistack runtime remove rust
 ```
 

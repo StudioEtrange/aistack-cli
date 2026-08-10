@@ -10,7 +10,7 @@ aistack_initialize() {
     export AISTACK_RUNTIME_TO_DETECT="python nodejs bun rust"
 	# runtimes required for AIStack
     # note : json5 core module require nodejs and nodejs require module nvm
-    export AISTACK_RUNTIME_CORE="nodejs"
+    export AISTACK_RUNTIME_CORE="nodejs python"
 
     # modules lists
     export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm pnpm cargo nvm"
@@ -39,7 +39,8 @@ aistack_initialize() {
 
 
     # paths ---
-    export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
+	# we can override this value (usefull for unit tests)
+    [ -n "${AISTACK_POOL}" ] || export AISTACK_POOL="${STELLA_APP_ROOT}/pool"
 
     export AISTACK_LAUNCHER_HOME="${STELLA_APP_WORK_ROOT}/launcher"
     mkdir -p "${AISTACK_LAUNCHER_HOME}"
@@ -221,34 +222,64 @@ aistack_info() {
 }
 
 aistack_init() {
-	# NOTE : aistack_install uninstall everything
-	aistack_install
+	local mode="${1:-refresh}"
+
+	case "${mode}" in
+		"refresh")
+			aistack_install_refresh
+			;;
+		"reinstall")
+			aistack_install_purge
+			;;
+		*)
+			echo "ERROR: unsupported init mode: ${mode}" >&2
+			return 1
+			;;
+	esac
 }
 
-aistack_install() {
-	aistack_uninstall
+# only update/install mandatories components, keep installed tools and regenerate launcher and context files
+aistack_install_refresh() {
+	aistack_initialize
 
-	# # we need this folder for core install
-	# mkdir -p "${AISTACK_ISOLATED_ROOT}"
+	aistack_component_core_install
+	# NOTE: those calls are included in aistack_component_core_install
+	#aistack_runtime_detect
+	#aistack_module_detect
+
+	aistack_tool_detect
+	aistack_mcp_detect
+
+	aistack_component_core_is_detected
+
+	aistack_generic_context_file_generate
+	aistack_launcher_and_context_files_regenerate
+
+}
+
+# uninstall everything to make a fresh install
+aistack_install_purge() {
+	aistack_uninstall 1>/dev/null
 
 	aistack_initialize
 
-	# we need to reset all runtime and modules variables (available, path, ...)
+	# after aistack_uninstall, we need to reset all runtime and modules variables (available, path, ...)
 	aistack_runtime_detect
 	aistack_module_detect
 	aistack_tool_detect
 	aistack_mcp_detect
 
 	aistack_component_core_install
-
-	# NOTE: included in aistack_component_core_install
+	# NOTE: those calls are included in aistack_component_core_install
 	#aistack_runtime_detect
 	#aistack_module_detect
 
-	# NOTE: we do not have any tool or mcp installed yet
+	# NOTE: after aistack_uninstall, we do not have any tool or mcp installed yet
 	#		unless in the future some tools will be considered as core and installed with aistack_component_core_install ?)
 	#aistack_tool_detect
 	#aistack_mcp_detect
+
+	aistack_component_core_is_detected
 
 	aistack_generic_context_file_generate
 	aistack_launcher_and_context_files_regenerate
@@ -813,7 +844,7 @@ aistack_component_core_is_detected() {
 aistack_component_core_install() {
 	local m r
 
-    echo "- Install some module to bootstrap AIStack"
+    echo "- Install some modules to bootstrap AIStack"
     for m in ${AISTACK_MODULE_CORE_BOOTSTRAP}; do
         aistack_component_install "${m}"
         aistack_module_detect
@@ -821,7 +852,9 @@ aistack_component_core_install() {
 
     echo "- Install core mandatories runtimes managed by AIStack"
     for r in ${AISTACK_RUNTIME_CORE}; do
-        aistack_runtime_require "${r}"
+		# NOTE: aistack_runtime_install use each runtime installer which check themselves if we need to upgrade the already installed runtimes
+        #aistack_runtime_require "${r}"
+		aistack_runtime_install "${r}"
     done
 
 	# NOTE: aistack_runtime_require include aistack_runtime_detect call
@@ -966,20 +999,18 @@ stella_feature_install() {
     local f="$1"
     local opt="$2"
     local o
-    
     local loaded_in_path_during_aistack_run="ON"
-	local not_loaded_in_path_during_aistack_run=""
 	for o in $opt; do
 		[ "$o" = "LOADED_IN_PATH" ] && loaded_in_path_during_aistack_run="ON"
-		[ "$o" = "NOT_LOADED_IN_PATH" ] && not_loaded_in_path_during_aistack_run="ON"
+		[ "$o" = "NOT_LOADED_IN_PATH" ] && loaded_in_path_during_aistack_run=""
 	done
 
+	# loaded_in_path_during_aistack_run
     if [ "${loaded_in_path_during_aistack_run}" = "ON" ]; then
         # PATH is injected in current and next aistack run context
         $STELLA_API get_feature "${f}"
-    fi
-
-    if [ "${not_loaded_in_path_during_aistack_run}" = "ON" ]; then
+    else
+		# not_loaded_in_path_during_aistack_run
         local _feature=""
         local _feature_name=""
 
@@ -1559,5 +1590,4 @@ remove_dir_with_exceptions() {
         "${find_args[@]}" \
         -exec rm -rf -- {} +
 }
-
 

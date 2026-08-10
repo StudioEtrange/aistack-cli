@@ -1,10 +1,8 @@
 #!/bin/bash
-AISTACK_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-AISTACK_CURRENT_RUNNING_DIR="$( cd "$( dirname "${BASH_SOURCE[1]}" )" && pwd )"
+_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 STELLA_LOG_STATE=OFF
-. "$AISTACK_CURRENT_FILE_DIR/stella-link.sh" include
-
+. "$_CURRENT_FILE_DIR/stella-link.sh" include
 
 usage() {
 	echo " * Usage $0 lib|json|yaml|glibc|vs|node|playwright|opencode|all [test-name]"
@@ -19,48 +17,50 @@ init_aistack_test_env() {
 	# create a temporary working directory for tests
 	mkdir -p "$STELLA_APP_WORK_ROOT"
 
-	# load aistack libraries
-	. "${STELLA_APP_ROOT}/../lib/lib.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_json.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_yaml.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_node.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_bun.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_rust.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_python.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_cpa.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_vscode.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_gemini.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_opencode.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_och.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_kilo.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_orla.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_bmad.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_gsd.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_adk.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_asm.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_playwright.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_mcp.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_llmfit.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_sktor.sh"
-	. "${STELLA_APP_ROOT}/../lib/lib_ciss.sh"
+	# override this value for unit test
+	export AISTACK_POOL="${_CURRENT_FILE_DIR}/../pool"
+	. "${_CURRENT_FILE_DIR}/../aistack-bootstrap.sh" "DO_NOT_LOAD_STELLA"
 
-	# initialize aistack paths (see in file aistack)
-	aistack_initialize 1>/dev/null 2>&1
+	# # load aistack libraries
+	# . "${STELLA_APP_ROOT}/../lib/lib.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_json.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_yaml.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_node.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_bun.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_rust.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_python.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_cpa.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_vscode.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_gemini.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_opencode.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_och.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_kilo.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_orla.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_bmad.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_gsd.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_adk.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_asm.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_playwright.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_mcp.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_llmfit.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_sktor.sh"
+	# . "${STELLA_APP_ROOT}/../lib/lib_ciss.sh"
+
+	# # initialize aistack paths (see in file aistack)
+	# aistack_initialize 1>/dev/null 2>&1
 	
-	aistack_runtime_detect 1>/dev/null 2>&1
-	aistack_module_detect 1>/dev/null 2>&1
-	aistack_tool_detect 1>/dev/null 2>&1
-	aistack_mcp_detect 1>/dev/null 2>&1
+	# aistack_runtime_detect 1>/dev/null 2>&1
+	# aistack_module_detect 1>/dev/null 2>&1
+	# aistack_tool_detect 1>/dev/null 2>&1
+	# aistack_mcp_detect 1>/dev/null 2>&1
 	
 
-	aistack_generic_context_file_generate 1>/dev/null 2>&1
-	aistack_launcher_and_context_files_regenerate 1>/dev/null 2>&1
+	# aistack_generic_context_file_generate 1>/dev/null 2>&1
+	# aistack_launcher_and_context_files_regenerate 1>/dev/null 2>&1
 
 	# install core requirements
-	# NOTE: use aistack_component_core_install instead of aistack_install for speed gain
-	#( aistack_core_install 1>/dev/null 2>&1 )
-	aistack_component_core_install
-	aistack_component_core_is_detected
+	aistack_install_refresh
+	
 
 	
 }

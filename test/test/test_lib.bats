@@ -7,6 +7,48 @@ setup() {
 	load 'stella_bats_helper.bash'
 }
 
+@test "aistack_init refreshes by default" {
+	aistack_install_refresh() {
+		printf '%s' "refresh"
+	}
+	aistack_install_purge() {
+		printf '%s' "purge"
+	}
+
+	run aistack_init
+
+	assert_success
+	assert_output "refresh"
+}
+
+@test "aistack_init reinstalls from scratch when requested" {
+	aistack_install_refresh() {
+		printf '%s' "refresh"
+	}
+	aistack_install_purge() {
+		printf '%s' "purge"
+	}
+
+	run aistack_init "reinstall"
+
+	assert_success
+	assert_output "purge"
+}
+
+@test "aistack_init rejects an unsupported mode" {
+	aistack_install_refresh() {
+		printf '%s' "refresh"
+	}
+	aistack_install_purge() {
+		printf '%s' "purge"
+	}
+
+	run aistack_init "force"
+
+	assert_failure
+	assert_output "ERROR: unsupported init mode: force"
+}
+
 @test "shell_quote_posix quotes an empty string" {
 	run shell_quote_posix ""
 

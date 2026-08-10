@@ -158,13 +158,14 @@ vscode_info() {
     fi
 
     echo AISTACK_VSCODE_MODE : ${AISTACK_VSCODE_MODE}
-    echo "AISTACK_VSCODE_MODE => which host aistack run now"
+    echo "AISTACK_VSCODE_MODE is the host mode where aistack run now"
     echo
     echo "Variables:"
     echo AISTACK_VSCODE_HOME : ${AISTACK_VSCODE_HOME}
     echo AISTACK_VSCODE_USER_HOME : ${AISTACK_VSCODE_USER_HOME}
     echo AISTACK_VSCODE_CONFIG_FILE : ${AISTACK_VSCODE_CONFIG_FILE}
-    echo AISTACK_VSCODE_RECENTLY_SERVER_ROOT : ${AISTACK_VSCODE_RECENTLY_SERVER_ROOT}
+    [ -f "${AISTACK_VSCODE_CONFIG_FILE}" ] && echo "			     VSCode configuration file exists" || echo echo "			     VSCode configuration file do not exists"
+	echo AISTACK_VSCODE_RECENTLY_SERVER_ROOT : ${AISTACK_VSCODE_RECENTLY_SERVER_ROOT}
     echo
     echo "Variables only when aistack run on local host:"
     echo AISTACK_VSCODE_LOCAL_ROOT : ${AISTACK_VSCODE_LOCAL_ROOT}
@@ -176,12 +177,12 @@ vscode_info() {
     echo
 
     echo TERM_PROGRAM : ${TERM_PROGRAM}
-    [ "${TERM_PROGRAM}" = "vscode" ] && echo "TERM_PROGRAM => vscode means aistack is in a shell inside VS Code"
+    [ "${TERM_PROGRAM}" = "vscode" ] && echo "TERM_PROGRAM value 'vscode' means aistack is in a shell inside VS Code"
     # this test works on linux AND wsl AND on coder web AND on every other system
     #[ "$TERM_PROGRAM" = "vscode" ] && echo "We are running inside a VS Code terminal"
 
     echo VSCODE_IPC_HOOK_CLI : ${VSCODE_IPC_HOOK_CLI}
-    [ -n "${VSCODE_IPC_HOOK_CLI}" ] && echo "VSCODE_IPC_HOOK_CLI => not empty means aistack is using VS Code "remote" feature - coder web is also based on the remote feature"
+    [ -n "${VSCODE_IPC_HOOK_CLI}" ] && echo "VSCODE_IPC_HOOK_CLI value not empty means aistack is using VS Code "remote" feature - coder web is also based on the remote feature"
     # this test works remote ssh on linux AND on vscode windows using remote WSL AND on coder web
     #[ -n "$VSCODE_IPC_HOOK_CLI" ] && echo "We are using VS Code remote extension (SSH, WSL, ...)"
 
@@ -227,30 +228,33 @@ vscode_path_unregister_for_vs_terminal() {
 		"linux") os="linux";;
 		"darwin") os="osx";;
 	esac
-
-    echo "- configure VS Code : remove ${target} from PATH environment variable from terminal.integrated.env.${os} PATH list"
+	
+    echo "- configure VS Code : if exists, remove ${target} from PATH environment variable from terminal.integrated.env.${os} PATH list"
     vscode_settings_remove_path_for_vs_terminal "${path_to_remove}" "REMOVE"
 }
 
 
 # remove all registered path in vscode terminal
 vscode_path_unregister_all_for_vs_terminal() {
-	# TODO; check this list is complete
-	# NOTE: because need lib_json which use json5 which needs nodesjs
-	if aistack_module_is_detected "json5"; then
-		gemini_path_unregister_for_vs_terminal
-		opencode_path_unregister_for_vs_terminal
-		orla_path_unregister_for_vs_terminal
-		bmad_path_unregister_for_vs_terminal
-		#gsd_path_unregister_for_vs_terminal
-		adk_path_unregister_for_vs_terminal
-		asm_path_unregister_for_vs_terminal
-		playwright_path_unregister_for_vs_terminal
-		kilo_path_unregister_for_vs_terminal
-		agy_path_unregister_for_vs_terminal
-		llmfit_path_unregister_for_vs_terminal
-        sktor_path_unregister_for_vs_terminal
-		ciss_path_unregister_for_vs_terminal
+	if [ -f "${AISTACK_VSCODE_CONFIG_FILE}" ]; then
+
+		# NOTE: because nregister_for_vs_terminal needs lib_json which use json5
+		if aistack_module_is_detected "json5"; then
+			# TODO; check this list is complete
+			gemini_path_unregister_for_vs_terminal
+			opencode_path_unregister_for_vs_terminal
+			orla_path_unregister_for_vs_terminal
+			bmad_path_unregister_for_vs_terminal
+			#gsd_path_unregister_for_vs_terminal
+			adk_path_unregister_for_vs_terminal
+			asm_path_unregister_for_vs_terminal
+			playwright_path_unregister_for_vs_terminal
+			kilo_path_unregister_for_vs_terminal
+			agy_path_unregister_for_vs_terminal
+			llmfit_path_unregister_for_vs_terminal
+			sktor_path_unregister_for_vs_terminal
+			ciss_path_unregister_for_vs_terminal
+		fi
 	fi
 }
 

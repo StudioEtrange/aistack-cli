@@ -51,7 +51,7 @@
 
 * add a way to disable feature management in stella framework, to gain speed.
 
-* fix ciss and sktor on macos
+* fix ciss and sktor and adk on macos
 
 * when install ciss on macos, rustup is installed on the system cache 
   ```
