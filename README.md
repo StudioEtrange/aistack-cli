@@ -3,11 +3,11 @@
 
 # AIStack CLI
 
-AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools, including `gemini-cli`, `antigravity-cli`, `opencode`, `asm`, `playwright-cli`, `kilo code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `bmad-method`, `get-shit-done-cc` or `ADK`, and so on. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact nor change, to test and use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools _([see full list](#integrations))_ including `Antigravity CLI`, `OpenCode`, `playwright-cli`, `Kilo Code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `BMAD-method`, `get-shit-done-cc` or `ADK`. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact to test and use them.
 
 ## Key Features of AIStack
 
-*   **AI Tool Management**: Streamlines the installation and configuration of AI agents like `gemini-cli`, `opencode`, `asm`, `Kilo Code` and so on. Provides some minimal convenient default settings.
+*   **AI Tool Management**: Streamlines the installation and configuration of AI tools like, `OpenCode`, `Antigravity CLI`, `Kilo Code` _([see full list](#integrations))_. Provides some minimal convenient default settings.
 *   **MCP Server Integration**: Easily configure and manage connections to various MCP (Model Context Protocol) servers.
 *   **Isolated Environments**: All tools are installed into a local `workspace/` directory, preventing system-wide conflicts. Installing any agent or MCP server will not pollute in anyway your system nor your development environment path with its own dependencies (nodejs, python, ...). Everything is contained in an easy deletable internal folder.
 *   **Portability**: Bash application, works on Linux & MacOS.
@@ -41,27 +41,34 @@ Managed runtimes can be installed or removed independently. Rust uses the offici
 ./aistack runtime remove rust
 ```
 
-NOTE : each item install command include uninstall before or means re-install the item.
-
 ## How-To and Quick Usage
 
-_"I want to install antigravity CLI from scratch and make it accessible from all my bash session"_
+**[READ ALL Quick Usage Case HERE](./doc/quickusage.md)**
 
-**_antigravity CLI installation, register and launch_** :
+### Case 1 : Antigravity CLI
+
+_"I want to install Antigravity CLI from scratch and make it accessible from all my bash session"_
+
+**_AIStack installation and initialisation_** :
 ```
 git clone https://github.com/StudioEtrange/aistack-cli.git
 cd aistack-cli
 ./aistack init
+```
+
+**_Antigravity CLI installation, register and launch_** :
+```
 ./aistack agy install
 ./aistack agy info
 ./aistack agy register bash
 ```
+
 **_in another bash session, launch_** :
 ```
 agy
 ```
 
-**[Read every quick usage HERE](./doc/quickusage.md)**
+
 
 
 ## Specific documentation interest
@@ -84,6 +91,7 @@ AIStack CLI offers functionalities for these tools
 
 * [Gemini CLI](doc/geminicli.md) 
 * [Opencode](doc/opencode.md) 
+* [OpenChamber](doc/openchamber.md)
 * [CLIProxyAPI](doc/cliproxyapi.md) 
 * [Antigravity CLI](doc/antigravity.md)
 * [asm - agent skill manager](doc/asm.md)
@@ -92,8 +100,9 @@ AIStack CLI offers functionalities for these tools
 * [Orla](doc/orla.md)
 * [llmfit](doc/llmfit.md)
 * [BMAD](doc/bmad.md)
+* [GSD - Get Shit Done](https://opengsd.net/) ([source](https://github.com/open-gsd/gsd-core))
 * [Agent Development Kit (ADK)](doc/adk.md)
-* [NVIDIA skillspeector](doc/skillspector.md)
+* [NVIDIA skillspector](doc/skillspector.md)
 * [Cisco AI Skill Scanner](doc/ciss.md)
 * [VS Code](doc/vscode.md)
 

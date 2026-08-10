@@ -52,7 +52,7 @@ openchamber_context_file_generate() {
 	# VARIABLES
 	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "AISTACK_GENERIC_CONTEXT_FILE AISTACK_OPENCODE_CONTEXT_FILE ${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES}"
 
-	# NOTE: special case, because the launcher do not dot this
+	# NOTE: special case, because it is normaly the launcher which ncludes those files
 	{
 		echo '[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"'
 		if opencode_is_installed; then
@@ -85,6 +85,8 @@ openchamber_disconnect_aistack() {
 openchamber_connect_aistack() {
 	openchamber_context_file_generate
 
+	# TODO : we need to inject the connection code only in default shell, not in all shell
+	
     local shell_name="${1:-all}"
 	local name="aistack-openchamber-connect"
     local rc_file
