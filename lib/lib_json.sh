@@ -384,7 +384,8 @@ json_set_key_into_file() {
         mv "$tmp_file" "$target_file"
         rm -f "$tmp_file"
     fi
-    sanitize_json "$target_file"
+    # NOTE : we do not need sanitize_json because jq always produce valid files
+    #sanitize_json "$target_file"
 }
 
 
@@ -591,11 +592,11 @@ json_tweak_value_of_list_into_file() {
 
     if [ "$#" -lt 4 ]; then
         echo "ERROR : argument missing"
-        exit 1
+        return 1
     fi
     if [ -z "$key_path" ]; then
         echo "ERROR : json key path to set empty"
-        exit 1
+        return 1
     fi
     if [ ! -s "$target_file" ]; then
         echo "Valid target file not found at $target_file. Creating it."
@@ -610,12 +611,13 @@ json_tweak_value_of_list_into_file() {
     if [ $? -ne 0 ]; then
         echo "ERROR : processing with jq"
         rm -f "$tmp_file"
-        exit 1
+        return 1
     else
         mv "$tmp_file" "$target_file"
         rm -f "$tmp_file"
     fi
-    sanitize_json "$target_file"
+    # NOTE : we do not need sanitize_json because jq always produce valid files
+    #sanitize_json "$target_file"
 }
 
 # if a string contains a given charactor, this function can replace the string with an escaped string and back

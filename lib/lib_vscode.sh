@@ -365,21 +365,29 @@ vscode_settings_tweak_path_for_vs_terminal() {
     
     # NOTE: if PATH value become "" or null, remove it completely or vscode will set PATH env var to empty string value
 
-    json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.linux.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"
-	case $mode in
-		REMOVE|REMOVE_REGEXP)
-			json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.linux.PATH' "IF_EMPTY" || :
-			# [ "$(vscode_get_config '.terminal\.integrated\.env\.linux.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.linux.PATH'
-			;;
-	esac
-	
-    json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.osx.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"
-	case $mode in
-		REMOVE|REMOVE_REGEXP)
-			json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.osx.PATH' "IF_EMPTY" || :
-			#[ "$(vscode_get_config '.terminal\.integrated\.env\.osx.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.osx.PATH'
-			;;
-	esac
+    if json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.linux.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"; then
+		case $mode in
+			REMOVE|REMOVE_REGEXP)
+				json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.linux.PATH' "IF_EMPTY" || :
+				# [ "$(vscode_get_config '.terminal\.integrated\.env\.linux.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.linux.PATH'
+				;;
+		esac
+	else
+		echo "ERROR in vscode_settings_tweak_path_for_vs_terminal"
+		return 1
+	fi
+
+    if json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.osx.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"; then
+		case $mode in
+			REMOVE|REMOVE_REGEXP)
+				json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.osx.PATH' "IF_EMPTY" || :
+				#[ "$(vscode_get_config '.terminal\.integrated\.env\.osx.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.osx.PATH'
+				;;
+		esac
+	else
+		echo "ERROR in vscode_settings_tweak_path_for_vs_terminal"
+		return 1
+	fi
 }
 
 # extension management ------------------------

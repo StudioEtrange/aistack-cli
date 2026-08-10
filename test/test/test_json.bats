@@ -989,17 +989,67 @@ EOF
 
 
 
-@test "test_and_fix_json_file" {
-
+@test "test_and_fix_json_file leaves valid JSON unchanged" {
+	local tmp
+	local original='{"valid":true,"nested":{"value":"preserved"}}'
 	tmp="$(mktemp)"
-  	cat >"$tmp" <<'EOF'
-{ "to" :"a",}
+	printf '%s\n' "${original}" > "${tmp}"
+
+	run test_and_fix_json_file "${tmp}"
+
+	assert_success
+	assert_output ""
+	assert_equal "$(cat "${tmp}")" "${original}"
+	rm -f "${tmp}"
+}
+
+@test "test_and_fix_json_file sanitizes valid JSON5" {
+	local tmp
+	tmp="$(mktemp)"
+	cat > "${tmp}" <<'EOF'
+{
+  // JSON5 configuration.
+  unquoted: 'value',
+  list: [1, 2,],
+}
 EOF
 
-	run test_and_fix_json_file "$tmp"
-	assert_success
+	run test_and_fix_json_file "${tmp}"
 
-	rm -f $tmp
+	assert_success
+	assert_output --partial "WARN : invalid json file"
+	assert_output --partial "it should be a valid json file now"
+	run jq -e '
+		.unquoted == "value"
+		and .list == [1, 2]
+	' "${tmp}"
+	assert_success
+	rm -f "${tmp}"
+}
+
+@test "test_and_fix_json_file fails when the file is missing" {
+	local missing_file="${BATS_TEST_TMPDIR}/missing.json"
+
+	run test_and_fix_json_file "${missing_file}"
+
+	assert_failure
+	assert_output "ERROR : file not found ${missing_file}"
+}
+
+@test "test_and_fix_json_file rejects irreparable content" {
+	local tmp
+	local original='{ invalid:'
+	tmp="$(mktemp)"
+	printf '%s\n' "${original}" > "${tmp}"
+
+	run test_and_fix_json_file "${tmp}"
+
+	assert_failure
+	assert_output --partial "WARN : invalid json file"
+	assert_output --partial "ERROR : failed to sanitize json from ${tmp}"
+	assert_output --partial "ERROR : invalid json file : ${tmp}"
+	assert_equal "$(cat "${tmp}")" "${original}"
+	rm -f "${tmp}"
 }
 
 
@@ -1077,6 +1127,96 @@ EOF
 
 	rm -f "${tmp1}" "${tmp2}"
 	unset MERGE_JSON_TEST_VAR
+}
+
+@test "merge_json_file accepts JSON5 source without modifying it" {
+	local source
+	local target
+	local source_before
+	source="$(mktemp)"
+	target="$(mktemp)"
+	cat > "${source}" <<'EOF'
+{
+  // Source configuration remains untouched.
+  unquoted: 'source-value',
+  nested: {
+    sourceOnly: true,
+  },
+}
+EOF
+	printf '%s\n' '{"nested":{"targetOnly":true}}' > "${target}"
+	source_before="$(cat "${source}")"
+
+	run merge_json_file "${source}" "${target}"
+
+	assert_success
+	assert_equal "$(jq -c . "${target}")" '{"nested":{"targetOnly":true,"sourceOnly":true},"unquoted":"source-value"}'
+	assert_equal "$(cat "${source}")" "${source_before}"
+	rm -f "${source}" "${target}"
+}
+
+@test "merge_json_file sanitizes a JSON5 target before merging" {
+	local source
+	local target
+	source="$(mktemp)"
+	target="$(mktemp)"
+	printf '%s\n' '{"source":"value"}' > "${source}"
+	cat > "${target}" <<'EOF'
+{
+  // Existing user configuration.
+  target: 'value',
+}
+EOF
+
+	run merge_json_file "${source}" "${target}"
+
+	assert_success
+	assert_equal "$(jq -c . "${target}")" '{"target":"value","source":"value"}'
+	rm -f "${source}" "${target}"
+}
+
+@test "merge_json_file creates a missing target and parent directory" {
+	local root
+	local source
+	local target
+	root="$(mktemp -d)"
+	source="${root}/source.json"
+	target="${root}/missing/config.json"
+	printf '%s\n' '{"created":true}' > "${source}"
+
+	run merge_json_file "${source}" "${target}"
+
+	assert_success
+	assert_equal "$(jq -c . "${target}")" '{"created":true}'
+	rm -rf "${root}"
+}
+
+@test "merge_json_file replaces arrays and scalar values from the target" {
+	local source
+	local target
+	source="$(mktemp)"
+	target="$(mktemp)"
+	printf '%s\n' '{"items":["source"],"enabled":true,"count":2}' > "${source}"
+	printf '%s\n' '{"items":["target"],"enabled":false,"count":1,"preserved":"value"}' > "${target}"
+
+	run merge_json_file "${source}" "${target}"
+
+	assert_success
+	assert_equal "$(jq -c . "${target}")" '{"items":["source"],"enabled":true,"count":2,"preserved":"value"}'
+	rm -f "${source}" "${target}"
+}
+
+@test "merge_json_file fails when the source file is missing" {
+	local target
+	target="$(mktemp)"
+	printf '%s\n' '{"preserved":true}' > "${target}"
+
+	run merge_json_file "${BATS_TEST_TMPDIR}/missing-source.json" "${target}"
+
+	assert_failure
+	assert_output --partial "ERROR : file to merge not found"
+	assert_equal "$(cat "${target}")" '{"preserved":true}'
+	rm -f "${target}"
 }
 
 
