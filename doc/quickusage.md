@@ -5,15 +5,15 @@ Right to the point how-to
 - [Quick Usage](#quick-usage)
   - [Case 0 : AIStack install and init](#case-0--aistack-install-and-init)
   - [Case 1 : Kilo Code in VS Code + OpenAI](#case-1--kilo-code-in-vs-code--openai)
-  - [Case 2 : Configure Node.js internal runtime](#case-2--configure-nodejs-internal-runtime)
-  - [Case 3 : install gemini-cli](#case-3--install-gemini-cli)
-  - [Case 4 : gemini-cli and local MCP server](#case-4--gemini-cli-and-local-mcp-server)
-  - [Case 5 : Orla + OpenAI](#case-5--orla--openai)
-  - [Case 6 : scan skills with killspector + OpenAI](#case-6--scan-skills-with-killspector--openai)
-  - [Case 7 : scan skills with asm](#case-7--scan-skills-with-asm)
-  - [Case 8 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-8--scan-skills-with-cisco-ai-skill-scanner--openai)
-  - [Case 9 : install the Rust runtime](#case-9--install-the-rust-runtime)
-  - [Case 10 : use Playwright CLI to take screenshot of a website](#case-10--use-playwright-cli-to-take-screenshot-of-a-website)
+  - [Case 2 : install gemini-cli](#case-2--install-gemini-cli)
+  - [Case 3 : gemini-cli and local MCP server](#case-3--gemini-cli-and-local-mcp-server)
+  - [Case 4 : Orla + OpenAI](#case-4--orla--openai)
+  - [Case 5 : scan skills with skillspector + OpenAI](#case-5--scan-skills-with-skillspector--openai)
+  - [Case 6 : scan skills with asm](#case-6--scan-skills-with-asm)
+  - [Case 7 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-7--scan-skills-with-cisco-ai-skill-scanner--openai)
+  - [Case 8 : install the Rust runtime](#case-8--install-the-rust-runtime)
+  - [Case 9 : use Playwright CLI to take screenshot of a website](#case-9--use-playwright-cli-to-take-screenshot-of-a-website)
+  - [Case 10 : Configure Node.js internal runtime](#case-10--configure-nodejs-internal-runtime)
 
 ## Case 0 : AIStack install and init
 
@@ -59,24 +59,8 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 
 
 
-## Case 2 : Configure Node.js internal runtime
 
-_"I want to set a npm registry for the internal Node.js runtime."_
-
-```
-cd aistack-cli
-./aistack npm config set registry https://registry.local.org/ -g
-```
-
-_"When I init AIStack, which will install Node.js runtime and some npm packages, I want to set a npm registry for the internal Node.js runtime."_
-
-```
-export AISTACK_INIT_FORCE_NPM_REGISTRY="https://registry.local.org/"
-cd aistack-cli
-./aistack init
-```
-
-## Case 3 : install gemini-cli
+## Case 2 : install gemini-cli
 
 _"I want to install gemini-cli from scratch and make it accessible from all my bash session"_
 
@@ -92,7 +76,7 @@ cd aistack-cli
 gemini
 ```
 
-## Case 4 : gemini-cli and local MCP server
+## Case 3 : gemini-cli and local MCP server
 
 _"I want to register intoto gemini-cli installation, a local MCP server calculator to do some maths"_
 
@@ -104,7 +88,7 @@ cd aistack
 ```
 
 
-## Case 5 : Orla + OpenAI
+## Case 4 : Orla + OpenAI
 
 _"I want to install Orla agent and use it connected to my OpenAI subscription."_
 
@@ -135,7 +119,7 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 ./aistack orla agent "Solve: If 2x + 3 = 7, what is x?"
 ```
 
-## Case 6 : scan skills with killspector + OpenAI
+## Case 5 : scan skills with skillspector + OpenAI
 
 _"I want to install skillspector and use it connected to my OpenAI subscription to scan skills."_
 
@@ -163,7 +147,7 @@ skillspector scan /tmp/skills/skills/docx --format markdown
 rm -Rf /tmp/skills
 ```
 
-## Case 7 : scan skills with asm
+## Case 6 : scan skills with asm
 
 _"I want to install agent skill manager (asm) and use it to scan skills security and quality."_
 
@@ -198,7 +182,7 @@ asm eval /tmp/skills/skills/docx
 rm -Rf /tmp/skills
 ```
 
-## Case 8 : scan skills with Cisco AI Skill Scanner + OpenAI
+## Case 7 : scan skills with Cisco AI Skill Scanner + OpenAI
 
 _"I want to install Cisco AI Skill Scanner and use it connected to my OpenAI subscription to scan skills."_
 
@@ -236,7 +220,7 @@ skill-scanner scan /tmp/skills/skills/algorithmic-art --use-behavioral --use-llm
 rm -Rf /tmp/skills
 ```
 
-## Case 9 : install the Rust runtime
+## Case 8 : install the Rust runtime
 
 _"I want to use an isolated Rust toolchain without changing my system installation."_
 
@@ -253,7 +237,7 @@ Remove the managed Rust runtime with:
 ./aistack runtime remove rust
 ```
 
-## Case 10 : use Playwright CLI to take screenshot of a website
+## Case 9 : use Playwright CLI to take screenshot of a website
 
 _"I want to install Playwright CLI, register it in shell and use it to take a screenshot of a website."_
 
@@ -270,4 +254,21 @@ cd aistack-cli
 playwright-cli open https://github.com/StudioEtrange/aistack-cli --headed
 playwright-cli screenshot
 playwright-cli close
+```
+
+## Case 10 : Configure Node.js internal runtime
+
+_"I want to set a npm registry for the internal Node.js runtime."_
+
+```
+cd aistack-cli
+./aistack npm config set registry https://registry.local.org/ -g
+```
+
+_"When I init AIStack, which will install Node.js runtime and some npm packages, I want to set a npm registry for the internal Node.js runtime."_
+
+```
+export AISTACK_INIT_FORCE_NPM_REGISTRY="https://registry.local.org/"
+cd aistack-cli
+./aistack init
 ```
