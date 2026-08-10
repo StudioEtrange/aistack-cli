@@ -7,9 +7,9 @@ AIStack CLI is an experimental swiss-knife command-line application designed to 
 
 ## Key Features of AIStack
 
-*   **AI Tool Management**: Streamlines the installation and configuration of AI tools like, `OpenCode`, `Antigravity CLI`, `Kilo Code` _([see full list](#integrations))_. Provides some minimal convenient default settings.
+*   **AI Tool Management**: Streamlines the installation and configuration of AI tools like `OpenCode`, `Antigravity CLI`, `Kilo Code` _([see full list](#integrations))_. Provides some minimal convenient default settings.
 *   **MCP Server Integration**: Easily configure and manage connections to various MCP (Model Context Protocol) servers.
-*   **Isolated Environments**: All tools are installed into a local `workspace/` directory, preventing system-wide conflicts. Installing any agent or MCP server will not pollute in anyway your system nor your development environment path with its own dependencies (nodejs, python, ...). Everything is contained in an easy deletable internal folder.
+*   **Isolated Environments**: All tools are installed into a local `workspace/` directory, preventing system-wide conflicts. Installing any tools or runtimes will not pollute in anyway your system nor your development environment. Everything is contained in an easy deletable internal folder.
 *   **Portability**: Bash application, works on Linux & MacOS.
 
 ## Getting Started
@@ -69,8 +69,6 @@ agy
 ```
 
 
-
-
 ## Specific documentation interest
 
 * Installing AIStack using a [specific npm registry](./doc/nodejs.md#using-a-npm-registry)
@@ -108,6 +106,8 @@ AIStack CLI offers functionalities for these tools
 
 ### MCP Servers
 
+[WIP: MCP topic is a work in progress]
+
 AIStack simplifies connecting to MCP (Model Context Protocol) servers, allowing your AI agents to interact with external tools and services.
 * **Catalogs**: [MCPMarket](https://mcpmarket.com/), [PulseMCP](https://www.pulsemcp.com/servers), [MCPServers.org](https://mcpservers.org/)
 
@@ -117,7 +117,6 @@ AIStack simplifies connecting to MCP (Model Context Protocol) servers, allowing 
 * **Context7**: Fetches up-to-date documentation and code examples. ([Source](https://github.com/upstash/context7)). https://context7.com/
 * **GitHub**: Official server for interacting with GitHub issues, PRs, and repositories. ([Source](https://github.com/github/github-mcp-server))
 * **Data Commons**: Tools and agents for interacting with the Data Commons Knowledge Graph using the Model Context Protocol (MCP). ([Source](https://github.com/datacommonsorg/agent-toolkit))
-
 
 
 ## Design Notes
