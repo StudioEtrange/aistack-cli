@@ -189,35 +189,46 @@ vscode_info() {
 
 # PATH management -----------------
 # NOTE : we need to keep at least code cli binary reacheable to launch vscode extension installation
-#   when "terminal.integrated.env.linux".PATH on remote is empty, vscode remote-cli code path is auto added by vscode itself to PATH variable in terminal
-#   when "terminal.integrated.env.linux".PATH on remote is defined, vscode remote-cli code path is NOT auto added by vscode itself to PATH variable in terminal
+#   when "terminal.integrated.env.OS".PATH on remote is empty, vscode remote-cli code path is auto added by vscode itself to PATH variable in terminal
+#   when "terminal.integrated.env.OS".PATH on remote is setted with any value, vscode remote-cli code path is NOT auto added by vscode itself to PATH variable in terminal
 #       (the value of "terminal.integrated.inheritEnv" do not change this behavior)
 #   so we add it manually because this script always set "terminal.integrated.env.linux".PATH which will never be empty anymore
 vscode_path_register_for_vs_terminal() {
     local target="$1"
     local path_to_add="$2"
 
+	local os
+	case "${STELLA_CURRENT_PLATFORM}" in
+		"linux") os="linux";;
+		"darwin") os="osx";;
+	esac
+
     # A/ add ${env:PATH} --------------
-    echo "- configure VS Code : add current PATH to terminal.integrated.env.linux and terminal.integrated.env.osx PATH environment variable using \${env:PATH} value"
+    echo "- configure VS Code : add current PATH environment variable into terminal.integrated.env.${os} PATH list (inject \${env:PATH})"
     vscode_settings_add_path_for_vs_terminal '${env:PATH}' "POSTPEND_IF_NOT_EXISTS"
     
-    # B/ REGISTER PATH in vscode settings path to local binary 'code' local OR path to remote-cli binary 'code' --------------
+    # B/ REGISTER PATH in vscode settings path to local binary 'code' OR path to remote-cli binary 'code' --------------
     # because we always want to be able to reach vscode cli, and if terminal.integrated.env.linux it overrides global PATH veriable
     # so we need to explicitly set vscode cli in PATH
     vscode_path_register_cli_for_vs_terminal
 
     # C/ specific cli path --------------
-    echo "- configure VS Code : add ${target} PATH to terminal.integrated.env.linux and terminal.integrated.env.osx PATH environment variable "
+    echo "- configure VS Code : add ${target} to PATH environment variable into terminal.integrated.env.${os} PATH list"
     vscode_settings_add_path_for_vs_terminal "${path_to_add}" "ALWAYS_PREPEND"
-    #vscode_settings_add_path_for_vs_terminal "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}" "ALWAYS_PREPEND"
-    #vscode_settings_add_path_for_vs_terminal "$(command -v gemini | xargs dirname)" "ALWAYS_PREPEND"
 
 }
 
 vscode_path_unregister_for_vs_terminal() {
     local target="${1}"
     local path_to_remove="${2}"
-    echo "- configure VS Code : remove ${target} PATH from terminal.integrated.env.linux and terminal.integrated.env.osx PATH environment variable "
+
+	local os
+	case "${STELLA_CURRENT_PLATFORM}" in
+		"linux") os="linux";;
+		"darwin") os="osx";;
+	esac
+
+    echo "- configure VS Code : remove ${target} from PATH environment variable from terminal.integrated.env.${os} PATH list"
     vscode_settings_remove_path_for_vs_terminal "${path_to_remove}" "REMOVE"
 }
 
@@ -249,14 +260,22 @@ vscode_path_register_cli_for_vs_terminal() {
     local code_found=0
     local vscode_remote_cli_path
 
+	local os
+	case "${STELLA_CURRENT_PLATFORM}" in
+		"linux") os="linux";;
+		"darwin") os="osx";;
+	esac
+
+	local p
     case "${AISTACK_VSCODE_MODE}" in
         "remote")
                 if [ -n "${AISTACK_VSCODE_REMOTE_CLI}" ]; then
                     code_found=1
+					p="$(dirname "${AISTACK_VSCODE_REMOTE_CLI}")"
                     vscode_settings_remove_path_for_vs_terminal "^${AISTACK_VSCODE_ALL_SERVERS_ROOT}/.*" "REMOVE_REGEXP"
-                    vscode_settings_add_path_for_vs_terminal "$(dirname "${AISTACK_VSCODE_REMOTE_CLI}")" "ALWAYS_PREPEND"
-                    echo "- configure VS Code : remote-cli code found in ${AISTACK_VSCODE_REMOTE_CLI}"
-                    echo "- configure VS Code : add PATH of remote code cli binary to terminal.integrated.env.linux PATH environment variable"
+                    vscode_settings_add_path_for_vs_terminal "${p}" "ALWAYS_PREPEND"
+                    echo "- configure VS Code : remote code cli found in ${AISTACK_VSCODE_REMOTE_CLI}"
+				    echo "- configure VS Code : add "${p}" to PATH environment variable into terminal.integrated.env.${os} PATH list"
                 fi
             ;;
 
@@ -268,11 +287,11 @@ vscode_path_register_cli_for_vs_terminal() {
                 "darwin") 
                     if [ -n "${AISTACK_VSCODE_LOCAL_CLI}" ]; then
                         code_found=1
+						p="$(dirname "${AISTACK_VSCODE_LOCAL_CLI}")"
                         vscode_settings_remove_path_for_vs_terminal "^${AISTACK_VSCODE_LOCAL_ROOT}/.*" "REMOVE_REGEXP"
-                        vscode_settings_add_path_for_vs_terminal "$(dirname "${AISTACK_VSCODE_LOCAL_CLI}")" "ALWAYS_PREPEND"
-                        echo "- configure VS Code : darwin code found in ${AISTACK_VSCODE_LOCAL_CLI}"
-                        echo "- configure VS Code : add PATH of local code cli binary to terminal.integrated.env.linux PATH environment variable"
-
+                        vscode_settings_add_path_for_vs_terminal "${p}" "ALWAYS_PREPEND"
+                        echo "- configure VS Code : local code cli found in ${AISTACK_VSCODE_LOCAL_CLI}"
+				    	echo "- configure VS Code : add ${p} to PATH environment variable into terminal.integrated.env.${os} PATH list"
                     fi
                     ;;
             esac
@@ -365,23 +384,16 @@ vscode_settings_tweak_path_for_vs_terminal() {
     
     # NOTE: if PATH value become "" or null, remove it completely or vscode will set PATH env var to empty string value
 
-    if json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.linux.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"; then
-		case $mode in
-			REMOVE|REMOVE_REGEXP)
-				json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.linux.PATH' "IF_EMPTY" || :
-				# [ "$(vscode_get_config '.terminal\.integrated\.env\.linux.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.linux.PATH'
-				;;
-		esac
-	else
-		echo "ERROR in vscode_settings_tweak_path_for_vs_terminal"
-		return 1
-	fi
+	local os
+	case "${STELLA_CURRENT_PLATFORM}" in
+		"linux") os="linux";;
+		"darwin") os="osx";;
+	esac
 
-    if json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.osx.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"; then
+	if json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.'${os}'.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"; then
 		case $mode in
 			REMOVE|REMOVE_REGEXP)
-				json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.osx.PATH' "IF_EMPTY" || :
-				#[ "$(vscode_get_config '.terminal\.integrated\.env\.osx.PATH')" = "" ] && vscode_remove_config '.terminal\.integrated\.env\.osx.PATH'
+				json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.'${os}'.PATH' "IF_EMPTY" || :
 				;;
 		esac
 	else
