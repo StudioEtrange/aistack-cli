@@ -359,14 +359,9 @@ main() {
                     else
                         echo "runtime $1 already installed"
                     fi
-					#aistack_runtime_install "$1"
-					#aistack_runtime_detect
-					#aistack_generic_context_file_generate
 				;;
 				remove)
 					aistack_runtime_uninstall "$1"
-					#aistack_runtime_detect
-					#aistack_generic_context_file_generate
 				;;
 				*)
 					echo "ERROR: Unknown command ${sub_command} for runtime"

@@ -148,7 +148,7 @@ nvm_default_node_cache_remove() {
 nvm_deactivate() {
     if [ "${AISTACK_MODULE_NVM_LOADED}" = "true" ]; then
         # will remove node from path
-        nvm deactivate
+        nvm deactivate --silent
     fi
 }
 

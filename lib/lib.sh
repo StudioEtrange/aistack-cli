@@ -10,7 +10,7 @@ aistack_initialize() {
     export AISTACK_RUNTIME_TO_DETECT="python nodejs bun rust"
 	# runtimes required for AIStack
     # note : json5 core module require nodejs and nodejs require module nvm
-    export AISTACK_RUNTIME_CORE="nodejs python"
+    export AISTACK_RUNTIME_CORE="nodejs"
 
     # modules lists
     export AISTACK_MODULE_TO_DETECT="yq jq json5 uv pipx mamba npm pnpm cargo nvm"
@@ -88,13 +88,17 @@ aistack_initialize() {
 aistack_info() {
     echo "--*== AIStack Informations ==*--"
     echo
+	( aistack_component_core_is_detected >/dev/null 2>&1) \
+		&& echo "AIStack core components are installed." \
+		|| echo "AIStack core components are NOT installed. Please initialize AIStack."
+    echo
 	echo "CURRENT PLATFORM DETECTED: $STELLA_CURRENT_PLATFORM"
     echo "AISTACK_LAUNCHER_HOME: $AISTACK_LAUNCHER_HOME"
     echo "AISTACK_MCP_LAUNCHER_HOME: $AISTACK_MCP_LAUNCHER_HOME"
     echo "AISTACK_ISOLATED_ROOT: $AISTACK_ISOLATED_ROOT"
     echo "AISTACK_GENERIC_CONTEXT_FILE: $AISTACK_GENERIC_CONTEXT_FILE"
-    echo
-    echo
+    echo 
+	
     echo "--JavaScript ecosystem--"
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
     echo "NVM_DIR : $NVM_DIR"
@@ -534,28 +538,40 @@ aistack_runtime_install() {
         "python")
             aistack_component_install "python"
             aistack_runtime_detect
-            aistack_generic_context_file_generate
+			aistack_module_detect
+			aistack_tool_detect
+			aistack_generic_context_file_generate
+			aistack_launcher_and_context_files_regenerate
             aistack_runtime_is_detected "python"
             return $?
             ;;
         "nodejs")
             aistack_component_install "nodejs"
             aistack_runtime_detect
+			aistack_module_detect
+			aistack_tool_detect
 			aistack_generic_context_file_generate
+			aistack_launcher_and_context_files_regenerate
             aistack_runtime_is_detected "nodejs"
             return $?
             ;;
         "bun")
             aistack_component_install "bun"
             aistack_runtime_detect
+			aistack_module_detect
+			aistack_tool_detect
 			aistack_generic_context_file_generate
+			aistack_launcher_and_context_files_regenerate
             aistack_runtime_is_detected "bun"
             return $?
             ;;
 		"rust")
 			aistack_component_install "rust"
-			aistack_runtime_detect
+            aistack_runtime_detect
+			aistack_module_detect
+			aistack_tool_detect
 			aistack_generic_context_file_generate
+			aistack_launcher_and_context_files_regenerate
             aistack_runtime_is_detected "rust"
             return $?
 			;;
@@ -568,26 +584,40 @@ aistack_runtime_install() {
 
 aistack_runtime_uninstall() {
     local r="$1"
+	# NOTE: remove a runtime may remove some modules or tools instaleld INSIDE the runtime path
+	#		thats why we need to redetect moodule and tool, and regenerate files because runtimes path may have changed
     case "${r}" in
         "python")
             python_uninstall
             aistack_runtime_detect
+			aistack_module_detect
+			aistack_tool_detect
 			aistack_generic_context_file_generate
+			aistack_launcher_and_context_files_regenerate
             ;;
         "nodejs")
             node_uninstall
             aistack_runtime_detect
+			aistack_module_detect
+			aistack_tool_detect
 			aistack_generic_context_file_generate
+			aistack_launcher_and_context_files_regenerate
             ;;
         "bun")
             bun_uninstall
             aistack_runtime_detect
+			aistack_module_detect
+			aistack_tool_detect
 			aistack_generic_context_file_generate
+			aistack_launcher_and_context_files_regenerate
             ;;
 		"rust")
 			rust_uninstall
-			aistack_runtime_detect
+            aistack_runtime_detect
+			aistack_module_detect
+			aistack_tool_detect
 			aistack_generic_context_file_generate
+			aistack_launcher_and_context_files_regenerate
 			;;
          *)
 			echo "ERROR: Unknown runtime $r"
