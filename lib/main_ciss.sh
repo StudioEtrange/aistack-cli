@@ -7,10 +7,7 @@ case "${sub_command}" in
 			exit 1
 		else
 			ciss_launcher_and_context_files_manage
-			echo "You should register its path into a supported shell or VS Code terminal"
-			echo "aistack ciss register all|bash|zsh|fish"
-			echo "aistack ciss register vs"
-			echo "Note: do not register the path into shells and VS Code at the same time"
+            echo "You should register it's path into your current shell: aistack ${command} register"
 		fi
 		;;
 	uninstall)
@@ -21,16 +18,19 @@ case "${sub_command}" in
 		ciss_launcher_and_context_files_manage "delete"
 		;;
 	register)
-		echo "Registering ciss launcher in PATH"
 		case "$1" in
 			vs) ciss_path_register_for_vs_terminal ;;
 			*) ciss_path_register_for_shell "$1" ;;
 		esac
 		;;
 	unregister)
-		echo "Unregistering ciss launcher PATH from $1"
-		case "$1" in
-			vs) ciss_path_unregister_for_vs_terminal ;;
+        [ -z "${1}" ] && target="all" || target="${1}"
+        case "${target}" in
+			"all")
+				ciss_path_unregister_for_shell "all"
+				ciss_path_unregister_for_vs_terminal
+				;;
+			"vs") ciss_path_unregister_for_vs_terminal ;;
 			*) ciss_path_unregister_for_shell "$1" ;;
 		esac
 		;;

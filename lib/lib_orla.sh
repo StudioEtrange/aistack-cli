@@ -110,14 +110,14 @@ orla_uninstall() {
 		orla_is_installed && return 1
 		return 0
 	else
-		echo "WARN : not installed or missing a required managed runtime $AISTACK_ORLA_RUNTIME_REQUIRED"
+		echo "WARN : not installed or missing requirements."
 	fi
 }
 
 
 
 orla_path_register_for_shell() {
-    local shell_name="$1"
+    local shell_name="${1:-current}"
 	if orla_is_installed; then
 		path_register_for_shell "orla" "${AISTACK_ORLA_LAUNCHER_HOME}" "$shell_name"
 	fi

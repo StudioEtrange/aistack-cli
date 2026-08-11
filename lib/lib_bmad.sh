@@ -71,13 +71,13 @@ bmad_uninstall() {
 		bmad_is_installed && return 1
 		return 0
 	else
-		echo "WARN : not installed or missing a required managed runtime $AISTACK_BMAD_RUNTIME_REQUIRED"
+		echo "WARN : not installed or missing requirements."
 	fi
 }
 
 
 bmad_path_register_for_shell() {
-    local shell_name="$1"
+    local shell_name="${1:-current}"
 	if bmad_is_installed; then
     	path_register_for_shell "bmad" "${AISTACK_BMAD_LAUNCHER_HOME}" "$shell_name"
 	fi

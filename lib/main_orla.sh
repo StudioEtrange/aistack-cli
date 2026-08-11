@@ -11,11 +11,7 @@ case "${sub_command}" in
             orla_settings_configure
 
             orla_launcher_and_context_files_manage
-
-            echo "You should register it's path into a spacific supported shell OR vscode terminal"
-            echo "aistack orla register all|bash|zsh|fish"
-            echo "aistack orla register vs"
-            echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into your current shell: aistack ${command} register"
         fi
         ;;
     uninstall)
@@ -39,7 +35,6 @@ case "${sub_command}" in
         orla_settings_remove
         ;;
     register)
-        echo "Registering Orla launcher in PATH"
         case "$1" in
             "vs")
                 orla_path_register_for_vs_terminal
@@ -50,8 +45,12 @@ case "${sub_command}" in
         esac
         ;;
     unregister)
-        echo "Unregistering Orla launcher PATH from $1"
-        case "$1" in
+        [ -z "${1}" ] && target="all" || target="${1}"
+        case "${target}" in
+			"all")
+				orla_path_unregister_for_shell "all"
+				orla_path_unregister_for_vs_terminal
+				;;
             "vs")
                 orla_path_unregister_for_vs_terminal
                 ;;

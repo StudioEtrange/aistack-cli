@@ -94,7 +94,7 @@ ciss_uninstall() {
 }
 
 ciss_path_register_for_shell() {
-	local shell_name="$1"
+	local shell_name="${1:-current}"
 	if ciss_is_installed; then
 		path_register_for_shell "skill-scanner" "${AISTACK_CISS_LAUNCHER_HOME}" "${shell_name}"
 	fi

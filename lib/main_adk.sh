@@ -7,11 +7,7 @@ case "${sub_command}" in
             exit 1
         else
             adk_launcher_and_context_files_manage
-
-            echo "You should register it's path into a spacific supported shell OR vscode terminal"
-            echo "aistack adk register all|bash|zsh|fish"
-            echo "aistack adk register vs"
-            echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into your current shell: aistack ${command} register"
         fi
         ;;
     uninstall)
@@ -24,7 +20,6 @@ case "${sub_command}" in
         adk_launcher_and_context_files_manage "delete"
         ;;
     register)
-        echo "Registering adk launcher in PATH for $1"
         case "$1" in
             "vs")
                 adk_path_register_for_vs_terminal
@@ -35,8 +30,12 @@ case "${sub_command}" in
         esac
         ;;
     unregister)
-        echo "Unregistering adk launcher PATH from $1"
-        case "$1" in
+		[ -z "${1}" ] && target="all" || target="${1}"
+        case "${target}" in
+			"all")
+				adk_path_unregister_for_shell "all"
+				adk_path_unregister_for_vs_terminal
+				;;
             "vs")
                 adk_path_unregister_for_vs_terminal
                 ;;

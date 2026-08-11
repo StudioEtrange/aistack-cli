@@ -8,11 +8,7 @@ case "${sub_command}" in
 		fi
 
 		playwright_launcher_and_context_files_manage
-
-		echo "You should register its path into a specific supported shell OR VS Code terminal"
-		echo "aistack plw register all|bash|zsh|fish"
-		echo "aistack plw register vs"
-		echo "note: do not register path into shells AND vs"
+        echo "You should register it's path into your current shell: aistack ${command} register"
 		;;
 	uninstall)
 		echo "Uninstalling Playwright CLI and unregistering Playwright CLI PATH"
@@ -27,9 +23,8 @@ case "${sub_command}" in
 		playwright_info
 		;;
 	register)
-		echo "Registering Playwright CLI launcher in PATH for $1"
 		case "$1" in
-			vs)
+			"vs")
 				playwright_path_register_for_vs_terminal
 				;;
 			*)
@@ -38,9 +33,13 @@ case "${sub_command}" in
 		esac
 		;;
 	unregister)
-		echo "Unregistering Playwright CLI launcher PATH from ${1:-all}"
-		case "$1" in
-			vs)
+        [ -z "${1}" ] && target="all" || target="${1}"
+        case "${target}" in
+			"all")
+				playwright_path_unregister_for_shell "all"
+				playwright_path_unregister_for_vs_terminal
+				;;
+			"vs")
 				playwright_path_unregister_for_vs_terminal
 				;;
 			*)

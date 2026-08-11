@@ -11,11 +11,7 @@ case "${sub_command}" in
             vscode_settings_configure "gemini"
 
             gemini_launcher_and_context_files_manage
-
-            echo "You should register it's path into a spacific supported shell OR vscode terminal"
-            echo "aistack gc register all|bash|zsh|fish"
-            echo "aistack gc register vs"
-            echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into your current shell: aistack ${command} register"
         fi
         ;;
     uninstall)
@@ -42,7 +38,6 @@ case "${sub_command}" in
         #gemini_launcher_and_context_files_manage
         ;;
     register)
-        echo "Registering Gemini CLI launcher in PATH for $1"
         case "$1" in
             "vs")
                 gemini_path_register_for_vs_terminal
@@ -53,8 +48,12 @@ case "${sub_command}" in
         esac
         ;;
     unregister)
-        echo "Unregistering Gemini CLI launcher PATH from $1"
-        case "$1" in
+        [ -z "${1}" ] && target="all" || target="${1}"
+        case "${target}" in
+			"all")
+                gemini_path_unregister_for_shell "all"
+				gemini_path_unregister_for_vs_terminal
+				;;
             "vs")
                 gemini_path_unregister_for_vs_terminal
                 ;;

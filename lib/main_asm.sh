@@ -10,11 +10,7 @@ case "${sub_command}" in
 			asm_settings_configure
 
 			asm_launcher_and_context_files_manage
-
-			echo "You should register it's path into a spacific supported shell OR vscode terminal"
-			echo "aistack asm register all|bash|zsh|fish"
-			echo "aistack asm register vs"
-			echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into your current shell: aistack ${command} register"
 		fi
 		;;
 	uninstall)
@@ -25,7 +21,6 @@ case "${sub_command}" in
 		asm_path_unregister_for_vs_terminal
 
 		asm_launcher_and_context_files_manage "delete"
-		# TODO delete asm context file here ?
 		;;
 	configure)
 		echo "Configuring asm"
@@ -36,7 +31,6 @@ case "${sub_command}" in
 		asm_settings_remove
 		;;
 	register)
-		echo "Registering asm launcher in PATH for $1"
 		case "$1" in
 			"vs")
 				asm_path_register_for_vs_terminal
@@ -47,8 +41,12 @@ case "${sub_command}" in
 		esac
 		;;
 	unregister)
-		echo "Unregistering asm launcher PATH from $1"
-		case "$1" in
+		[ -z "${1}" ] && target="all" || target="${1}"
+		case "${target}" in
+			"all")
+				asm_path_unregister_for_shell "all"
+				asm_path_unregister_for_vs_terminal
+				;;
 			"vs")
 				asm_path_unregister_for_vs_terminal
 				;;

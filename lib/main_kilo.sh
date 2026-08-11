@@ -12,11 +12,7 @@ case "${sub_command}" in
             # vscode_settings_configure "kilo"
             
             kilo_launcher_and_context_files_manage
-
-            echo "You should register it's path into a spacific supported shell OR vscode terminal"
-            echo "aistack kc register all|bash|zsh|fish"
-            echo "aistack kc register vs"
-            echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into your current shell: aistack ${command} register"
         fi
         ;;
     uninstall)
@@ -45,7 +41,6 @@ case "${sub_command}" in
         #kilo_launcher_and_context_files_manage
         ;;
     register)
-        echo "Registering Kilo Code CLI launcher in PATH for ${1}"
         case "${1}" in
             "vs")
                 kilo_path_register_for_vs_terminal
@@ -56,8 +51,12 @@ case "${sub_command}" in
         esac
         ;;
     unregister)
-        echo "Unegistering Kilo Code CLI launcher PATH from ${1}"
-        case "${1}" in
+        [ -z "${1}" ] && target="all" || target="${1}"
+        case "${target}" in
+			"all")
+				kilo_path_unregister_for_shell "all"
+				kilo_path_unregister_for_vs_terminal
+				;;
             "vs")
                 kilo_path_unregister_for_vs_terminal
                 ;;

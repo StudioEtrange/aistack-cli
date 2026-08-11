@@ -98,7 +98,12 @@ aistack_info() {
     echo "AISTACK_ISOLATED_ROOT: $AISTACK_ISOLATED_ROOT"
     echo "AISTACK_GENERIC_CONTEXT_FILE: $AISTACK_GENERIC_CONTEXT_FILE"
     echo 
-	
+	echo "CURRENT PLATFORM DETECTED: $STELLA_CURRENT_PLATFORM"
+	local cs="$(find_parent_calling_shell)"
+	echo "CURRENT USER SHELL: "$cs""
+	echo "shell configuration file used by default for registering components: $(get_user_shell_config_files "${cs}")"
+
+	echo
     echo "--JavaScript ecosystem--"
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
     echo "NVM_DIR : $NVM_DIR"
@@ -1296,7 +1301,96 @@ unregister_for_shell() {
 			rm -f "${tmp_file}"
 			return 1
 		fi
+
+# identify the calling shell of this script
+# among of a known define list of shells
+# return 1 if shell not found or not known
+find_parent_calling_shell() {
+    pid="$PPID"
+
+    while [ "$pid" -gt 1 ]; do
+        args=$(ps -p "$pid" -o args= 2>/dev/null) || return 1
+
+        cmd=${args%% *}
+        name=${cmd##*/}
+        name=${name#-}
+
+        case "$name" in
+            bash|zsh|fish|sh|dash|ksh|mksh)
+                printf '%s\n' "$name"
+                return 0
+                ;;
+        esac
+
+        pid=$(ps -p "$pid" -o ppid= 2>/dev/null | tr -d ' ')
+        [ -n "$pid" ] || break
+    done
+
+    return 1
+}
+
+# get shell configuration file path
+# for the current user shell or for a list of shell
+# including when this script is called via sudo
+# return 0 if file is determined and print path to shell config file
+# return 1 in other case
+get_user_shell_config_files() {
+	local shell_name_list="${1:-current}"
+	local target_user target_home target_env
+	local shell
+
+    # Determine the target user and their environment
+    if [ -n "${SUDO_USER:-}" ]; then
+        target_user="$SUDO_USER"
+        target_home=$(call_sudo -iu "$target_user" sh -c 'printf "%s\n" "$HOME"') || return 1
+        target_env=$(call_sudo -iu "$target_user" sh -c 'printf "%s\n" "${ENV:-}"') || target_env=""
+    else
+        target_user="${USER:-$(id -un)}"
+        target_home="$HOME"
+        target_env="${ENV:-}"
+    fi
+
+    # Make sure HOME was successfully determined
+    [ -n "$target_home" ] || {
+        #echo "Unable to determine HOME for $target_user" >&2
+        return 1
+    }
+
+	if [ "${shell_name_list}" = "current" ]; then
+		# Determine the shell from which this script was launched
+		shell_name_list=$(find_parent_calling_shell) || {
+			#echo "Unable to determine the calling shell" >&2
+			return 1
+		}
+	fi
+
+	for shell in ${shell_name_list}; do
+		# Determine the configuration file path
+		case ${shell} in
+			bash)
+				printf '%s\n' "${target_home}/.bashrc"
+				;;
+			zsh)
+				printf '%s\n' "${target_home}/.zshrc"
+				;;
+			fish)
+				# TODO: aistack inject in files some non posix code (i.e: for openchamber)
+				#printf '%s\n' "${target_home}/.config/fish/config.fish"
+				#echo "Unsupported shell fish" >&2
+				;;
+			sh|dash)
+				printf '%s\n' "${target_home}/.profile"
+				;;
+			ksh|mksh)
+				printf '%s\n' "${target_env:-${target_home}/.profile}"
+				;;
+			*)
+				#echo "Unsupported shell: $shell" >&2
+				;;
+		esac
 	done
+
+	return 0
 }
 
 

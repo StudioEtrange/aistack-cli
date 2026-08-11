@@ -111,7 +111,7 @@ cpa_uninstall() {
 		cpa_is_installed && return 1
 		return 0
 	else
-		echo "WARN : not installed or missing a required managed runtime ${AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED}"
+		echo "WARN : not installed or missing requirements."
 	fi
 }
 

@@ -7,11 +7,7 @@ case "${sub_command}" in
             exit 1
         else
             llmfit_launcher_and_context_files_manage
-
-            echo "You should register it's path into a spacific supported shell OR vscode terminal"
-            echo "aistack llmfit register all|bash|zsh|fish"
-            echo "aistack llmfit register vs"
-            echo "note: do not register path into shells AND vs"
+            echo "You should register it's path into your current shell: aistack ${command} register"
         fi
         ;;
     uninstall)
@@ -25,7 +21,6 @@ case "${sub_command}" in
         llmfit_launcher_and_context_files_manage "delete"
         ;;
     register)
-        echo "Registering Orla launcher in PATH"
         case "$1" in
             "vs")
                 llmfit_path_register_for_vs_terminal
@@ -36,8 +31,12 @@ case "${sub_command}" in
         esac
         ;;
     unregister)
-        echo "Unregistering llmfit launcher PATH from $1"
-        case "$1" in
+        [ -z "${1}" ] && target="all" || target="${1}"
+        case "${target}" in
+			"all")
+				llmfit_path_unregister_for_shell "all"
+				llmfit_path_unregister_for_vs_terminal
+				;;
             "vs")
                 llmfit_path_unregister_for_vs_terminal
                 ;;

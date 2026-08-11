@@ -10,12 +10,8 @@ case "${sub_command}" in
             bmad_settings_configure
 
             bmad_launcher_and_context_files_manage
-
-            echo "You should register it's path into a spacific supported shell OR vscode terminal"
-            echo "aistack bmad register all|bash|zsh|fish"
-            echo "aistack bmad register vs"
-            echo "note: do not register path into shells AND vs"
-        fi
+            echo "You should register it's path into your current shell: aistack ${command} register"        
+		fi
         ;;
     uninstall)
         echo "Uninstalling bmad and unregister bmad PATH (keep all configuration unchanged, to remove configuration use reset command)"
@@ -27,7 +23,6 @@ case "${sub_command}" in
         bmad_launcher_and_context_files_manage "delete"
         ;;
     register)
-        echo "Registering bmad launcher in PATH for $1"
         case "$1" in
             "vs")
                 bmad_path_register_for_vs_terminal
@@ -38,8 +33,12 @@ case "${sub_command}" in
         esac
         ;;
     unregister)
-        echo "Unregistering bmad launcher PATH from $1"
-        case "$1" in
+        [ -z "${1}" ] && target="all" || target="${1}"
+        case "${target}" in
+			"all")
+                bmad_path_unregister_for_shell "all"
+                bmad_path_unregister_for_vs_terminal
+				;;
             "vs")
                 bmad_path_unregister_for_vs_terminal
                 ;;

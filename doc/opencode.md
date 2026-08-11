@@ -35,3 +35,13 @@ Select an explicit default model and an optional small model:
 ```
 
 When CLIProxyAPI is not reachable, an explicit default model is required. Only the explicitly provided models are then registered.
+
+## Skills
+
+* configuration locations loaded:
+  - opencode project scope: `.opencode/skills/<name>/SKILL.md`
+  - opencode global scope: `~/.config/opencode/skills/<name>/SKILL.md`
+  - claude project scope: `.claude/skills/<name>/SKILL.md`
+  - claude global scope: `~/.claude/skills/<name>/SKILL.md`
+  - generic agent project scope: `.agents/skills/<name>/SKILL.md`
+  - generic agent global scope: `~/.agents/skills/<name>/SKILL.md`
