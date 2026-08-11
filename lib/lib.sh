@@ -1177,21 +1177,26 @@ path_register_for_shell() {
 }
 
 # remove path
-# use 'all' to unregister to all known shell
+# unregister a specific registered path from a list of shell or from all shell
 path_unregister_for_shell() {
     local name="$1"
     local shell_name_list="${2:-all}"
 
 	if unregister_for_shell "aistack-${name}-path" "${shell_name_list}"; then
-		echo "- unregister ${name} PATH for shell ${shell_name_list}"
+		echo "- unregister ${name} PATH for ${shell_name_list} shell"
 	else
 		return 1
 	fi
 }
 
+# unregister all registered path from a list of shell or from all shell
 path_unregister_all_for_shell() {
     local shell_name_list="${1:-all}"
-	unregister_for_shell "aistack-*-path" "${shell_name_list}"
+	if unregister_for_shell "aistack-*-path" "${shell_name_list}"; then
+		echo "- unregister all registered PATH for ${shell_name_list} shell"
+	else
+		return 1
+	fi
 }
 
 # remove a bloc from shell rc file
