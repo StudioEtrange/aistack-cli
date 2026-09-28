@@ -1202,41 +1202,35 @@ path_unregister_all_for_shell() {
 # remove a bloc from shell rc file
 # bloc_name supports shell-style '*' and '?' wildcards
 # use 'all' to unregister to all known shell
+# use 'current' to unregister from the current user shell
 unregister_for_shell() {
 	local bloc_name="${1}"
 	local shell_name_list="${2:-all}"
-	local shell_list
 	local rc_file
+	local rc_file_list
+	local rc_file_mode
 	local tmp_file
-	local s
 
 	[ -n "${bloc_name}" ] || {
 		echo "ERROR: block name is empty" >&2
 		return 1
 	}
 
-	[ "${shell_name_list}" = "all" ] \
-		&& shell_list="bash zsh fish" \
-		|| shell_list="${shell_name_list}"
+	case "${shell_name_list}" in
+		"current")
+			shell_name_list="$(find_parent_calling_shell)"
+			echo "INFO: current user shell detected: ${shell_name_list}"
+			;;
+		"all")
+			shell_name_list="bash zsh fish sh dash ksh mksh"
+			;;
+	esac
 
-	for s in ${shell_list}; do
-		case "${s}" in
-			"bash")
-				rc_file="${HOME}/.bashrc"
-				;;
-			"zsh")
-				rc_file="${HOME}/.zshrc"
-				;;
-			"fish")
-				rc_file="${HOME}/.config/fish/config.fish"
-				;;
-			*)
-				echo "ERROR: unsupported shell: ${s}"
-				return 1
-				;;
-		esac
+	rc_file_list="$(get_user_shell_config_files "${shell_name_list}")" || return $?
 
-		[ -f "${rc_file}" ] || continue
+	while IFS= read -r rc_file; do
+		[ -n "${rc_file}" ] || continue
+		[ -r "${rc_file}" ] || continue
 
 		if ! awk -v block_pattern="${bloc_name}" '
 			function glob_matches(value, pattern, regex) {
@@ -1309,6 +1303,13 @@ unregister_for_shell() {
 			return 1
 		fi
 
+	done <<EOF
+${rc_file_list}
+EOF
+}
+
+
+
 # identify the calling shell of this script
 # among of a known define list of shells
 # return 1 if shell not found or not known
@@ -1346,23 +1347,6 @@ get_user_shell_config_files() {
 	local target_user target_home target_env
 	local shell
 
-    # Determine the target user and their environment
-    if [ -n "${SUDO_USER:-}" ]; then
-        target_user="$SUDO_USER"
-        target_home=$(call_sudo -iu "$target_user" sh -c 'printf "%s\n" "$HOME"') || return 1
-        target_env=$(call_sudo -iu "$target_user" sh -c 'printf "%s\n" "${ENV:-}"') || target_env=""
-    else
-        target_user="${USER:-$(id -un)}"
-        target_home="$HOME"
-        target_env="${ENV:-}"
-    fi
-
-    # Make sure HOME was successfully determined
-    [ -n "$target_home" ] || {
-        #echo "Unable to determine HOME for $target_user" >&2
-        return 1
-    }
-
 	if [ "${shell_name_list}" = "current" ]; then
 		# Determine the shell from which this script was launched
 		shell_name_list=$(find_parent_calling_shell) || {
@@ -1375,21 +1359,21 @@ get_user_shell_config_files() {
 		# Determine the configuration file path
 		case ${shell} in
 			bash)
-				printf '%s\n' "${target_home}/.bashrc"
+				printf '%s\n' "${HOME}/.bashrc"
 				;;
 			zsh)
-				printf '%s\n' "${target_home}/.zshrc"
+				printf '%s\n' "${HOME}/.zshrc"
 				;;
 			fish)
 				# TODO: aistack inject in files some non posix code (i.e: for openchamber)
-				#printf '%s\n' "${target_home}/.config/fish/config.fish"
+				#printf '%s\n' "${HOME}/.config/fish/config.fish"
 				#echo "Unsupported shell fish" >&2
 				;;
 			sh|dash)
-				printf '%s\n' "${target_home}/.profile"
+				printf '%s\n' "${HOME}/.profile"
 				;;
 			ksh|mksh)
-				printf '%s\n' "${target_env:-${target_home}/.profile}"
+				printf '%s\n' "${AISTACK_USER_ENV:-${HOME}/.profile}"
 				;;
 			*)
 				#echo "Unsupported shell: $shell" >&2
