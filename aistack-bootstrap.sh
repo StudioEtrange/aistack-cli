@@ -2,17 +2,13 @@
 AISTACK_CURRENT_FILE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 AISTACK_CURRENT_RUNNING_DIR="$( cd "$( dirname "." )" && pwd )"
 
-# NOTE: do not load stella if it was already loaded in another app
+
+# NOTE: do not load stella if it was already loaded by another app
 # i.e see launch_test.sh
 if [ ! "$1" = "DO_NOT_LOAD_STELLA" ]; then
 	STELLA_LOG_STATE="OFF"
 	. "${AISTACK_CURRENT_FILE_DIR}/stella-link.sh" include
-
-	# NOTE:
-	#   From HERE, $STELLA_ORIGINAL_SYSTEM_PATH contains $PATH before stella features are included
 fi
-
-
 
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_json.sh"
@@ -40,6 +36,9 @@ fi
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_ciss.sh"
 
 aistack_initialize
+
+# init user variables berfore loading stella in case we have changed the HOME folder
+user_init
 
 aistack_runtime_detect
 aistack_module_detect

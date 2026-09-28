@@ -92,17 +92,20 @@ aistack_info() {
 		&& echo "AIStack core components are installed." \
 		|| echo "AIStack core components are NOT installed. Please initialize AIStack."
     echo
-	echo "CURRENT PLATFORM DETECTED: $STELLA_CURRENT_PLATFORM"
-    echo "AISTACK_LAUNCHER_HOME: $AISTACK_LAUNCHER_HOME"
-    echo "AISTACK_MCP_LAUNCHER_HOME: $AISTACK_MCP_LAUNCHER_HOME"
-    echo "AISTACK_ISOLATED_ROOT: $AISTACK_ISOLATED_ROOT"
-    echo "AISTACK_GENERIC_CONTEXT_FILE: $AISTACK_GENERIC_CONTEXT_FILE"
+	echo "AISTACK home folder (STELLA_APP_ROOT): ${STELLA_APP_ROOT}"
+    echo "AISTACK_LAUNCHER_HOME: ${AISTACK_LAUNCHER_HOME}"
+    echo "AISTACK_MCP_LAUNCHER_HOME: ${AISTACK_MCP_LAUNCHER_HOME}"
+    echo "AISTACK_ISOLATED_ROOT: ${AISTACK_ISOLATED_ROOT}"
+    echo "AISTACK_GENERIC_CONTEXT_FILE: ${AISTACK_GENERIC_CONTEXT_FILE}"
     echo 
-	echo "CURRENT PLATFORM DETECTED: $STELLA_CURRENT_PLATFORM"
+	echo "CURRENT PLATFORM DETECTED: ${STELLA_CURRENT_PLATFORM}"
+	echo "Detected user: ${AISTACK_USER}"
+	[ "${AISTACK_SUDO}" = "ON" ] && echo "SUDO mode detected - with user ${AISTACK_USER}"
+	echo "Detected HOME (variables AISTACK_USER_HOME and HOME): ${AISTACK_USER_HOME}"
+    echo
 	local cs="$(find_parent_calling_shell)"
-	echo "CURRENT USER SHELL: "$cs""
+	echo "CURRENT USER SHELL: ${cs}"
 	echo "shell configuration file used by default for registering components: $(get_user_shell_config_files "${cs}")"
-
 	echo
     echo "--JavaScript ecosystem--"
     echo "AISTACK_NVM_HOME : $AISTACK_NVM_HOME"
@@ -1523,6 +1526,37 @@ glibc_binary_compat() {
 
 
 # --------------- VARIOUS -----------------------------
+
+# Determine the current user and HOME even in sudo mode
+user_init() {
+    if [ -z "${AISTACK_SUDO}" ]; then
+        if [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ] && [ "$(id -u)" -eq 0 ]; then
+            AISTACK_SUDO="ON"
+            AISTACK_USER="${SUDO_USER}"
+            AISTACK_USER_UID="$(id -u "${SUDO_USER}")"
+            AISTACK_USER_GROUP="$(id -gn "${AISTACK_USER}")"
+			AISTACK_USER_HOME="${HOME}"
+
+            AISTACK_USER_ENV="${ENV:-}"
+
+            echo "WARN: sudo mode detected launched by user ${AISTACK_USER}"
+            echo "      it may cause permission issues for all files under HOME."
+            echo
+        else
+            AISTACK_SUDO="OFF"
+            AISTACK_USER="${USER:-$(id -un)}"
+            AISTACK_USER_UID="$(id -u)"
+            AISTACK_USER_GROUP="$(id -gn)"
+            AISTACK_USER_ENV="${ENV:-}"
+            AISTACK_USER_HOME="${HOME}"
+        fi
+
+        
+        export AISTACK_USER AISTACK_USER_UID AISTACK_USER_GROUP AISTACK_USER_ENV AISTACK_USER_HOME HOME ENV
+	fi
+    return 0
+}
+
 
 # return 0 if list contains items, else 1
 # list_contains "aa bb xx" "bb"
