@@ -123,20 +123,34 @@ vscode_init() {
 # inject specific target settings for vscode
 vscode_settings_configure() {
     local target="${1}"
+	local result=0
 
     case "${target}" in
         "gemini" )
-            merge_json_file "${AISTACK_POOL}/settings/gemini-cli/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
-            merge_json_file "${AISTACK_POOL}/settings/gemini-code-assist/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
-        ;;
+            (
+				merge_json_file "${AISTACK_POOL}/settings/gemini-cli/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
+            ) || result=$?
+			if [ "${result}" -eq 0 ]; then
+				(
+					merge_json_file "${AISTACK_POOL}/settings/gemini-code-assist/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
+				) || result=$?
+			fi
+		;;
         "opencode" )
-            merge_json_file "${AISTACK_POOL}/settings/opencode/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
-        ;;
+            (
+				merge_json_file "${AISTACK_POOL}/settings/opencode/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
+			) || result=$?
+		;;
 		"antigravity" )
-            merge_json_file "${AISTACK_POOL}/settings/antigravity-cli/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
+			(
+            	merge_json_file "${AISTACK_POOL}/settings/antigravity-cli/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
+			) || result=$?
 		;;
     esac
+	
+	return "${result}"
 }
+
 
 # remove specific target settings from vscode
 vscode_settings_remove() {
@@ -238,9 +252,11 @@ vscode_path_unregister_for_vs_terminal() {
 vscode_path_unregister_all_for_vs_terminal() {
 	if [ -f "${AISTACK_VSCODE_CONFIG_FILE}" ]; then
 
-		# NOTE: because nregister_for_vs_terminal needs lib_json which use json5
+		# NOTE: because unregister_for_vs_terminal needs lib_json which use json5
 		if aistack_module_is_detected "json5"; then
-			# TODO; check this list is complete
+			echo "- configure VS Code : remove all registered path in PATH environment variable from terminal.integrated.env.${os} PATH list"
+
+			# TODO: check this list is complete
 			gemini_path_unregister_for_vs_terminal
 			opencode_path_unregister_for_vs_terminal
 			orla_path_unregister_for_vs_terminal
@@ -309,6 +325,7 @@ vscode_path_register_cli_for_vs_terminal() {
 }
 
 # generic config management -----------------
+# merge a json file or a json string into vsconfig
 vscode_merge_config() {
 	local config_to_merge="${1}"
 	local file_to_merge="${config_to_merge}"
@@ -316,6 +333,7 @@ vscode_merge_config() {
 	local result
 
 	if [ ! -f "${file_to_merge}" ]; then
+        # NOTE : it is a json string to merge
 		tmp_file="$(mktemp)" || return 1
 		printf '%s\n' "${config_to_merge}" > "${tmp_file}"
 		file_to_merge="${tmp_file}"
@@ -324,19 +342,29 @@ vscode_merge_config() {
 	merge_json_file "${file_to_merge}" "${AISTACK_VSCODE_CONFIG_FILE}"
 	result=$?
 
-	rm -Rf "${tmp_file}"
+	rm -f "${tmp_file}"
 	return ${result}
 }
 
 vscode_remove_config() {
     local key_path="${1}"
-    json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}"
+	local result
+	(
+    	json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}"
+	) || result=$?
+
+	return ${result}
 }
 
 vscode_set_config() {
     local key_path="${1}"
     local value="${2}"
-    json_set_key_into_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}" "${value}"
+	local result
+	(
+    	json_set_key_into_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}" "${value}"
+	) || result=$?
+
+	return ${result}
 }
 
 vscode_get_config() {
@@ -397,7 +425,10 @@ vscode_settings_tweak_path_for_vs_terminal() {
 	if json_tweak_value_of_list_into_file '.terminal\.integrated\.env\.'${os}'.PATH' "${path}" ':' "${AISTACK_VSCODE_CONFIG_FILE}" "${mode}"; then
 		case $mode in
 			REMOVE|REMOVE_REGEXP)
-				json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.'${os}'.PATH' "IF_EMPTY" || :
+                # NOTE: if PATH value become "" or null, remove it completely or vscode will set PATH env var to empty string value
+				(
+					json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" '.terminal\.integrated\.env\.'${os}'.PATH' "IF_EMPTY" || :
+				)
 				;;
 		esac
 	else
