@@ -319,7 +319,7 @@ yaml_set_key_into_file() {
         return 1
     fi
 
-    cp -f "$tmp_target_file" "$target_file"
+	cat "$tmp_target_file" > "$target_file"
     rm -f "$tmp_target_file"
 
 }
@@ -380,7 +380,7 @@ yaml_del_key_from_file() {
         exit 1
     fi
 
-    cp -f "$tmp_target_file" "$target_file"
+    cat "$tmp_target_file" > "$target_file"
     rm -f "$tmp_target_file"
 }
 

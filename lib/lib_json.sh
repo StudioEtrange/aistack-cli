@@ -172,7 +172,8 @@ sanitize_json() {
         rm -f "$tmp_file"
         return 1
     else
-        mv "$tmp_file" "$arg"
+        cat "$tmp_file" > "$arg"
+        rm -f "$tmp_file"
         return 0
     fi
 }
@@ -322,6 +323,7 @@ json_set_key() {
 	else
 		input_file="$(mktemp)" || {
 			echo "ERROR : unable to create temporary JSON file" >&2
+            rm -f "$input_file"
 			return 1
 		}
 		cat > "$input_file"
@@ -381,7 +383,7 @@ json_set_key_into_file() {
         rm -f "$tmp_file"
         return $ret
     else
-        mv "$tmp_file" "$target_file"
+        cat "$tmp_file" > "$target_file"
         rm -f "$tmp_file"
     fi
     # NOTE : we do not need sanitize_json because jq always produce valid files
@@ -513,18 +515,19 @@ json_del_key_from_file() {
 	esac
 
 
-	if ! mv "${tmp_file}" "${target_file}"; then
-		echo "ERROR: unable to replace JSON file: ${target_file}" >&2
+	if ! cat "${tmp_file}" > "${target_file}"; then
+		echo "ERROR: unable to fill JSON file: ${target_file}" >&2
 		rm -f "${tmp_file}"
 		return 1
 	fi
 
+    rm -f "${tmp_file}"
 	return 0
 }
 
 
 
-# merge one jwon file (file_to_merge) into another (file_to_merge_into)
+# merge one json file (file_to_merge) into another (file_to_merge_into)
 # file_to_merge : have higher priority and erase file_to_merge_into content
 # file_to_merge also support environment variable injection ${VAR} (Replace ${VAR} with environnement variable if it exists)
 merge_json_file() {
@@ -578,7 +581,7 @@ merge_json_file() {
         rm -f "$tmp_file" "$tmp_merge"
         exit 1
     else
-        mv "$tmp_file" "$file_to_merge_into"
+        cat "$tmp_file" > "$file_to_merge_into"
         rm -f "$tmp_file" "$tmp_merge"
     fi
 }
@@ -599,6 +602,12 @@ json_tweak_value_of_list_into_file() {
         return 1
     fi
     if [ ! -s "$target_file" ]; then
+        case "$mode" in
+            "REMOVE"|"REMOVE_REGEXP")
+                # NOTE : no file or empty so nothing to REMOVE
+                return 0
+            ;;
+        esac
         echo "Valid target file not found at $target_file. Creating it."
         mkdir -p "$(dirname "$target_file")"
         echo "{}" > "$target_file"
@@ -613,7 +622,7 @@ json_tweak_value_of_list_into_file() {
         rm -f "$tmp_file"
         return 1
     else
-        mv "$tmp_file" "$target_file"
+        cat "$tmp_file" > "$target_file" 
         rm -f "$tmp_file"
     fi
     # NOTE : we do not need sanitize_json because jq always produce valid files

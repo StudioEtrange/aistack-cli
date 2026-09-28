@@ -1264,6 +1264,7 @@ unregister_for_shell() {
 
 		tmp_file="$(mktemp "${rc_file}.aistack.XXXXXX")" || {
 			echo "ERROR: unable to create temporary file for ${rc_file}" >&2
+            rm -f "${tmp_file}"
 			return 1
 		}
 
@@ -1298,10 +1299,11 @@ unregister_for_shell() {
 
 			!skip
 		' "${rc_file}" > "${tmp_file}"; then
-			mv "${tmp_file}" "${rc_file}" || {
+            cat "${tmp_file}" > "${rc_file}" || {
 				rm -f "${tmp_file}"
 				return 1
 			}
+            rm -f "${tmp_file}"
 		else
 			rm -f "${tmp_file}"
 			return 1
