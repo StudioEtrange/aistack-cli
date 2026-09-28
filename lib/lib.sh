@@ -1146,6 +1146,7 @@ path_register_for_shell() {
         parent_dir="$(dirname "${rc_file}")"
         if [ ! -d "${parent_dir}" ]; then
             mkdir -p "${parent_dir}"
+		fi
         if [ -f "${rc_file}" ]; then
             path_unregister_for_shell "${name}" "${s}" 1>/dev/null 2>&1
         else
