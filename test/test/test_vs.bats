@@ -10,6 +10,30 @@ teardown() {
     true
 }
 
+@test "vscode_init uses SUDO_USER home" {
+	local test_bin="${BATS_TEST_TMPDIR}/bin"
+	local target_home="${BATS_TEST_TMPDIR}/sudo user home"
+	local target_user="$(id -un)"
+	mkdir -p "${test_bin}"
+	mkdir -p "${target_home}/Library/Application Support/Code/User"
+	cat > "${test_bin}/sudo" <<EOF
+#!/bin/sh
+printf '%s\n' '${target_home}'
+EOF
+	chmod +x "${test_bin}/sudo"
+	STELLA_CURRENT_PLATFORM="darwin"
+	export SUDO_USER="${target_user}"
+	export PATH="${test_bin}:${PATH}"
+
+	user_init
+	vscode_init "local"
+
+	assert_equal "${AISTACK_USER}" "${target_user}"
+	assert_equal "${AISTACK_USER_HOME}" "${target_home}"
+	assert_equal "${HOME}" "${target_home}"
+	assert_equal "${AISTACK_VSCODE_CONFIG_FILE}" "${target_home}/Library/Application Support/Code/User/settings.json"
+}
+
 
 
 @test "vscode_merge_config accepts a JSON file" {
@@ -74,4 +98,3 @@ teardown() {
 
 	rm -f "${tmp}"
 }
-

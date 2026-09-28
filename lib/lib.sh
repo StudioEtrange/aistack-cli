@@ -1145,11 +1145,23 @@ path_register_for_shell() {
         rc_file="$(get_user_shell_config_files "${s}")"
         parent_dir="$(dirname "${rc_file}")"
         if [ ! -d "${parent_dir}" ]; then
+			# TODO : there is a possible problem with file ownership in sudo mode
             mkdir -p "${parent_dir}"
+            if [ "${AISTACK_SUDO}" = "ON " ]; then      
+                if [ "$($STELLA_API is_logical_subpath "${HOME}" "${parent_dir}")" = "TRUE" ]; then
+                    # NOTE: rc file is NOT directly under HOME BUT in a subpath of HOME
+                    # we may have to restore user ownership of parent dir
+                    # it will apply a chown -R on the path, so we absolutely avoid to do that directly on HOME !
+                    sudo_set_ownership_to_sudouser "${parent_dir}"
+                fi
+            fi
+        fi
         if [ -f "${rc_file}" ]; then
             path_unregister_for_shell "${name}" "${s}" 1>/dev/null 2>&1
         else
+			# TODO : there is a possible problem with file ownership in sudo mode
             touch "${rc_file}"
+            sudo_set_ownership_to_sudouser "${rc_file}"
         fi
 
 		case "${s}" in
@@ -1536,6 +1548,12 @@ glibc_binary_compat() {
 
 # --------------- VARIOUS -----------------------------
 
+# call the real sudo command, in case "sudo" was overriden
+call_sudo() {
+	command sudo "$@"
+}
+
+
 # Determine the current user and HOME even in sudo mode
 user_init() {
     if [ -z "${AISTACK_SUDO}" ]; then
@@ -1566,6 +1584,111 @@ user_init() {
     return 0
 }
 
+
+# Determine the current user and HOME even in sudo mode
+TODO_user_init() {
+    if [ -z "${AISTACK_SUDO}" ]; then
+        if [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ] && [ "$(id -u)" -eq 0 ]; then
+            AISTACK_SUDO="ON"
+            AISTACK_USER="${SUDO_USER}"
+            AISTACK_USER_UID="$(id -u "${SUDO_USER}")"
+            AISTACK_USER_GROUP="$(id -gn "${AISTACK_USER}")"
+            
+            case "${STELLA_CURRENT_PLATFORM}" in
+                "linux")
+                    if command -v getent >/dev/null 2>&1; then
+                        ROOT_HOME="$(getent passwd root | cut -d: -f6)"
+                    else
+                        ROOT_HOME="$(awk -F: '$1 == "root" { print $6; exit }' /etc/passwd)"
+                    fi
+                    ;;
+                "darwin")
+                    ROOT_HOME="$(dscl . -read /Users/root NFSHomeDirectory | awk '{print $2}')"
+                    ;;
+                *)
+                    ROOT_HOME="/root"
+                    ;;
+            esac
+
+			# get HOME of the user launching sudo command
+            ORIGINAL_HOME="$(call_sudo -iu "${AISTACK_USER}" sh -c 'printf "%s\n" "$HOME"')" || ORIGINAL_HOME="${HOME}"
+			AISTACK_USER_HOME="${HOME}"
+			# NOTE: uncomment this line below to force HOME value with root's home
+            AISTACK_USER_HOME="${ROOT_HOME}"
+            # NOTE: uncomment this line below to force HOME value with current user's home
+            #AISTACK_USER_HOME="${ORIGINAL_HOME}"
+            HOME="${AISTACK_USER_HOME}"
+
+			# get ENV of the user launching sudo command
+            ORIGINAL_ENV=$(call_sudo -iu "${AISTACK_USER}" sh -c 'printf "%s\n" "${ENV:-}"') || ORIGINAL_ENV=""
+            # NOTE: uncomment this line below to force ENV value with root's ENV value
+            AISTACK_USER_ENV="${ENV:-}"
+            # NOTE: uncomment this line below to force ENV value with current user's ENV value
+            #AISTACK_USER_ENV="${ORIGINAL_ENV}"
+            ENV="${AISTACK_USER_ENV}"
+
+            echo "WARN: sudo mode detected launched by user ${AISTACK_USER}"
+            echo "      it may cause permission issues for all files under HOME."
+            echo "      For consistency AIStack forces HOME to be root's HOME ($ROOT_HOME) which is not always the default behavior, depending on linux/macos distribution you have."
+            echo "      and for more safety AIStack will try to protect shell RC files and vscode config file against root taking ownership to avoid permission issues."
+            echo
+        else
+            AISTACK_SUDO="OFF"
+            AISTACK_USER="${USER:-$(id -un)}"
+            AISTACK_USER_UID="$(id -u)"
+            AISTACK_USER_GROUP="$(id -gn)"
+            AISTACK_USER_ENV="${ENV:-}"
+            AISTACK_USER_HOME="${HOME}"
+        fi
+
+        
+        export AISTACK_USER AISTACK_USER_UID AISTACK_USER_GROUP AISTACK_USER_ENV AISTACK_USER_HOME HOME ENV
+	fi
+    return 0
+}
+
+
+# if this function is launched when in SUDO ($AISTACK_SUDO)
+# it will check the owner of the path (file or folder)
+# and if it is different from the user who launched sudo command,
+# make it as the owner recursivly
+# NOTE: you must not apply this function to RC config files in HOME directory when HOME directory is root
+sudo_set_ownership_to_sudouser() {
+	local p="${1}"
+	local current_uid
+
+    # init user if it was not already done
+    [ -z "${AISTACK_SUDO}" ] && user_init
+
+	#if [ -n "${SUDO_USER:-}" ] && [ "${SUDO_USER}" != "root" ] && [ "$(id -u)" -eq 0 ]; then
+	if [ "${AISTACK_SUDO}" = "ON" ]; then
+        if [ "${SUDO_USER}" != "root" ] && [ "$(id -u)" -eq 0 ]; then
+            sudo_set_ownership "${p}" "${AISTACK_USER_UID}" "${AISTACK_USER_GROUP}"
+        fi
+	fi
+	return 0
+}
+
+# set ownership of all files of a path
+# if its current UID is different from the target UID
+sudo_set_ownership() {
+    local p="${1}"
+    local target_uid="${2}"
+    local target_gid="${3}"
+
+    if [ -f "${p}" ] || [ -d "${p}" ]; then
+        current_uid="$(
+            stat -f '%u' "${p}" 2>/dev/null ||
+            stat -c '%u' "${p}" 2>/dev/null
+        )"
+        if [ "${current_uid}" != "${target_uid}" ]; then
+            call_sudo chown -R "${target_uid}:${target_gid}" "${p}" || { \
+                echo "ERROR: unable to set ${p} ownership" >&2
+                return 1
+            }
+        fi
+    fi
+}
 
 # return 0 if list contains items, else 1
 # list_contains "aa bb xx" "bb"
@@ -1748,4 +1871,3 @@ remove_dir_with_exceptions() {
         "${find_args[@]}" \
         -exec rm -rf -- {} +
 }
-

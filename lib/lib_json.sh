@@ -368,6 +368,7 @@ json_set_key_into_file() {
     fi
     if [ ! -s "$target_file" ]; then
         echo "Valid target file not found at $target_file. Creating it."
+        # TODO : there is a possible problem with file ownership in sudo mode
         mkdir -p "$(dirname "$target_file")"
         echo "{}" > "$target_file"
     else
@@ -546,6 +547,7 @@ merge_json_file() {
 
     if [ ! -s "$file_to_merge_into" ]; then
         echo "Valid target file not found at $file_to_merge_into. Creating it."
+        # TODO : there is a possible problem with file ownership in sudo mode
         mkdir -p "$(dirname "$file_to_merge_into")"
         echo "{}" > "$file_to_merge_into"
     fi
@@ -609,6 +611,7 @@ json_tweak_value_of_list_into_file() {
             ;;
         esac
         echo "Valid target file not found at $target_file. Creating it."
+        # TODO : there is a possible problem with file ownership in sudo mode
         mkdir -p "$(dirname "$target_file")"
         echo "{}" > "$target_file"
     else

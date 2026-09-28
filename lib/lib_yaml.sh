@@ -288,6 +288,7 @@ yaml_set_key_into_file() {
         exit 1
     fi
     if [ ! -s "$target_file" ]; then
+		# TODO : warn possible problem with file ownership in sudo mode
         mkdir -p "$(dirname "$target_file")"
         touch "$target_file"
     fi
@@ -399,6 +400,7 @@ merge_yaml_file() {
     fi
 
     if [ ! -s "$file_to_merge_into" ]; then
+		# TODO : warn possible problem with file ownership in sudo mode
         mkdir -p "$(dirname "$file_to_merge_into")"
         touch "$file_to_merge_into"
     fi
