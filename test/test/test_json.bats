@@ -1845,7 +1845,6 @@ EOF
 }
 EOF
 	original="$(cat "${tmp}")"
-
 	run json_tweak_value_of_list_into_file ".PATH" '[' ":" "${tmp}" "REMOVE_REGEXP"
 
 	assert_failure
@@ -1858,7 +1857,6 @@ EOF
 	local target
 	root="$(mktemp -d)"
 	target="${root}/missing/config.json"
-
 	run json_tweak_value_of_list_into_file "." "AA" ":" "${target}" "ALWAYS_PREPEND"
 
 	assert_failure

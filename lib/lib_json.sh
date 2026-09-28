@@ -593,6 +593,9 @@ json_tweak_value_of_list_into_file() {
 	local target_file="${4}"
 	local mode="${5:-ALWAYS_PREPEND}"
 
+	local target_file_created=
+	local save_target_file=
+
     if [ "$#" -lt 4 ]; then
         echo "ERROR : argument missing"
         return 1
@@ -611,7 +614,10 @@ json_tweak_value_of_list_into_file() {
         echo "Valid target file not found at $target_file. Creating it."
         mkdir -p "$(dirname "$target_file")"
         echo "{}" > "$target_file"
+		target_file_created=1
     else
+		local save_target_file="$(mktemp)"
+		cat "$target_file" > "$save_target_file"
         test_and_fix_json_file "$target_file"
     fi
 
@@ -620,6 +626,14 @@ json_tweak_value_of_list_into_file() {
     if [ $? -ne 0 ]; then
         echo "ERROR : processing with jq"
         rm -f "$tmp_file"
+		if [ $target_file_created -eq 1 ]; then
+			rm -f "$target_file"
+		fi
+		# restore saved target file to avoid change done in test_and_fix_json_file
+		if [ -f "$save_target_file" ]; then
+			cat "$save_target_file" > "$target_file"
+			rm -f "$save_target_file"
+		fi
         return 1
     else
         cat "$tmp_file" > "$target_file" 
