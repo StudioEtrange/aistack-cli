@@ -4,7 +4,6 @@
 aistack_initialize() {
 
 	export AISTACK_MANAGED_ENV="1"
-
     # components ---
     # runtime lists
     export AISTACK_RUNTIME_TO_DETECT="python nodejs bun rust"
@@ -1117,17 +1116,17 @@ stella_feature_installed() {
     fi
 }
 
-# --------------- SHELL RC FILE MANAGEMENT -----------------------------
+# --------------- SHELL MANAGEMENT -----------------------------
 
 
+# TODO all path register function do not take care well of error and do not return a correct value
 # add a PATH env variable by configuring shell rc files
 path_register_for_shell() {
     local name="$1"
 	local path_to_add="$2"
-    local shell_name_list="${3:-all}"
-
-    local rc_file
-	local err=0
+    local shell_name_list="${3:-current}"
+    local rc_file parent_dir
+	local res=0
 
 	if [ -z "$path_to_add" ]; then
         echo "ERROR: No path to add parameter provided."
@@ -1137,46 +1136,56 @@ path_register_for_shell() {
     local BEGIN_MARK="# >>> aistack-${name}-path >>>"
     local END_MARK="# <<< aistack-${name}-path <<<"
 
-	[ "$shell_name_list" = "all" ] && shell_list="bash zsh fish" || shell_list="$shell_name_list"
+	if [ "${shell_name_list}" = "current" ]; then
+		shell_name_list="$(find_parent_calling_shell)"
+		echo "INFO: current user shell detected: ${shell_name_list}"
+	fi
 
-	for s in $shell_list; do
-		# TODO : for bash also modify $HOME/.bash_profile ?
-		[ "$s" = "bash" ] && rc_file="$HOME/.bashrc"
-		[ "$s" = "zsh" ] && rc_file="$HOME/.zshrc"
-		[ "$s" = "fish" ] && rc_file="$HOME/.config/fish/config.fish"
+	for s in ${shell_name_list}; do
+        rc_file="$(get_user_shell_config_files "${s}")"
+        parent_dir="$(dirname "${rc_file}")"
+        if [ ! -d "${parent_dir}" ]; then
+            mkdir -p "${parent_dir}"
+        if [ -f "${rc_file}" ]; then
+            path_unregister_for_shell "${name}" "${s}" 1>/dev/null 2>&1
+        else
+            touch "${rc_file}"
+        fi
 
-		case "$s" in
-			"bash"|"zsh")
-				[ -f "$rc_file" ] && path_unregister_for_shell "$name" "$s" 1>/dev/null 2>&1 || touch "$rc_file"
-				if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
+		case "${s}" in
+			"bash"|"zsh"|"ksh"|"sh"|"dash"|"mksh")
+				if ! grep -Fq "$BEGIN_MARK" "${rc_file}"; then
 					{
 						echo "$BEGIN_MARK"
 						echo "export PATH=\"${path_to_add}:\$PATH\""
 						echo "$END_MARK"
-					} >> "$rc_file"
+					} >> "${rc_file}" || return $?
 				fi
-    			echo "- register $name PATH for shell $s"
+				echo "- register ${name} PATH for shell ${s} into ${rc_file}"
 				;;
 			"fish")
-				mkdir -p "$(dirname "$rc_file")"
-				[ -f "$rc_file" ] && path_unregister_for_shell "$name" "$s" 1>/dev/null 2>&1 || touch "$rc_file"
-				if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
+				# TODO
+				echo "- WARN: fish shell not supported yet"
+				res=1
+				continue
+				if ! grep -Fq "$BEGIN_MARK" "${rc_file}"; then
 					{
 						echo "$BEGIN_MARK"
 						echo "set -gx PATH \"${path_to_add}\" \$PATH"
 						echo "$END_MARK"
-					} >> "$rc_file"
+					} >> "${rc_file}" || return $?
 				fi
-    			echo "- register $name PATH for shell $s"
+				echo "- register ${name} PATH for shell ${s} into ${rc_file}"
 				;;
 			*) 
-				echo "ERROR : unsupported shell $s"
-				err=1
+				echo "WARN: unsupported shell $s"
+				res=1
 				;;
 		esac
 	done
 
-	return $err
+	return ${res}
+
 }
 
 # remove path
