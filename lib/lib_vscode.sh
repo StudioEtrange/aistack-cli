@@ -414,7 +414,6 @@ vscode_settings_tweak_path_for_vs_terminal() {
     # REMOVE_REGEXP remove all occurences of an regexp path expression
     local mode="${2:-ALWAYS_PREPEND}" 
     
-    # NOTE: if PATH value become "" or null, remove it completely or vscode will set PATH env var to empty string value
 
 	local os
 	case "${STELLA_CURRENT_PLATFORM}" in
