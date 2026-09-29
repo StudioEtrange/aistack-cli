@@ -399,7 +399,7 @@ cpa_settings_management_api_disable() {
 
 
 cpa_settings_management_api_key_reset() {
-    cpa_set_config ".remote.secret-key" "" "double"
+    cpa_set_config ".management.secret-key" "" "double"
 
     echo "" > "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE"
 }
@@ -416,7 +416,7 @@ cpa_settings_management_api_key_create() {
 # note : the management API key is hashed in the config file
 cpa_settings_management_api_key_set() {
     local key="$1"
-    cpa_set_config ".remote.secret-key" "$key" "double"
+    cpa_set_config ".management.secret-key" "$key" "double"
 }
 
 cpa_settings_management_api_key_get() {
