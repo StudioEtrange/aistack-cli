@@ -382,10 +382,15 @@ aistack_context_file_export_path() {
 	esac
 
 	# export variable used in VARIABLE_LIST
-	[ -n "${variable_list_to_export}" ] && aistack_context_file_export_variables "${f}" "${variable_list_to_export}"
+	if [ -n "${variable_list_to_export}" ]; then
+		aistack_context_file_export_variables "${f}" "${variable_list_to_export}" || return $?
+	fi
 
 	# export PATH
-	[ -n "${list_path_to_export}" ] && echo "export PATH=\"${list_path_to_export}:\${PATH}\"" >> "${f}"
+	if [ -n "${list_path_to_export}" ]; then
+		echo "export PATH=\"${list_path_to_export}:\${PATH}\"" >> "${f}" || return $?
+	fi
+	return 0
 }
 
 
@@ -406,8 +411,8 @@ aistack_context_path_add_component() {
         	vp="AISTACK_RUNTIME_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
 		;;
 		"module")
-			va="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
-        	vp="AISTACK_MODULE_$(printf '%s' "${m}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
+			va="AISTACK_MODULE_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
+        	vp="AISTACK_MODULE_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
 		;;
 	esac
 

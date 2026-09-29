@@ -542,7 +542,7 @@ cpa_get_model_list() {
         return 1
     fi
 
-    curl -skL -X GET http://localhost:8317/v1/models \
+    curl -skL -X GET $(cpa_settings_get_api_endpoint)/models \
         -H "Authorization: Bearer $(cpa_settings_api_key_get 0)" \
         -H "Content-Type: application/json" | jq -r '.data[]?.id // empty' | sort
 

@@ -60,27 +60,51 @@ init_aistack_test_env() {
 
 	# install core requirements
 	aistack_install_refresh
-	
-
-	
 }
 
 test_launch_bats() {
 	local domain="$1"
-	# regular expression that will match tests functions names
 	local filter="$2"
+	local _v
+	local test_status
+	local cleanup_status
 
-	local _v=$(mktmp)
-	declare >"$_v"
-	declare -f >>"$_v"
+	_v="$(mktmp)" || return 1
 
-	if [ "$filter" = "" ]; then
-		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "${STELLA_APP_ROOT}/test/test_$domain.bats"
+	declare > "${_v}" || {
+		rm -f "${_v}"
+		return 1
+	}
+
+	declare -f >> "${_v}" || {
+		rm -f "${_v}"
+		return 1
+	}
+
+	if [ -z "${filter}" ]; then
+		__BATS_STELLA_DECLARE="${_v}" bats \
+			--verbose-run \
+			"${STELLA_APP_ROOT}/test/test_${domain}.bats"
+		test_status=$?
 	else
-		__BATS_STELLA_DECLARE="$_v" bats --verbose-run "${STELLA_APP_ROOT}/test/test_$domain.bats" -f "${filter}"
+		__BATS_STELLA_DECLARE="${_v}" bats \
+			--verbose-run \
+			"${STELLA_APP_ROOT}/test/test_${domain}.bats" \
+			-f "${filter}"
+		test_status=$?
 	fi
-	rm -f "$_v"
+
+	rm -f "${_v}"
+	cleanup_status=$?
+
+	if [ "${test_status}" -ne 0 ]; then
+		return "${test_status}"
+	fi
+
+	return "${cleanup_status}"
 }
+
+
 
 #STELLA_LOG_STATE=ON
 case $1 in
@@ -89,15 +113,14 @@ case $1 in
     ;;
   all|"")
 	init_aistack_test_env
-	test_launch_bats lib $2
-    test_launch_bats json $2
-	test_launch_bats yaml $2
-	test_launch_bats glibc $2
-	test_launch_bats vs $2
-	test_launch_bats node $2
-	test_launch_bats playwright $2
-    test_launch_bats opencode $2
-    ;;
+	test_status=0
+	for domain in lib json yaml glibc vs node playwright opencode; do
+		test_launch_bats "${domain}" "${2}" || test_status=1
+	done
+
+	exit "${test_status}"
+	;;
+
   lib)
 	init_aistack_test_env
     test_launch_bats lib $2

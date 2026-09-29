@@ -16,13 +16,22 @@ case "${sub_command}" in
         fi
         ;;
     uninstall)
-        echo "Uninstalling Kilo Code and unregister Kilo Code CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
-        kilo_uninstall
+        case "${1}" in
+			extension)
+		        echo "Uninstalling Kilo Code VSCode extension"
+				kilo_uninstall "${1}"
+				;;
+			cli|"")
+		        echo "Uninstalling Kilo Code and unregister Kilo Code CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
+				kilo_uninstall "${1}"
 
-        kilo_path_unregister_for_shell "all"
-        kilo_path_unregister_for_vs_terminal
+				kilo_path_unregister_for_shell "all"
+				kilo_path_unregister_for_vs_terminal
 
-        kilo_launcher_and_context_files_manage "delete"
+				kilo_launcher_and_context_files_manage "delete"
+				;;
+		esac
+		
         ;;
     configure)
         echo "Configuring Kilo Code CLI and Kilo Code VS Code extension"

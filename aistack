@@ -146,7 +146,6 @@ Options:
     plw install [@version]                Install Playwright CLI. Default version is @latest.
     plw uninstall                         Uninstall Playwright CLI and unregister Playwright CLI PATH.
     plw info                              Print Playwright CLI information.
-    plw version                           Print the installed Playwright CLI version.
     plw register [<current|shell list|vs>]           Register Playwright CLI PATH into shell env PATH. Default value is "current" for current shell or a list of supported shells or "vs" for VS Code integrated terminal env PATH.
     plw unregister [<all|current|shell list|vs>]       Unregister Playwright CLI PATH from shell env PATH. Default value is "all" for all supported shells, "current" for current shell or a list of supported shells or "vs" for VS Code integrated terminal env PATH.
     plw launch [context folder] -- <playwright-cli command>
