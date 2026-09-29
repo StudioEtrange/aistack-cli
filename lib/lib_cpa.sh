@@ -334,7 +334,7 @@ cpa_remove_config() {
 
     case "$key_path" in
         .*) ;;
-        *)  key_path=".$key_path" ;;
+        *)  key_path="$key_path" ;;
     esac
 
     yaml_del_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$key_path"
@@ -347,7 +347,7 @@ cpa_set_config() {
 
     case "$key_path" in
         .*) ;;
-        *)  key_path=".$key_path" ;;
+        *)  key_path="$key_path" ;;
     esac
 
     yaml_set_key_into_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$key_path" "$value" "$string_style"
@@ -359,7 +359,7 @@ cpa_get_config() {
 
     case "$key_path" in
         .*) ;;
-        *)  key_path=".$key_path" ;;
+        *)  key_path="$key_path" ;;
     esac
 
     yaml_get_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" "$key_path"
@@ -371,19 +371,19 @@ cpa_get_config() {
 cpa_settings_set_host() {
     local host="$1"
     # TODO check double option
-    cpa_set_config "host" "$host" "double"
+    cpa_set_config ".server.host" "$host" "double"
 }
 
 cpa_settings_set_port() {
     local port="$1"
-    cpa_set_config "port" "$port"
+    cpa_set_config ".server.port" "$port"
 }
 
 cpa_settings_get_address() {
-    local tls="$(cpa_get_config ".tls.enable")"
+    local tls="$(cpa_get_config ".server.tls.enable")"
     local scheme="http"
     [ "$tls" = "true" ] && scheme="https"
-    local api_uri="${scheme}://$(cpa_get_config ".host"):$(cpa_get_config ".port")"
+    local api_uri="${scheme}://$(cpa_get_config ".server.host"):$(cpa_get_config ".server.port")"
     echo -n "$api_uri"
 }
 
@@ -399,7 +399,7 @@ cpa_settings_management_api_disable() {
 
 
 cpa_settings_management_api_key_reset() {
-    cpa_set_config ".remote-management.secret-key" "" "double"
+    cpa_set_config ".remote.secret-key" "" "double"
 
     echo "" > "$AISTACK_CLIPROXYAPI_MANAGEMENT_API_KEY_FILE"
 }
@@ -416,7 +416,7 @@ cpa_settings_management_api_key_create() {
 # note : the management API key is hashed in the config file
 cpa_settings_management_api_key_set() {
     local key="$1"
-    cpa_set_config ".remote-management.secret-key" "$key" "double"
+    cpa_set_config ".remote.secret-key" "$key" "double"
 }
 
 cpa_settings_management_api_key_get() {
@@ -425,7 +425,7 @@ cpa_settings_management_api_key_get() {
 
 # API key management ------------------------
 cpa_settings_api_key_reset() {
-    cpa_remove_config ".api-keys"
+    cpa_remove_config ".access.api-keys"
 }
 
 # cpa must have been installed before
@@ -446,8 +446,8 @@ cpa_settings_api_key_add() {
 
     local tmp_target_file="$(mktemp)"
     # NOTE : avoid using -i (and -P) to preserve file formatting like quote style for values
-    #if ! KEY="$key" yq eval -i '.["api-keys"] += [strenv(KEY)] | .["api-keys"][] style="double"' "$AISTACK_CLIPROXYAPI_CONFIG_FILE"; then
-    if ! KEY="$key" yq eval '.["api-keys"] += [strenv(KEY)] | .["api-keys"][] style="double"' "$AISTACK_CLIPROXYAPI_CONFIG_FILE" > "$tmp_target_file"; then
+    #if ! KEY="$key" yq eval -i '.access.["api-keys"] += [strenv(KEY)] | .access.["api-keys"][] style="double"' "$AISTACK_CLIPROXYAPI_CONFIG_FILE"; then
+    if ! KEY="$key" yq eval '.access.["api-keys"] += [strenv(KEY)] | .access.["api-keys"][] style="double"' "$AISTACK_CLIPROXYAPI_CONFIG_FILE" > "$tmp_target_file"; then
         echo "ERROR: Failed to add API key to configuration" >&2
         rm -f "$tmp_target_file"
         return 1
@@ -471,7 +471,7 @@ cpa_settings_api_key_del() {
     local tmp_target_file="$(mktemp)"
     # NOTE : avoid using -i (and -P) to preserve file formatting like quote style for values
     KEY="$key" yq eval '
-        .["api-keys"] |= (
+        .access.["api-keys"] |= (
         (. // [])
         | map(select(. != strenv(KEY)))
         )
@@ -488,12 +488,12 @@ cpa_settings_api_key_del() {
 
 
 cpa_settings_api_key_list() {
-    yaml_get_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ".api-keys" | yq -r '.[]'
+    yaml_get_key_from_file "$AISTACK_CLIPROXYAPI_CONFIG_FILE" ".access.api-keys" | yq -r '.[]'
 }
 
 cpa_settings_api_key_get() {
     local index="${1:-0}"
-    if ! cat "$AISTACK_CLIPROXYAPI_CONFIG_FILE" 2>/dev/null | yq '.api-keys['$index'] | sub("^null$"; "")' 2>/dev/null; then
+    if ! cat "$AISTACK_CLIPROXYAPI_CONFIG_FILE" 2>/dev/null | yq '.access.api-keys['$index'] | sub("^null$"; "")' 2>/dev/null; then
         return 1
     fi
 }
@@ -527,9 +527,9 @@ cpa_settings_configure_tls() {
         fi
     fi 
 
-    cpa_set_config ".tls.enable" "true"
-    cpa_set_config ".tls.cert" "$cert_path" "double"
-    cpa_set_config ".tls.key" "$key_path" "double"
+    cpa_set_config ".server.tls.enable" "true"
+    cpa_set_config ".server.tls.cert" "$cert_path" "double"
+    cpa_set_config ".server.tls.key" "$key_path" "double"
 
     echo "TLS with certificate configured successfully with $cert_path and $key_path."
 }
