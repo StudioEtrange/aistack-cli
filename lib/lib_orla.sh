@@ -63,7 +63,7 @@ orla_install() {
 
 	if [ -z "$version" ] || [ "$version" = "latest" ]; then
 		echo "No version provided, fetching the latest version..."
-		version="$(github_get_latest_release "dorcha-inc/orla")" || return $?
+		version="$(github_get_latest_release "harvard-cns/orla")" || return $?
 		[ -n "${version}" ] || { echo "ERROR: Failed to retrieve latest Orla version"; return 1; }
 		echo "latest version is ${version}"
 	fi
@@ -91,7 +91,7 @@ orla_install() {
 	[ -n "${os_arch}" ] || { echo "ERROR: Unsupported platform or CPU family: ${STELLA_CURRENT_PLATFORM}/${STELLA_CURRENT_CPU_FAMILY}"; return 1; }
 
 	local filename="orla-${os_arch}.tar.gz"
-	local download_url="https://github.com/dorcha-inc/orla/releases/download/${version}/${filename}"
+	local download_url="https://github.com/harvard-cns/orla/releases/download/${version}/${filename}"
 
 	echo "Downloading and installing Orla ${version} from ${download_url} to ${ORLA_FEAT_INSTALL_ROOT}..."
 	# DEST_ERASE allow to uninstall before install
@@ -318,7 +318,7 @@ orla_settings_get_api_endpoint() {
 
 # orla agent management ------------------------
 # the default backend is defined in orla configuration
-# https://github.com/dorcha-inc/orla/blob/main/internal/config/config.go
+# https://github.com/harvard-cns/orla/blob/v1.2.15/internal/config/config.go
 orla_agent_register_default_backend() {
     local nickname="$1"
     local type="$2" # ollama or openai or sglang
@@ -340,7 +340,7 @@ orla_agent_register_default_backend() {
 
     # MaxConcurrency is the maximum number of concurrent inference requests dispatched to this backend
     # A value of 0 or 1 means serial dispatch.
-    # https://github.com/dorcha-inc/orla/blob/4eb6ca0ebcd5f4fe9e21116cb866d749f0877bdd/internal/core/types.go#L30
+    # https://github.com/harvard-cns/orla/blob/4eb6ca0ebcd5f4fe9e21116cb866d749f0877bdd/internal/core/types.go#L30
     [ -n "$max_concurrency" ] && orla_set_config "llm_backend.max_concurrency" "$max_concurrency"
     # QueueCapacity is the maximum number of requests that may be queued for this backend.
     [ -n "$queue_capacity" ] && orla_set_config "llm_backend.queue_capacity" "$queue_capacity"

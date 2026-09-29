@@ -3,7 +3,9 @@ shift
 case "${sub_command}" in
     install)
 
-        if ! orla_install "latest"; then
+		# TODO : fix version to 1.2.15, last version including an agent and not only a server
+        #if ! orla_install "latest"; then
+		if ! orla_install "latest"; then
             echo "ERROR: orla not installed"
             exit 1
         else

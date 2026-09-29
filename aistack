@@ -74,7 +74,7 @@ Options:
                                                                 Set a 'default' and 'small' model else pick the first CLIProxyAPI model as default.
                                                                 NOTE: small model is for generation of title, commit message, prompt enhancement, and other quick tasks.
     ----
-    orla : Orla - https://github.com/dorcha-inc/orla
+    orla : Orla - hhttps://github.com/harvard-cns/orla
     orla install                      Install and configure Orla.
     orla uninstall                    Uninstalling Orla and unregister Orla PATH. (keep all configuration unchanged, to remove configuration use 'aistack orla reset' command)
     orla configure                    Configure Orla with some default values. But do not fully reset all other existing config values. ('aistack orla install' include configuration)
