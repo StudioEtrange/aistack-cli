@@ -6,17 +6,18 @@ Right to the point how-to
   - [Case 0 : AIStack install and init](#case-0--aistack-install-and-init)
   - [Case 1 : Antigravity CLI](#case-1--antigravity-cli)
   - [Case 2 : Kilo Code VS Code extension + OpenAI](#case-2--kilo-code-vs-code-extension--openai)
-  - [Case 3 : Orla + OpenAI](#case-3--orla--openai)
-  - [Case 4 : use Playwright CLI to take screenshot of a website](#case-4--use-playwright-cli-to-take-screenshot-of-a-website)
-  - [Case 5 : OpenCode + OpenAI](#case-5--opencode--openai)
-  - [Case 6 : OpenChamber desktop + OpenCode + OpenAI](#case-6--openchamber-desktop--opencode--openai)
-  - [Case 7 : scan skills with NVIDIA skillspector + OpenAI](#case-7--scan-skills-with-nvidia-skillspector--openai)
-  - [Case 8 : scan skills with Agent Skill Manager](#case-8--scan-skills-with-agent-skill-manager)
-  - [Case 9 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-9--scan-skills-with-cisco-ai-skill-scanner--openai)
-  - [Case 10 : install the Rust runtime](#case-10--install-the-rust-runtime)
-  - [Case 11 : Configure Node.js internal runtime](#case-11--configure-nodejs-internal-runtime)
-  - [Case 12 : install gemini-cli](#case-12--install-gemini-cli)
-  - [Case 13 : gemini-cli and local MCP server](#case-13--gemini-cli-and-local-mcp-server)
+  - [Case 3 : Kilo Code CLI + OpenAI](#case-3--kilo-code-cli--openai)
+  - [Case 4 : Orla + OpenAI](#case-4--orla--openai)
+  - [Case 5 : use Playwright CLI to take screenshot of a website](#case-5--use-playwright-cli-to-take-screenshot-of-a-website)
+  - [Case 6 : OpenCode + OpenAI](#case-6--opencode--openai)
+  - [Case 7 : OpenChamber desktop + OpenCode + OpenAI](#case-7--openchamber-desktop--opencode--openai)
+  - [Case 8 : scan skills with NVIDIA skillspector + OpenAI](#case-8--scan-skills-with-nvidia-skillspector--openai)
+  - [Case 9 : scan skills with Agent Skill Manager](#case-9--scan-skills-with-agent-skill-manager)
+  - [Case 10 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-10--scan-skills-with-cisco-ai-skill-scanner--openai)
+  - [Case 11 : install the Rust runtime](#case-11--install-the-rust-runtime)
+  - [Case 12 : Configure Node.js internal runtime](#case-12--configure-nodejs-internal-runtime)
+  - [Case 13 : install gemini-cli](#case-13--install-gemini-cli)
+  - [Case 14 : gemini-cli and local MCP server](#case-14--gemini-cli-and-local-mcp-server)
 
 ## Case 0 : AIStack install and init
 
@@ -54,7 +55,7 @@ agy
 
 ## Case 2 : Kilo Code VS Code extension + OpenAI
 
-_"I want to install Kilo Code VS Code extension aand using my OpenAI subscription with it."_
+_"I want to install Kilo Code VS Code extension and using my OpenAI subscription with it."_
 
 **_CPA installation and launch in background_** :
 
@@ -91,7 +92,47 @@ To select an explicit default model and an optional small model:
 
 
 
-## Case 3 : Orla + OpenAI
+## Case 3 : Kilo Code CLI + OpenAI
+
+_"I want to install Kilo Code CLI and using my OpenAI subscription with it."_
+
+**_CPA installation and launch in background_** :
+
+```bash
+cd aistack-cli
+./aistack cpa install
+./aistack cpa up
+./aistack cpa info
+```
+
+Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to follow its logs, and `./aistack cpa down` to stop it.
+
+
+**_Codex (OpenAI) login and model listing_** :
+```bash
+./aistack cpa login codex-oauth
+./aistack cpa model list
+```
+
+**_Kilo Code CLI installation_** :
+```
+./aistack kc install
+```
+**_Kilo Code connection_** :
+```
+./aistack kc connect cpa
+```
+
+To select an explicit default model and an optional small model:
+
+```bash
+./aistack kc connect cpa "gpt-5.6-sol" "gpt-5.6-luna"
+```
+
+
+
+
+## Case 4 : Orla + OpenAI
 
 _"I want to install Orla agent and use it connected to my OpenAI subscription."_
 
@@ -122,7 +163,7 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 ./aistack orla agent "Solve: If 2x + 3 = 7, what is x?"
 ```
 
-## Case 4 : use Playwright CLI to take screenshot of a website
+## Case 5 : use Playwright CLI to take screenshot of a website
 
 _"I want to install Playwright CLI, register it in shell and use it to take a screenshot of a website."_
 
@@ -141,7 +182,7 @@ playwright-cli screenshot
 playwright-cli close
 ```
 
-## Case 5 : OpenCode + OpenAI
+## Case 6 : OpenCode + OpenAI
 
 _"I want to install OpenCode and using my OpenAI subscription with it."_
 
@@ -179,7 +220,7 @@ To select an explicit default model and an optional small model:
 opencode
 ```
 
-## Case 6 : OpenChamber desktop + OpenCode + OpenAI
+## Case 7 : OpenChamber desktop + OpenCode + OpenAI
 
 _"I want to use OpenChamber Desktop with my installed OpenCode and using my OpenAI subscription."_ _(see [Case 5](#case-5--opencode--openai))_
 
@@ -187,7 +228,7 @@ _"I want to use OpenChamber Desktop with my installed OpenCode and using my Open
 ./aistack och connect aistack
 ```
 
-## Case 7 : scan skills with NVIDIA skillspector + OpenAI
+## Case 8 : scan skills with NVIDIA skillspector + OpenAI
 
 _"I want to install NVIDIA skillspector and use it connected to my OpenAI subscription to scan skills."_
 
@@ -215,7 +256,7 @@ skillspector scan /tmp/skills/skills/docx --format markdown
 rm -Rf /tmp/skills
 ```
 
-## Case 8 : scan skills with Agent Skill Manager
+## Case 9 : scan skills with Agent Skill Manager
 
 _"I want to install Agent Skill Manager (asm) and use it to scan skills security and quality."_
 
@@ -250,7 +291,7 @@ asm eval /tmp/skills/skills/docx
 rm -Rf /tmp/skills
 ```
 
-## Case 9 : scan skills with Cisco AI Skill Scanner + OpenAI
+## Case 10 : scan skills with Cisco AI Skill Scanner + OpenAI
 
 _"I want to install Cisco AI Skill Scanner and use it connected to my OpenAI subscription to scan skills."_
 
@@ -288,7 +329,7 @@ skill-scanner scan /tmp/skills/skills/algorithmic-art --use-behavioral --use-llm
 rm -Rf /tmp/skills
 ```
 
-## Case 10 : install the Rust runtime
+## Case 11 : install the Rust runtime
 
 _"I want to use an isolated Rust toolchain without changing my system installation."_
 
@@ -305,7 +346,7 @@ Remove the managed Rust runtime with:
 ./aistack runtime remove rust
 ```
 
-## Case 11 : Configure Node.js internal runtime
+## Case 12 : Configure Node.js internal runtime
 
 _"I want to set a npm registry for the internal Node.js runtime."_
 
@@ -322,7 +363,7 @@ cd aistack-cli
 ./aistack init
 ```
 
-## Case 12 : install gemini-cli
+## Case 13 : install gemini-cli
 
 _"I want to install gemini-cli from scratch and make it accessible from all my bash session"_
 
@@ -338,7 +379,7 @@ cd aistack-cli
 gemini
 ```
 
-## Case 13 : gemini-cli and local MCP server
+## Case 14 : gemini-cli and local MCP server
 
 _"I want to register intoto gemini-cli installation, a local MCP server calculator to do some maths"_
 
