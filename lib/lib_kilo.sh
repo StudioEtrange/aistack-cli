@@ -213,11 +213,16 @@ kilo_info() {
 }
 
 kilo_show_config() {
-    if [ -f "$AISTACK_KILO_CONFIG_FILE" ]; then
-        cat "$AISTACK_KILO_CONFIG_FILE"
-    else
-        echo "No configuration file found. ($AISTACK_KILO_CONFIG_FILE)"
-    fi
+	if kilo_is_installed; then
+		kilo_launch debug config
+	else
+		if [ -f "$AISTACK_KILO_CONFIG_FILE" ]; then
+			echo "Kilo cli is not installed, showing raw config file ($AISTACK_KILO_CONFIG_FILE)"
+			cat "$AISTACK_KILO_CONFIG_FILE"
+		else
+			echo "No configuration file found. ($AISTACK_KILO_CONFIG_FILE)"
+		fi
+	fi
 }
 
 
@@ -405,6 +410,11 @@ kilo_unregister_cpa_key() {
 }
 
 # needs cpa to be running if model is empty, to retrieve model list from CLIProxyAPI
+# this function will register all models from cpa into kilo config
+# and set default model and small model
+# you still have to select a model for each agent in kilo cli or kilo vscode extension 
+# NOTE : cannot be programaticly setted because cli and vscode extension persist UI persist their state/choice
+# through a json file for cli (~/.local/state/kilo/model.json) and a sqlite db for vscode (state.vscdb)
 kilo_connect_cpa() {
     # empty means all available models
     local wanted_default_model="${1}"
