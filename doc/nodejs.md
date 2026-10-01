@@ -4,7 +4,8 @@
   - [Node.js and glibc](#nodejs-and-glibc)
   - [Notes](#notes)
   - [About MCP server](#about-mcp-server)
-  - [Using a npm registry](#using-a-npm-registry)
+  - [Set a cache path for nvm binaries](#set-a-cache-path-for-nvm-binaries)
+  - [Using your own npm registry](#using-your-own-npm-registry)
 
 
 ## Node.js and glibc
@@ -59,7 +60,18 @@
   exec "npx" -y @upstash/context7-mcp --api-key "${CONTEXT7_API_KEY}"
   ```
 
-## Using a npm registry
+## Set a cache path for nvm binaries
+
+define AISTACK_NVM_CACHE before using aistack
+
+  ```
+  export AISTACK_NVM_CACHE=/opt/nvm-cache
+  cd aistack-cli
+  ./aistack init
+  ```
+
+
+## Using your own npm registry
 
 * set a npm registry for Node.js at AIStack init
 

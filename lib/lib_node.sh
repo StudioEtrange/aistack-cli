@@ -5,7 +5,7 @@ node_init() {
     export NVM_DIR="${AISTACK_NVM_HOME}"
 
     # cache folder for NVM
-    export AISTACK_NVM_CACHE="${STELLA_APP_CACHE_DIR}/nvm-cache"
+	export AISTACK_NVM_CACHE="${AISTACK_NVM_CACHE:-${STELLA_APP_CACHE_DIR}/nvm-cache}"
     mkdir -p "${AISTACK_NVM_CACHE}"
 	export AISTACK_NVM_DEFAULT_BIN_CACHE="${AISTACK_NVM_HOME}/aistack-default-bin"
 
