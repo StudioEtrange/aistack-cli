@@ -16,7 +16,9 @@ Options:
     help                    Display this help message.
     info                    Display various aistack information and configuration.
     shell                   Enter aistack AIStack and path.
-	runtime add|remove <runtime> Install/remove an AIStack managed runtime to be used in any tool run context (Available: python, nodejs, bun, rust). Core runtimes are always preinstalled ($AISTACK_RUNTIME_CORE)
+    runtime add|remove <runtime> Install/remove an AIStack managed runtime to be used in any tool run context (Available: python, nodejs, bun, rust). Core runtimes are always preinstalled ($AISTACK_RUNTIME_CORE)
+    register [<current|shell list|vs>]          Register aistack-cli PATH into shell env PATH. Default value is "current" for current shell or a list of supported shells or "vs" for VS Code integrated terminal env PATH.
+    unregister [<all|current|shell list|vs>]      Unregister aistack-cli PATH from shell env PATH. Default value is "all" for all supported shells, "current" for current shell or a list of supported shells or "vs" for VS Code integrated terminal env PATH.
     ----
     gc : gemini-cli - https://google-gemini.github.io/gemini-cli
     gc install [@version]           Install and configure Gemini CLI. (main versions are latest, nightly, preview) (when asked to relaunch gemini cli, use 'aistack gc launch' command)
@@ -274,6 +276,33 @@ main() {
         uninstall)
             aistack_uninstall
 			exit $?
+            ;;
+        register)
+            case "$1" in
+                "vs")
+                    aistack_path_register_for_vs_terminal
+                    ;;
+                *)
+                    aistack_path_register_for_shell "$1"
+                    ;;
+            esac
+            exit $?
+            ;;
+        unregister)
+            [ -z "${1}" ] && target="all" || target="${1}"
+            case "${target}" in
+                "all")
+                    aistack_path_unregister_for_shell "all"
+                    aistack_path_unregister_for_vs_terminal
+                    ;;
+                "vs")
+                    aistack_path_unregister_for_vs_terminal
+                    ;;
+                *)
+                    aistack_path_unregister_for_shell "$1"
+                    ;;
+            esac
+            exit $?
             ;;
 	esac
 

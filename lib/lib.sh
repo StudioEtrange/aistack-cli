@@ -1123,6 +1123,21 @@ stella_feature_installed() {
 
 # --------------- SHELL MANAGEMENT -----------------------------
 
+aistack_path_register_for_shell() {
+	local shell_name="${1:-current}"
+	path_register_for_shell "aistack" "${STELLA_APP_ROOT}" "$shell_name"
+}
+
+aistack_path_unregister_for_shell() {
+	local shell_name="${1:-current}"
+	path_unregister_for_shell "aistack" "$shell_name"
+}
+aistack_path_register_for_vs_terminal() {
+	vscode_path_register_for_vs_terminal "aistack" "${STELLA_APP_ROOT}"
+}
+aistack_path_unregister_for_vs_terminal() {
+	vscode_path_unregister_for_vs_terminal "aistack" "${STELLA_APP_ROOT}"
+}
 
 # TODO all path register function do not take care well of error and do not return a correct value
 # add a PATH env variable by configuring shell rc files
