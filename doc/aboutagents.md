@@ -224,10 +224,20 @@ LLM             = model used by X Agent
 
   * asm - agent-skill-manager
     * https://github.com/luongnv89/asm
-    * CLI - 197 stars 13 forks - last activity april 26
+    * CLI - 947 stars 83 forks - last activity oct 26
     * https://luongnv.com/asm/
     * use central folder and symlink to agent skill folder
     * list, manage, download skills from various location (i.e `asm install https://github.com/anthropics/skills/tree/main/skills/algorithmic-art`)
   * Rito-w/skills-manager
     * https://github.com/Rito-w/skills-manager
     * Desktop IDE - 146 stars 10 forks - last release april 26
+
+  * skillkit
+    * https://github.com/rohitg00/skillkit
+    * https://skillkit.sh/
+    * CLI - 1500 stars 151 forks - last activity june 26
+    * supercharge AI coding agents with portable skills. Install, translate & share skills across Claude Code, Cursor, Codex, Copilot & 40 more
+    * SkillKit is the package manager for AI agent skills. Install from 400K+ skills across 31 sources. Auto-translate between formats. Persist session learnings. Ship to 46 agents at once.
+    * sample:
+    ```
+    npm i -g @skillkit/tui  

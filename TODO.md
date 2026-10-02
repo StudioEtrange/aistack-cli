@@ -170,6 +170,8 @@
     * LLM request compression
     * act as a proxy
     * expose a MCP server
+    * OK if you run coding agents daily and want savings without touching your code, work across several agents and want one shared memory, or need compression that is reversible — originals stay retrievable through CCR for the configured TTL.
+    * NOT OK if you only use one provider's native compaction and don't need cross-agent memory, or work in a sandbox where local processes can't run.
     ```
     Your agent / app
     (Claude Code, Cursor, Codex, LangChain, Agno, Strands, your own code)...
@@ -198,6 +200,51 @@
   * optillm
     * Optimizing inference proxy for LLMs
     * https://github.com/algorithmicsuperintelligence/optillm
+    * OptiLLM is an inference proxy that implements 20+ state-of-the-art techniques to dramatically improve LLM accuracy and performance on reasoning tasks - without requiring any model training or fine-tuning.
+    * Implemented optimization techniques
+
+      | Approach                             | Slug               | Description                                                                                    |
+      | ------------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------- |
+      | [MARS (Multi-Agent Reasoning System)](optillm/mars) | `mars`             | Multi-agent reasoning with diverse temperature exploration, cross-verification, and iterative improvement |
+      | [Cerebras Planning and Optimization](optillm/cepo)   | `cepo`             | Combines Best of N, Chain-of-Thought, Self-Reflection, Self-Improvement, and various prompting techniques |
+      | CoT with Reflection                  | `cot_reflection`   | Implements chain-of-thought reasoning with \<thinking\>, \<reflection> and \<output> sections |
+      | PlanSearch                           | `plansearch`       | Implements a search algorithm over candidate plans for solving a problem in natural language   |
+      | ReRead                               | `re2`              | Implements rereading to improve reasoning by processing queries twice                          |
+      | Self-Consistency                     | `self_consistency` | Implements an advanced self-consistency method                                                 |
+      | Z3 Solver                            | `z3`               | Utilizes the Z3 theorem prover for logical reasoning                                           |
+      | R* Algorithm                         | `rstar`            | Implements the R* algorithm for problem-solving                                                |
+      | LEAP                                 | `leap`             | Learns task-specific principles from few shot examples                                         |
+      | Round Trip Optimization              | `rto`              | Optimizes responses through a round-trip process                                               |
+      | Best of N Sampling                   | `bon`              | Generates multiple responses and selects the best one                                          |
+      | Mixture of Agents                    | `moa`              | Combines responses from multiple critiques                                                     |
+      | Monte Carlo Tree Search              | `mcts`             | Uses MCTS for decision-making in chat responses                                                |
+      | PV Game                              | `pvg`              | Applies a prover-verifier game approach at inference time                                      |
+      | [Deep Confidence](optillm/deepconf) | N/A for proxy | Implements confidence-guided reasoning with multiple intensity levels for enhanced accuracy |
+      | CoT Decoding                         |  N/A for proxy     | Implements chain-of-thought decoding to elicit reasoning without explicit prompting            |
+      | Entropy Decoding                     |  N/A for proxy     | Implements adaptive sampling based on the uncertainty of tokens during generation              |
+      | Thinkdeeper                          |  N/A for proxy     | Implements the `reasoning_effort` param from OpenAI for reasoning models like DeepSeek R1      |
+      | [AutoThink](optillm/autothink)       |  N/A for proxy     | Combines query complexity classification with steering vectors to enhance reasoning            |
+
+    * Implemented plugins
+
+      | Plugin                  | Slug               | Description                                                                                    |
+      | ----------------------- | ------------------ | ---------------------------------------------------------------------------------------------- |
+      | [System Prompt Learning](optillm/plugins/spl)  | `spl`              | Implements what [Andrej Karpathy called the third paradigm](https://x.com/karpathy/status/1921368644069765486) for LLM learning, this enables the model to acquire program solving knowledge and strategies |
+      | [Deep Think](optillm/plugins/deepthink)              | `deepthink`        | Implements a Gemini-like Deep Think approach using inference time scaling for reasoning LLMs |
+      | [Long-Context Cerebras Planning and Optimization](optillm/plugins/longcepo)              | `longcepo`              | Combines planning and divide-and-conquer processing of long documents to enable infinite context  |
+      | Majority Voting         | `majority_voting`  | Generates k candidate solutions and selects the most frequent answer through majority voting (default k=6) |
+      | MCP Client              | `mcp`              | Implements the model context protocol (MCP) client, enabling you to use any LLM with any MCP Server  |
+      | Router                  | `router`           | Uses the [optillm-modernbert-large](https://huggingface.co/codelion/optillm-modernbert-large) model to route requests to different approaches based on the user prompt |
+      | Chain-of-Code           | `coc`              | Implements a chain of code approach that combines CoT with code execution and LLM based code simulation |
+      | Memory                  | `memory`           | Implements a short term memory layer, enables you to use unbounded context length with any LLM. Set `OPTILLM_MEMORY_FILE` to opt in to file-backed persistence so memories survive across requests |
+      | Privacy                 | `privacy`          | Anonymize PII data in request and deanonymize it back to original value in response            |
+      | Read URLs               | `readurls`         | Reads all URLs found in the request, fetches the content at the URL and adds it to the context |
+      | Execute Code            | `executecode`      | Enables use of code interpreter to execute python code in requests and LLM generated responses |
+      | JSON                    | `json`             | Enables structured outputs using the outlines library, supports pydantic types and JSON schema |
+      | GenSelect               | `genselect`        | Generative Solution Selection - generates multiple candidates and selects the best based on quality criteria |
+      | Web Search              | `web_search`       | Performs Google searches using Chrome automation (Selenium) to gather search results and URLs |
+      | [Deep Research](optillm/plugins/deep_research)           | `deep_research`    | Implements Test-Time Diffusion Deep Researcher (TTD-DR) for comprehensive research reports using iterative refinement |
+      | [Proxy](optillm/plugins/proxy)      | `proxy`            | Load balancing and failover across multiple LLM providers with health monitoring and round-robin routing |
 
 * web browser
   * BrowserClaw and BrowserOS
