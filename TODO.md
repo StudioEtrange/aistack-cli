@@ -161,6 +161,13 @@
   * litellm
     * https://github.com/BerriAI/litellm
 
+* turn cli into API
+  * sub2API
+    * https://github.com/Wei-Shaw/sub2api
+    * AI API Gateway Platform for Subscription Quota Distribution
+    * supports gemini-cli and google one account
+    * high requirements including postgres !
+ 
 
 * optimization
   * headroom
@@ -191,6 +198,8 @@
           ▼
     LLM provider  (Anthropic · OpenAI · Bedrock...)
     ```
+
+
 
   * caveman
     * https://github.com/juliusbrussee/caveman

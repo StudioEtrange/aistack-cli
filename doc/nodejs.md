@@ -81,7 +81,7 @@ cd aistack-cli
 ./aistack init
 ```
 
-* set a npm registry for Node.js
+* set a npm registry for Node.js (it is redundant if you have already done using AISTACK_INIT_FORCE_NPM_REGISTRY)
 
 ```
 cd aistack-cli

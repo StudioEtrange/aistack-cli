@@ -29,6 +29,10 @@ An open-source AI agent that brings the power of Gemini directly into your termi
   * 106 stars - Experimental gemini-cli as MCP server : https://github.com/levindixon/gemini-cli-mcp-server
 * LiteLLM and gemini-cli https://docs.litellm.ai/docs/tutorials/litellm_gemini_cli
 * override gemini-cli with GEMINI_API_KEY, GEMINI_MODEL, GOOGLE_GEMINI_BASE_URL
+* gemini-oauth
+    * https://github.com/kimws/gemini-oauth
+    * expose a compatible OpenAI API using gemini oauth
+    * allow to use existing gemini-cli oauth or can login itself to gemini
 * gemini-cli extensions : https://geminicli.com/extensions/
   * build extensions : https://geminicli.com/docs/extensions/writing-extensions/
   * extensions for gemini-cli are a package of
