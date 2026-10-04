@@ -256,10 +256,10 @@
       | [Proxy](optillm/plugins/proxy)      | `proxy`            | Load balancing and failover across multiple LLM providers with health monitoring and round-robin routing |
 
 * web browser
-  * BrowserClaw and BrowserOS
-    * https://github.com/browseros-ai/browseros
-    * BrowserClaw : MCP-compatible browser
-    * BrowserOS : Chromium fork with an AI agent built into every new ta to chat with
+  * BrowserOS neo
+    * https://github.com/browseros-ai/BrowserOS
+    * BrowserOS neo is a browser your AI drives
+    * BrowserOS is a browser you drive, with an AI agent built in.
   * browserwing
     * https://github.com/browserwing/browserwing
     * Native MCP & Skills protocol support
@@ -268,6 +268,10 @@
     * https://github.com/browser-use/browser-use
     * Python library (`uv add browser-use`) with human described task to interact with browser
     * integration with ai agent with a skill https://github.com/browser-use/browser-harness/blob/main/install.md
+  * Playwright CLI
+    * with skills or MCP
+  * lightpanda browser
+    * https://github.com/lightpanda-io/browser
 
 
 
