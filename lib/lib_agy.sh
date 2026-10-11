@@ -111,13 +111,13 @@ agy_uninstall() {
 agy_path_register_for_shell() {
 	local shell_name="${1:-current}"
 	if agy_is_installed; then
-		path_register_for_shell "antigravity" "${AISTACK_ANTIGRAVITY_LAUNCHER_HOME}" "$shell_name"
+		register_path_named_bloc_for_shell "antigravity" "${AISTACK_ANTIGRAVITY_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 
 agy_path_unregister_for_shell() {
 	local shell_name="${1:-all}"
-	path_unregister_for_shell "antigravity" "$shell_name"
+	unregister_path_named_bloc_for_shell "antigravity" "$shell_name"
 }
 
 agy_path_register_for_vs_terminal() {

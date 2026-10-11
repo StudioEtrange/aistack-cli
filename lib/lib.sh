@@ -478,7 +478,7 @@ aistack_launcher_and_context_files_regenerate() {
 
 # remove all injected value in shell rc files and vscide
 aistack_shell_purge() {
-	path_unregister_all_for_shell
+	unregister_any_path_named_bloc_for_shell
 
 	# NOTE: special case for openchamber to clean shell profile
 	openchamber_disconnect_aistack "all"
@@ -1122,26 +1122,39 @@ stella_feature_installed() {
 }
 
 # --------------- SHELL MANAGEMENT -----------------------------
-
+# register aistack tool in PATH for a list of shells or current shell
+# for shell_name_list
+#   use 'all' to unregister to all known shell
+#   use 'current' to unregister from the current user shell
 aistack_path_register_for_shell() {
-	local shell_name="${1:-current}"
-	path_register_for_shell "aistack" "${STELLA_APP_ROOT}" "$shell_name"
+	local shell_name_list="${1:-current}"
+	register_path_named_bloc_for_shell "aistack" "${STELLA_APP_ROOT}" "$shell_name_list"
 }
-
+# unregister aistack tool in PATH for a list of shells or current shell
+# for shell_name_list
+#   use 'all' to unregister to all known shell
+#   use 'current' to unregister from the current user shell
 aistack_path_unregister_for_shell() {
-	local shell_name="${1:-current}"
-	path_unregister_for_shell "aistack" "$shell_name"
+	local shell_name_list="${1:-current}"
+	unregister_path_named_bloc_for_shell "aistack" "$shell_name_list"
 }
+# register aistack tool in PATH vs code terminal
 aistack_path_register_for_vs_terminal() {
 	vscode_path_register_for_vs_terminal "aistack" "${STELLA_APP_ROOT}"
 }
+# unregister aistack tool in PATH vs code terminal
 aistack_path_unregister_for_vs_terminal() {
 	vscode_path_unregister_for_vs_terminal "aistack" "${STELLA_APP_ROOT}"
 }
 
-# TODO all path register function do not take care well of error and do not return a correct value
-# add a PATH env variable by configuring shell rc files
-path_register_for_shell() {
+
+
+# TODO do not take care well of error and do not return a correct value
+# add a PATH env variable by configuring a named bloc in shell rc files
+# for shell_name_list
+#   use 'all' to register to all known shell
+#   use 'current' to register from the current user shell
+register_path_named_bloc_for_shell() {
     local name="$1"
 	local path_to_add="$2"
     local shell_name_list="${3:-current}"
@@ -1156,10 +1169,15 @@ path_register_for_shell() {
     local BEGIN_MARK="# >>> aistack-${name}-path >>>"
     local END_MARK="# <<< aistack-${name}-path <<<"
 
-	if [ "${shell_name_list}" = "current" ]; then
-		shell_name_list="$(find_parent_calling_shell)"
-		echo "INFO: current user shell detected: ${shell_name_list}"
-	fi
+    case "${shell_name_list}" in
+		"current")
+			shell_name_list="$(find_parent_calling_shell)"
+			echo "INFO: current user shell detected: ${shell_name_list}"
+			;;
+		"all")
+			shell_name_list="bash zsh sh dash ksh mksh"
+			;;
+	esac
 
 	for s in ${shell_name_list}; do
         rc_file="$(get_user_shell_config_files "${s}")"
@@ -1168,7 +1186,7 @@ path_register_for_shell() {
             mkdir -p "${parent_dir}"
 		fi
         if [ -f "${rc_file}" ]; then
-            path_unregister_for_shell "${name}" "${s}" 1>/dev/null 2>&1
+            unregister_path_named_bloc_for_shell "${name}" "${s}" 1>/dev/null 2>&1
         else
             touch "${rc_file}"
         fi
@@ -1209,34 +1227,45 @@ path_register_for_shell() {
 
 }
 
+
 # remove path
-# unregister a specific registered path from a list of shell or from all shell
-path_unregister_for_shell() {
+# unregister a specific registered named path  from a list of shell or from all shell
+# for shell_name_list
+#   use 'all' to unregister to all known shell
+#   use 'current' to unregister from the current user shell
+unregister_path_named_bloc_for_shell() {
     local name="$1"
     local shell_name_list="${2:-all}"
 
-	if unregister_for_shell "aistack-${name}-path" "${shell_name_list}"; then
+	if unregister_named_bloc_for_shell "aistack-${name}-path" "${shell_name_list}"; then
 		echo "- unregister ${name} PATH for ${shell_name_list} shell"
 	else
 		return 1
 	fi
 }
 
-# unregister all registered path from a list of shell or from all shell
-path_unregister_all_for_shell() {
+# unregister all registered named path from a list of shell or from all shell
+# for shell_name_list
+#   use 'all' to unregister to all known shell
+#   use 'current' to unregister from the current user shell
+unregister_any_path_named_bloc_for_shell() {
     local shell_name_list="${1:-all}"
-	if unregister_for_shell "aistack-*-path" "${shell_name_list}"; then
+	if unregister_named_bloc_for_shell "aistack-*-path" "${shell_name_list}"; then
 		echo "- unregister all registered PATH for ${shell_name_list} shell"
 	else
 		return 1
 	fi
 }
 
-# remove a bloc from shell rc file
+
+
+
+# remove a named bloc from shell rc file
 # bloc_name supports shell-style '*' and '?' wildcards
-# use 'all' to unregister to all known shell
-# use 'current' to unregister from the current user shell
-unregister_for_shell() {
+# for shell_name_list
+#   use 'all' to unregister to all known shell
+#   use 'current' to unregister from the current user shell
+unregister_named_bloc_for_shell() {
 	local bloc_name="${1}"
 	local shell_name_list="${2:-all}"
 	local rc_file

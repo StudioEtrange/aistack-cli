@@ -51,7 +51,7 @@ opencode_is_installed() {
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="true"
 
 	# variable used by some other tools (like openchamber)
-	export OPENCODE_BINARY="$AISTACK_OPENCODE_TOOL_PATH"
+	export OPENCODE_BINARY="$AISTACK_OPENCODE_LAUNCHER_FILE"
 	return 0
 }
 
@@ -91,12 +91,12 @@ opencode_uninstall() {
 opencode_path_register_for_shell() {
     local shell_name="${1:-current}"
 	if opencode_is_installed; then
-    	path_register_for_shell "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}" "$shell_name"
+    	register_path_named_bloc_for_shell "opencode" "${AISTACK_OPENCODE_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 opencode_path_unregister_for_shell() {
     local shell_name="${1:-all}"
-    path_unregister_for_shell "opencode" "$shell_name"
+    unregister_path_named_bloc_for_shell "opencode" "$shell_name"
 }
 opencode_path_register_for_vs_terminal() {
 	if opencode_is_installed; then

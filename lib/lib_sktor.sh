@@ -102,12 +102,12 @@ sktor_uninstall() {
 sktor_path_register_for_shell() {
     local shell_name="${1:-current}"
 	if sktor_is_installed; then
-    	path_register_for_shell "skillspector" "${AISTACK_SKTOR_LAUNCHER_HOME}" "$shell_name"
+    	register_path_named_bloc_for_shell "skillspector" "${AISTACK_SKTOR_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 sktor_path_unregister_for_shell() {
     local shell_name="${1:-all}"
-    path_unregister_for_shell "skillspector" "$shell_name"
+    unregister_path_named_bloc_for_shell "skillspector" "$shell_name"
 }
 sktor_path_register_for_vs_terminal() {
 	if sktor_is_installed; then

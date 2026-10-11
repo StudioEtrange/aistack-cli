@@ -52,7 +52,7 @@ openchamber_context_file_generate() {
 	# VARIABLES
 	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "AISTACK_GENERIC_CONTEXT_FILE AISTACK_OPENCODE_CONTEXT_FILE ${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES}"
 
-	# NOTE: special case, because it is normaly the launcher which ncludes those files
+	# NOTE: special case, because it is normaly the launcher which includes those files, but there is no launcher script for openchamber
 	{
 		echo '[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"'
 		if opencode_is_installed; then
@@ -76,34 +76,61 @@ openchamber_info() {
 	echo "OpenChamber context file : $AISTACK_OPENCHAMBER_CONTEXT_FILE"
 }
 
+# openchamber will use registered aistack registered tools and runtimes while launching shell session
+openchamber_connect_aistack() {
+	openchamber_context_file_generate
+	# inject openchamber context file in shell launched by openchamber
+	openchamber_context_register_for_shell "current"
+
+
+	# configure openchamber vscode extension to use opencode context file (instead of opencode launcher script)
+	vscode_set_config "openchamber\.opencodeBinary" "\"${AISTACK_OPENCODE_LAUNCHER_FILE}\""
+
+}
+
 openchamber_disconnect_aistack() {
 	local shell_name="${1:-all}"
 	local name="aistack-openchamber-connect"
-	unregister_for_shell "${name}" "${shell_name}"
+	unregister_named_bloc_for_shell "${name}" "${shell_name}"
 }
 
-openchamber_connect_aistack() {
-	openchamber_context_file_generate
-
-	# TODO : we need to inject the connection code only in default shell, not in all shell
-	
-    local shell_name="${1:-all}"
+# allow to inject openchamber context file in shell launched by openchamber
+# env var OPENCHAMBER_RUNTIME allow to detect if the current shell was launched by openchamber (desktop, web or remote ssh)
+# OPENCHAMBER_RUNTIME is not documented, see https://github.com/search?q=repo%3Aopenchamber%2Fopenchamber+OPENCHAMBER_RUNTIME&type=code
+openchamber_context_register_for_shell() {
 	local name="aistack-openchamber-connect"
-    local rc_file
-	local err=0
+    local shell_name_list="${1:-current}"
+    local rc_file parent_dir
+	local res=0
 
-    local BEGIN_MARK="# >>> ${name} >>>"
+	local BEGIN_MARK="# >>> ${name} >>>"
     local END_MARK="# <<< ${name} <<<"
-	[ "$shell_name" = "all" ] && shell_list="bash zsh" || shell_list="$shell_name"
 
-	for s in $shell_list; do
-		[ "$s" = "bash" ] && rc_file="$HOME/.bashrc"
-		[ "$s" = "zsh" ] && rc_file="$HOME/.zshrc"
+    case "${shell_name_list}" in
+		"current")
+			shell_name_list="$(find_parent_calling_shell)"
+			echo "INFO: current user shell detected: ${shell_name_list}"
+			;;
+		"all")
+			shell_name_list="bash zsh sh dash ksh mksh"
+			;;
+	esac
 
-		case "$s" in
-			"bash"|"zsh")
-				[ -f "$rc_file" ] && unregister_for_shell "$name" "$s" 1>/dev/null 2>&1 || touch "$rc_file"
-				if ! grep -Fq "$BEGIN_MARK" "$rc_file"; then
+	for s in ${shell_name_list}; do
+        rc_file="$(get_user_shell_config_files "${s}")"
+        parent_dir="$(dirname "${rc_file}")"
+        if [ ! -d "${parent_dir}" ]; then
+            mkdir -p "${parent_dir}"
+		fi
+        if [ -f "${rc_file}" ]; then
+            unregister_path_named_bloc_for_shell "${name}" "${s}" 1>/dev/null 2>&1
+        else
+            touch "${rc_file}"
+        fi
+
+		case "${s}" in
+			"bash"|"zsh"|"ksh"|"sh"|"dash"|"mksh")
+				if ! grep -Fq "$BEGIN_MARK" "${rc_file}"; then
 					{
 						echo "$BEGIN_MARK"
 						echo 'case "${OPENCHAMBER_RUNTIME:-}" in'
@@ -112,17 +139,21 @@ openchamber_connect_aistack() {
 						echo '		;;'
 						echo 'esac'
 						echo "$END_MARK"
-					} >> "$rc_file"
+					} >> "${rc_file}" || return $?
 				fi
-    			echo "- register openchamber connection to aistack for shell $s"
+				echo "- register ${name} for shell ${s} into ${rc_file}"
+				;;
+			"fish")
+				# TODO
+				echo "- WARN: fish shell not supported yet"
 				;;
 			*) 
-				echo "ERROR : unsupported shell $s"
-				err=1
+				echo "WARN: unsupported shell $s"
+				res=1
 				;;
 		esac
 	done
 
-	return $err
-
+	return ${res}
 }
+

@@ -100,7 +100,7 @@ setup() {
 	assert_output "${value}"
 }
 
-@test "unregister_for_shell removes one exact block" {
+@test "unregister_named_bloc_for_shell removes one exact block" {
 	local test_home="${BATS_TEST_TMPDIR}/home"
 	mkdir -p "${test_home}"
 	cat > "${test_home}/.bashrc" <<'EOF'
@@ -114,7 +114,7 @@ export PATH="/opencode:$PATH"
 after
 EOF
 
-	HOME="${test_home}" run unregister_for_shell "aistack-gemini-path" "bash"
+	HOME="${test_home}" run unregister_named_bloc_for_shell "aistack-gemini-path" "bash"
 
 	assert_success
 	run grep -F "aistack-gemini-path" "${test_home}/.bashrc"
@@ -123,7 +123,7 @@ EOF
 	assert_success
 }
 
-@test "unregister_for_shell removes all matching wildcard blocks" {
+@test "unregister_named_bloc_for_shell removes all matching wildcard blocks" {
 	local test_home="${BATS_TEST_TMPDIR}/home"
 	mkdir -p "${test_home}"
 	cat > "${test_home}/.bashrc" <<'EOF'
@@ -140,7 +140,7 @@ connect openchamber
 after
 EOF
 
-	HOME="${test_home}" run unregister_for_shell "aistack-*-path" "bash"
+	HOME="${test_home}" run unregister_named_bloc_for_shell "aistack-*-path" "bash"
 
 	assert_success
 	run grep -F "aistack-gemini-path" "${test_home}/.bashrc"
@@ -155,19 +155,35 @@ EOF
 	assert_success
 }
 
-@test "unregister_for_shell does not rewrite a file without matching blocks" {
+@test "unregister_named_bloc_for_shell does not rewrite a file without matching blocks" {
 	local test_home="${BATS_TEST_TMPDIR}/home"
-	local modified_before
+	local modified_before modified_after
 	mkdir -p "${test_home}"
 	printf '%s\n' "unchanged" > "${test_home}/.bashrc"
 	touch -t 202001010101 "${test_home}/.bashrc"
-	modified_before="$(stat -f '%m' "${test_home}/.bashrc" 2>/dev/null || stat -c '%Y' "${test_home}/.bashrc")"
+	case "$(uname -s)" in
+		Darwin)
+			modified_before="$(stat -f '%m' "${test_home}/.bashrc")"
+			;;
+		*)
+			modified_before="$(stat -c '%Y' "${test_home}/.bashrc")"
+			;;
+	esac
 
-	HOME="${test_home}" run unregister_for_shell "aistack-*-path" "bash"
-
+	HOME="${test_home}" run unregister_named_bloc_for_shell "aistack-*-path" "bash"
 	assert_success
-	assert_equal "$(stat -f '%m' "${test_home}/.bashrc" 2>/dev/null || stat -c '%Y' "${test_home}/.bashrc")" "${modified_before}"
-	run grep -F "unchanged" "${test_home}/.bashrc"
+
+	case "$(uname -s)" in
+		Darwin)
+			modified_after="$(stat -f '%m' "${test_home}/.bashrc")"
+			;;
+		*)
+			modified_after="$(stat -c '%Y' "${test_home}/.bashrc")"
+			;;
+	esac
+	assert_equal "${modified_after}" "${modified_before}"
+	
+	run grep -Fx "unchanged" "${test_home}/.bashrc"
 	assert_success
 }
 

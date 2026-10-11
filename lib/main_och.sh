@@ -8,9 +8,7 @@ case "${sub_command}" in
 		
         case "$1" in
             aistack)
-                echo "INFO: Connecting Openchamber to AIStack-cli context, tools and runtimes"
-                #openchamber_connect_aistack
-				openchamber_context_file_generate
+                echo "INFO: Connecting Openchamber to AIStack-cli context so its shell session will use aistack tools and runtimes"
 				openchamber_connect_aistack
                 ;;
         esac

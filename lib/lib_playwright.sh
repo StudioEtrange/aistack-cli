@@ -74,13 +74,13 @@ playwright_uninstall() {
 playwright_path_register_for_shell() {
 	local shell_name="${1:-current}"
 	if playwright_is_installed; then
-		path_register_for_shell "playwright-cli" "${AISTACK_PLAYWRIGHT_LAUNCHER_HOME}" "${shell_name}"
+		register_path_named_bloc_for_shell "playwright-cli" "${AISTACK_PLAYWRIGHT_LAUNCHER_HOME}" "${shell_name}"
 	fi
 }
 
 playwright_path_unregister_for_shell() {
 	local shell_name="${1:-all}"
-	path_unregister_for_shell "playwright-cli" "${shell_name}"
+	unregister_path_named_bloc_for_shell "playwright-cli" "${shell_name}"
 }
 
 playwright_path_register_for_vs_terminal() {

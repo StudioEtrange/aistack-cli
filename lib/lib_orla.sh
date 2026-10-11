@@ -119,12 +119,12 @@ orla_uninstall() {
 orla_path_register_for_shell() {
     local shell_name="${1:-current}"
 	if orla_is_installed; then
-		path_register_for_shell "orla" "${AISTACK_ORLA_LAUNCHER_HOME}" "$shell_name"
+		register_path_named_bloc_for_shell "orla" "${AISTACK_ORLA_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 orla_path_unregister_for_shell() {
     local shell_name="${1:-all}"
-    path_unregister_for_shell "orla" "$shell_name"
+    unregister_path_named_bloc_for_shell "orla" "$shell_name"
 }
 orla_path_register_for_vs_terminal() {
 	if orla_is_installed; then

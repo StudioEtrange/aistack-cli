@@ -76,12 +76,12 @@ adk_uninstall() {
 adk_path_register_for_shell() {
 	local shell_name="${1:-current}"
 	if adk_is_installed; then
-		path_register_for_shell "adk" "${AISTACK_ADK_LAUNCHER_HOME}" "$shell_name"
+		register_path_named_bloc_for_shell "adk" "${AISTACK_ADK_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 adk_path_unregister_for_shell() {
 	local shell_name="${1:-all}"
-	path_unregister_for_shell "adk" "$shell_name"
+	unregister_path_named_bloc_for_shell "adk" "$shell_name"
 }
 adk_path_register_for_vs_terminal() {
 	if adk_is_installed; then

@@ -86,12 +86,12 @@ asm_uninstall() {
 asm_path_register_for_shell() {
 	local shell_name="${1:-current}"
 	if asm_is_installed; then
-		path_register_for_shell "asm" "${AISTACK_ASM_LAUNCHER_HOME}" "$shell_name"
+		register_path_named_bloc_for_shell "asm" "${AISTACK_ASM_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 asm_path_unregister_for_shell() {
     local shell_name="${1:-all}"
-	path_unregister_for_shell "asm" "$shell_name"
+	unregister_path_named_bloc_for_shell "asm" "$shell_name"
 }
 asm_path_register_for_vs_terminal() {
 	if asm_is_installed; then

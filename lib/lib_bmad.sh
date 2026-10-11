@@ -79,12 +79,12 @@ bmad_uninstall() {
 bmad_path_register_for_shell() {
     local shell_name="${1:-current}"
 	if bmad_is_installed; then
-    	path_register_for_shell "bmad" "${AISTACK_BMAD_LAUNCHER_HOME}" "$shell_name"
+    	register_path_named_bloc_for_shell "bmad" "${AISTACK_BMAD_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 bmad_path_unregister_for_shell() {
     local shell_name="${1:-all}"
-    path_unregister_for_shell "bmad" "$shell_name"
+    unregister_path_named_bloc_for_shell "bmad" "$shell_name"
 }
 bmad_path_register_for_vs_terminal() {
 	if bmad_is_installed; then

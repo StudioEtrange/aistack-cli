@@ -85,12 +85,12 @@ gemini_uninstall() {
 gemini_path_register_for_shell() {
     local shell_name="${1:-current}"
 	if gemini_is_installed; then
-    	path_register_for_shell "gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}" "$shell_name"
+    	register_path_named_bloc_for_shell "gemini" "${AISTACK_GEMINI_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 gemini_path_unregister_for_shell() {
     local shell_name="${1:-all}"
-    path_unregister_for_shell "gemini" "$shell_name"
+    unregister_path_named_bloc_for_shell "gemini" "$shell_name"
 }
 gemini_path_register_for_vs_terminal() {
 	if gemini_is_installed; then

@@ -109,12 +109,12 @@ kilo_uninstall() {
 kilo_path_register_for_shell() {
     local shell_name="${1:-current}"
 	if kilo_is_installed; then
-    	path_register_for_shell "kilo" "${AISTACK_KILO_LAUNCHER_HOME}" "$shell_name"
+    	register_path_named_bloc_for_shell "kilo" "${AISTACK_KILO_LAUNCHER_HOME}" "$shell_name"
 	fi
 }
 kilo_path_unregister_for_shell() {
     local shell_name="${1:-all}"
-    path_unregister_for_shell "kilo" "$shell_name"
+    unregister_path_named_bloc_for_shell "kilo" "$shell_name"
 }
 kilo_path_register_for_vs_terminal() {
 	if kilo_is_installed; then
