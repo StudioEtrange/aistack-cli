@@ -6,6 +6,8 @@ opencode_init() {
 	[ -z "${OPENCODE_CONFIG}" ] && export AISTACK_OPENCODE_CONFIG_FILE="${AISTACK_OPENCODE_CONFIG_HOME}/opencode.json" || export AISTACK_OPENCODE_CONFIG_FILE="${OPENCODE_CONFIG}"
 	export OPENCODE_CONFIG="${AISTACK_OPENCODE_CONFIG_FILE}"
 
+	export AISTACK_OPENCODE_CLI_CONFIG_FILE="${AISTACK_OPENCODE_CONFIG_HOME}/cli.json"
+
 	# cpa key for opencode to connect to cpa backend
 	export AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE="${AISTACK_OPENCODE_CONFIG_HOME}/cpa_key_for_oc"
 	[ -f "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE="$(cat "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE_FILE")"
@@ -55,10 +57,14 @@ opencode_is_installed() {
 	return 0
 }
 
+# flavor : 1 for opencode 1.x or 2 for opencode 2.x
+# version : specific version or latest
 opencode_install() {
 	local r m
 	local version="$1"
 	[ -z "${version}" ] && version="@latest"
+	local flavor="$2"
+	[ -z "${flavor}" ] && flavor="2"
 
 	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED}; do
 		echo "INFO: OpenCode require ${r} managed runtime"
@@ -70,16 +76,34 @@ opencode_install() {
 		aistack_module_require "${m}"
 	done
 
-	echo "Installing Opencode CLI ${version}"
-	node_package_install --allow-scripts=opencode-ai "opencode-ai${version}" || return $?
+	echo "Installing Opencode CLI flavor $flavor version ${version}"
+	case "$flavor" in
+		"1")
+			node_package_install --allow-scripts=opencode-ai "opencode-ai${version}" || return $?
+			;;
+		"2")
+			node_package_install --allow-scripts=@opencode/cli "@opencode/cli${version}" || return $?
+			;;
+	esac
+
+
 
 	opencode_is_installed
 	return $?
 }
 
 opencode_uninstall() {
+	local flavor="$1"
+	[ -z "${flavor}" ] && flavor="2"
 	if opencode_is_installed; then
-		node_package_uninstall "opencode-ai" || return $?
+		case "$flavor" in
+			"1")
+				node_package_uninstall "opencode-ai" || return $?
+				;;
+			"2")
+				node_package_uninstall "@opencode/cli" || return $?
+				;;
+		esac
 		opencode_is_installed && return 1
 		return 0
 	else
@@ -179,11 +203,13 @@ opencode_settings_configure() {
 
     echo "add some default settings :"
     merge_json_file "${AISTACK_POOL}/settings/opencode/opencode.json" "$AISTACK_OPENCODE_CONFIG_FILE"
+    merge_json_file "${AISTACK_POOL}/settings/opencode/cli.json" "$AISTACK_OPENCODE_CLI_CONFIG_FILE"
 }
 
 
 opencode_info() {
     echo "Configuration file : $AISTACK_OPENCODE_CONFIG_FILE"
+	echo "Cli configuration file : $AISTACK_OPENCODE_CLI_CONFIG_FILE"
 	echo
 	echo "OPENCODE available : $AISTACK_OPENCODE_TOOL_AVAILABLE"
 	echo "OPENCODE path : $AISTACK_OPENCODE_TOOL_PATH"
@@ -197,10 +223,13 @@ opencode_info() {
 }
 
 opencode_show_config() {
+	echo "---- $AISTACK_OPENCODE_CLI_CONFIG_FILE"
+	if [ -f "$AISTACK_OPENCODE_CLI_CONFIG_FILE" ]; then
+		cat "$AISTACK_OPENCODE_CLI_CONFIG_FILE"
+    fi
+	echo "---- $AISTACK_OPENCODE_CONFIG_FILE"
 	if [ -f "$AISTACK_OPENCODE_CONFIG_FILE" ]; then
 		cat "$AISTACK_OPENCODE_CONFIG_FILE"
-    else
-        echo "No configuration file found. ($AISTACK_OPENCODE_CONFIG_FILE)"
     fi
 }
 
@@ -252,16 +281,16 @@ opencode_register_provider() {
 
     [ -n "${provider_id}" ] && provider_id="${provider_id//./\\.}" || { echo "ERROR opencode_register_provider : missing provider_id"; return 1; }
 
-    opencode_remove_config "provider.${provider_id}"
-
-	opencode_set_config "provider.${provider_id}.npm" "\"$provider_type\""
-	opencode_set_config "provider.${provider_id}.name" "\"$provider_display_name\""
-	opencode_set_config "provider.${provider_id}.options.baseURL" "\"$endpoint\""
+	# providers v2 doc : https://opencode.ai/v2/docs/providers
+	opencode_remove_config "providers.${provider_id}" || return $?
+	opencode_set_config "providers.${provider_id}.package" "\"${provider_type}\"" || return $?
+	opencode_set_config "providers.${provider_id}.name" "\"${provider_display_name}\"" || return $?
+	opencode_set_config "providers.${provider_id}.settings.baseURL" "\"${endpoint}\"" || return $?
 	if [ -n "$api_key" ]; then
-		opencode_set_config "provider.${provider_id}.options.apiKey" "\"$api_key\""
+		opencode_set_config "providers.${provider_id}.settings.apiKey" "\"${api_key}\"" || return $?
 	fi
 	if [ -n "$api_key_env_var" ]; then
-		opencode_set_config "provider.${provider_id}.options.apiKey" "\"{env:$api_key_env_var}\""
+		opencode_set_config "providers.${provider_id}.settings.apiKey" "\"{env:${api_key_env_var}}\"" || return $?
 	fi
 }
 
@@ -270,10 +299,9 @@ opencode_register_model() {
     local model_id="$2"
     local real_model_id="$3"
     local model_display_name="$4"
-    local reasoning="$5" # true | false
-    local tool_call="$6" # true | false
-    local limit_context="$7"
-    local limit_output="$8"
+    local tool_call="$5" # true | false
+    local limit_context="$6"
+    local limit_output="$7"
 
     local original_provider_id="$provider_id"
     [ -n "${provider_id}" ] && provider_id="${provider_id//./\\.}" || { echo "ERROR opencode_register_model : missing provider_id"; return 1; }
@@ -284,15 +312,18 @@ opencode_register_model() {
 
     [ -z "${model_display_name}" ] && model_display_name="$original_model_id"
 
-    opencode_remove_config "provider.${provider_id}.models.${model_id}"
-    opencode_set_config "provider.${provider_id}.models.${model_id}.id" "\"$real_model_id\""
-    opencode_set_config "provider.${provider_id}.models.${model_id}.name" "\"$model_display_name\""
-
-    [ -n "$reasoning" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.reasoning" "$reasoning"
-    [ -n "$tool_call" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.tool_call" "$tool_call"
-
-	[ -n "$limit_context" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.limit.context" "$limit_context"
-	[ -n "$limit_output" ] && opencode_set_config "provider.${provider_id}.models.${model_id}.limit.output" "$limit_output"
+	opencode_remove_config "providers.${provider_id}.models.${model_id}" || return $?
+	opencode_set_config "providers.${provider_id}.models.${model_id}.modelID" "\"${real_model_id}\"" || return $?
+	opencode_set_config "providers.${provider_id}.models.${model_id}.name" "\"${model_display_name}\"" || return $?
+	if [ -n "${tool_call}" ]; then
+		opencode_set_config "providers.${provider_id}.models.${model_id}.capabilities.tools" "${tool_call}" || return $?
+	fi
+	if [ -n "${limit_context}" ]; then
+		opencode_set_config "providers.${provider_id}.models.${model_id}.limit.context" "${limit_context}" || return $?
+	fi
+	if [ -n "${limit_output}" ]; then
+		opencode_set_config "providers.${provider_id}.models.${model_id}.limit.output" "${limit_output}" || return $?
+	fi
 	return 0
 }
 
@@ -305,14 +336,19 @@ opencode_set_default_model() {
     [ -n "$provider_id" ] && [ -n "$model_id" ] && opencode_set_config "model" "\"${provider_id}/${model_id}\""
 }
 
-# set a small model in opencode config
-# for title generation, commit message generation, prompt enhancement, and other quick tasks
+# Select the OpenCode v2 title-generation agent model.
+# replace "small_model" key in v1
+opencode_set_title_model() {
+	local provider_id="${1}"
+	local model_id="${2}"
+	if [ -z "${provider_id}" ] || [ -z "${model_id}" ]; then
+		echo "ERROR: opencode_set_title_model requires provider_id and model_id."
+		return 1
+	fi
+	opencode_set_config "agents.title.model" "\"${provider_id}/${model_id}\"" || return $?
+}
 opencode_set_small_model() {
-    local provider_id="$1"
-    local model_id="$2"
-
-    opencode_remove_config "small_model"
-    [ -n "$provider_id" ] && [ -n "$model_id" ] && opencode_set_config "small_model" "\"${provider_id}/${model_id}\""
+	opencode_set_title_model "$@"
 }
 
 
@@ -345,13 +381,13 @@ opencode_unregister_cpa_key() {
 opencode_connect_cpa() {
     # empty means all available models
     local wanted_default_model="${1}"
-    local wanted_small_model="${2}"
+    local wanted_title_model="${2}"
     local model_list
     local default_model
-    local small_model
+    local title_model
 
 	echo "generate a CLIProxyAPI API key for Opencode to connect to CPA backend"
-	echo "and register model cpa as provider in opencode configuration ($AISTACK_OPENCODE_CONFIG_HOME)"
+	echo "and register model cpa as provider in opencode configuration ($AISTACK_OPENCODE_CONFIG_FILE)"
   
     if ! cpa_is_configured; then
         echo "ERROR: Failed to connect Opencode to CLIProxyAPI : CLIProxyAPI is not configured."
@@ -366,7 +402,7 @@ opencode_connect_cpa() {
     fi
 
     # register provider AIStack CLIProxyAPI
-    opencode_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@ai-sdk/openai-compatible" "$(cpa_settings_get_api_endpoint)" "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE" ""
+    opencode_register_provider "aistack-cpa" "AIStack CLIProxyAPI" "@opencode/ai/providers/openai-compatible" "$(cpa_settings_get_api_endpoint)" "$AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE" "" || return $?
 
 
     if ! cpa_instance_reachable; then
@@ -382,7 +418,7 @@ opencode_connect_cpa() {
         for m in ${model_list}; do
             # the first model available will be the default model
             [ -z "${default_model}" ] && default_model="${m}"
-            opencode_register_model "aistack-cpa" "${m}" "${m}" "AIStack cpa-${m}"
+             opencode_register_model "aistack-cpa" "${m}" "${m}" "AIStack cpa-${m}" || return $?
         done
     fi
 
@@ -390,16 +426,15 @@ opencode_connect_cpa() {
     [ -n "${wanted_default_model}" ] && default_model="${wanted_default_model}"
     # NOTE : the wanted_default_model might have been already registered into opencode just before.
     if [ -n "${default_model}" ]; then
-        opencode_register_model "aistack-cpa" "${default_model}" "${default_model}" "AIStack cpa-${default_model}"
-        opencode_set_default_model "aistack-cpa" "${default_model}"
+        opencode_register_model "aistack-cpa" "${default_model}" "${default_model}" "AIStack cpa-${default_model}" || return $?
+        opencode_set_default_model "aistack-cpa" "${default_model}" || return $?
     fi
 
-    # small model
-    if [ -n "${wanted_small_model}" ]; then
-        small_model="${wanted_small_model}"
-        # NOTE : the wanted_small_model might have been already registered into opencode just before.
-        opencode_register_model "aistack-cpa" "${small_model}" "${small_model}" "AIStack cpa-${small_model}"
-        [ -n "${small_model}" ] && opencode_set_small_model "aistack-cpa" "${small_model}"
+    # Optional title-generation model.
+    if [ -n "${wanted_title_model}" ]; then
+        title_model="${wanted_title_model}"
+        opencode_register_model "aistack-cpa" "${title_model}" "${title_model}" "AIStack cpa-${title_model}" || return $?
+        opencode_set_title_model "aistack-cpa" "${title_model}"
     fi
 
 }

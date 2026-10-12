@@ -45,10 +45,10 @@ cd aistack-cli
 ```
 ./aistack agy install
 ./aistack agy info
-./aistack agy register bash
+./aistack agy register
 ```
 
-**_in another bash session, launch_** :
+**_in another shell session, launch_** :
 ```
 agy
 ```
@@ -165,16 +165,16 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 
 ## Case 5 : use Playwright CLI to take screenshot of a website
 
-_"I want to install Playwright CLI, register it in shell and use it to take a screenshot of a website."_
+_"I want to install Playwright CLI, register for current shell and use it to take a screenshot of a website."_
 
 ```bash
 cd aistack-cli
 ./aistack plw install
 ./aistack plw info
-./aistack plw register bash
+./aistack plw register
 ```
 
-**_in another bash session, open webrowser and take a screenshot in current directory_** :
+**_in another shell session, open webrowser and take a screenshot in current directory_** :
 
 ```bash
 playwright-cli open https://github.com/StudioEtrange/aistack-cli --headed
@@ -204,18 +204,18 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 
 ```bash
 ./aistack oc install
-./aistack oc register bash
+./aistack oc register
 
 ./aistack oc connect cpa
 ./aistack oc info
 ```
 
-To select an explicit default model and an optional small model:
+To select an explicit default model and an optional session-title model (`agents.title.model`, OpenCode 2):
 ```bash
 ./aistack oc connect cpa "gpt-5.6-sol" "gpt-5.6-luna"
 ```
 
-**_in another bash session, launch_** :
+**_in another shell session, launch_** :
 ```
 opencode
 ```
@@ -235,13 +235,13 @@ _"I want to install NVIDIA skillspector and use it connected to my OpenAI subscr
 **_skillspector installation and launch_** :
 ```
 ./aistack sktor install
-./aistack sktor register bash
+./aistack sktor register
 
 ./aistack sktor connect cpa gpt-5.4-mini
 ./aistack sktor launch
 ```
 
-**_in another bash session, launch_** :
+**_in another shell session, launch_** :
 ```
 skillspector --help
 
@@ -263,12 +263,12 @@ _"I want to install Agent Skill Manager (asm) and use it to scan skills security
 **_asm installation and launch_** :
 ```
 ./aistack asm install
-./aistack asm register bash
+./aistack asm register
 
 ./aistack asm launch
 ```
 
-**_in another bash session, launch_** :
+**_in another shell session, launch_** :
 ```
 asm --help
 asm list
@@ -312,12 +312,12 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 **_Cisco AI Skill Scanner installation and connection_** :
 ```
 ./aistack ciss install
-./aistack ciss register bash
+./aistack ciss register
 
 ./aistack ciss connect cpa "gpt-5.6-luna"
 ```
 
-**_in another bash session, scan a skill_** :
+**_in another shell session, scan a skill_** :
 ```
 skill-scanner --help
 
@@ -367,7 +367,7 @@ cd aistack-cli
 
 _"I want to install gemini-cli from scratch and make it accessible from all my bash session"_
 
-**_gemini-cli installation, register and launch_** :
+**_gemini-cli installation, register for bash and launch_** :
 ```
 cd aistack-cli
 ./aistack gc install

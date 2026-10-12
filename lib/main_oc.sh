@@ -2,7 +2,7 @@ local sub_command="$1"
 shift
 case "${sub_command}" in
     install)
-        if ! opencode_install "$1"; then
+        if ! opencode_install "$1" "$2"; then
             echo "ERROR: Opencode CLI not installed"
             exit 1
         else
@@ -17,7 +17,7 @@ case "${sub_command}" in
     uninstall)
 
         echo "Uninstalling Opencode CLI and unregister Opencode CLI PATH (keep all configuration unchanged, to remove configuration use reset command)"
-        opencode_uninstall
+        opencode_uninstall "$1"
         
         opencode_path_unregister_for_shell "all"
         opencode_path_unregister_for_vs_terminal

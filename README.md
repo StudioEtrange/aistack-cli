@@ -88,7 +88,7 @@ agy
 AIStack CLI offers functionalities for these tools
 
 * [Gemini CLI](doc/geminicli.md) 
-* [Opencode](doc/opencode.md) 
+* [Opencode](doc/opencode.md)
 * [OpenChamber](doc/openchamber.md)
 * [CLIProxyAPI](doc/cliproxyapi.md) 
 * [Antigravity CLI](doc/antigravity.md)
