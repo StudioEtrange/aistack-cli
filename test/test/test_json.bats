@@ -529,7 +529,7 @@ EOF
 
 }
 
-@test "json_del_key3" {
+@test "json_del_key delete non existing key" {
 
 	run json_del_key "a.w" <<'EOF'
 {
@@ -541,8 +541,19 @@ EOF
   }
 }
 EOF
-	assert_failure
-	assert_output ""
+	assert_failure 10
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "b": {
+      "c": "value",
+      "d": "value"
+    }
+  }
+}
+EOF
+	)
+	assert_output "$expected"
 
 }
 
@@ -587,9 +598,16 @@ EOF
 }
 EOF
 
-	assert_failure
-	assert_equal "$status" "1"
-	assert_output ""
+	assert_failure 10
+	expected=$(cat <<'EOF'
+{
+  "a": {
+    "preserved": "value"
+  }
+}
+EOF
+	)
+	assert_output "$expected"
 }
 
 @test "json_del_key_if_empty removes a null value" {
@@ -690,9 +708,7 @@ EOF
 }
 EOF
 
-		assert_failure
-		assert_equal "$status" "2"
-		assert_output ""
+		assert_failure 11
 	done
 }
 
@@ -728,9 +744,8 @@ EOF
 		'{"a":{"target":"value"}}' \
 		"a.target"
 
-	assert_failure
-	assert_equal "$status" "2"
-	assert_output ""
+	assert_failure 11
+	assert_output '{"a":{"target":"value"}}'
 }
 
 
@@ -799,7 +814,7 @@ EOF
 EOF
 
 	run json_del_key_from_file "$tmp" "a.w.d"
-	assert_failure
+	assert_success
 	expected='{ "a": { "b": { "c": "value", "d": "value" }}}'
 	assert_equal "$(cat "$tmp")" "$expected"
 
@@ -866,8 +881,9 @@ EOF
 
 	run json_del_key_from_file "$tmp" "missing" "IF_EMPTY"
 
-	assert_failure
+	assert_success
 	assert_equal "$(cat "$tmp")" "$original"
+	assert_output ""
 	rm -f "$tmp"
 }
 
@@ -883,8 +899,9 @@ EOF
 
 		run json_del_key_from_file "$tmp" "target" "IF_EMPTY"
 
-		assert_failure
+		assert_success
 		assert_equal "$(cat "$tmp")" "$original"
+		assert_output ""
 		rm -f "$tmp"
 	done
 }
@@ -1003,6 +1020,39 @@ EOF
 	rm -f "${tmp}"
 }
 
+@test "test_and_fix_json_file accepts false without rewriting it" {
+	local target="${BATS_TEST_TMPDIR}/false.json"
+	printf '%s\n' 'false' > "${target}"
+
+	run test_and_fix_json_file "${target}"
+
+	assert_success
+	assert_output ""
+	assert_equal "$(< "${target}")" 'false'
+}
+
+@test "test_and_fix_json_file accepts null without rewriting it" {
+	local target="${BATS_TEST_TMPDIR}/null.json"
+	printf '%s\n' 'null' > "${target}"
+
+	run test_and_fix_json_file "${target}"
+
+	assert_success
+	assert_output ""
+	assert_equal "$(< "${target}")" 'null'
+}
+
+@test "test_and_fix_json_file rejects an empty file" {
+	local target="${BATS_TEST_TMPDIR}/empty.json"
+	: > "${target}"
+
+	run test_and_fix_json_file "${target}"
+
+	assert_failure
+	assert_output --partial "WARN: invalid JSON file: ${target}"
+	[ ! -s "${target}" ]
+}
+
 @test "test_and_fix_json_file sanitizes valid JSON5" {
 	local tmp
 	tmp="$(mktemp)"
@@ -1017,8 +1067,8 @@ EOF
 	run test_and_fix_json_file "${tmp}"
 
 	assert_success
-	assert_output --partial "WARN : invalid json file"
-	assert_output --partial "it should be a valid json file now"
+	assert_output --partial "WARN: invalid JSON file"
+	assert_output --partial "INFO: attempting to sanitize it"
 	run jq -e '
 		.unquoted == "value"
 		and .list == [1, 2]
@@ -1033,7 +1083,7 @@ EOF
 	run test_and_fix_json_file "${missing_file}"
 
 	assert_failure
-	assert_output "ERROR : file not found ${missing_file}"
+	assert_output "ERROR: file not found ${missing_file}"
 }
 
 @test "test_and_fix_json_file rejects irreparable content" {
@@ -1045,9 +1095,8 @@ EOF
 	run test_and_fix_json_file "${tmp}"
 
 	assert_failure
-	assert_output --partial "WARN : invalid json file"
+	assert_output --partial "WARN: invalid JSON file"
 	assert_output --partial "ERROR : failed to sanitize json from ${tmp}"
-	assert_output --partial "ERROR : invalid json file : ${tmp}"
 	assert_equal "$(cat "${tmp}")" "${original}"
 	rm -f "${tmp}"
 }
@@ -1633,51 +1682,126 @@ EOF
 
 @test "json_tweak_value_of_list_remove_missing_value" {
 
-  run json_tweak_value_of_list ".PATH" "DD" ":" "REMOVE" <<'EOF'
+  	run json_tweak_value_of_list ".PATH" "DD" ":" "REMOVE" <<'EOF'
 {"PATH":"AA:BB:CC"}
 EOF
-  expected=$(cat <<'EOF'
+  	expected=$(cat <<'EOF'
 {
   "PATH": "AA:BB:CC"
 }
 EOF
-  )
+  	)
 
-  assert_success
+  	assert_success
 	assert_output "$expected"
 }
 
 
-@test "json_tweak_value_of_list_remove_entire_list" {
+@test "json_tweak_value_of_list purge empty elements of the list when adding a value" {
+	local mode
 
-  run json_tweak_value_of_list ".PATH" "AA" ":" "REMOVE" <<'EOF'
+	for mode in PREPEND_IF_NOT_EXISTS ALWAYS_PREPEND; do
+		run json_tweak_value_of_list ".PATH" "ZZ" ":" "${mode}" <<'EOF'
+{"PATH":":AA::CC:BB:","preserved":true}
+EOF
+		assert_success
+		expected=$(cat <<'EOF'
+{
+  "PATH": "ZZ:AA:CC:BB",
+  "preserved": true
+}
+EOF
+		)
+		assert_output "$expected"
+	done
+}
+
+
+@test "json_tweak_value_of_list purge empty elements of the list when postpend a value" {
+	local mode
+
+	for mode in POSTPEND_IF_NOT_EXISTS ALWAYS_POSTPEND; do
+		run json_tweak_value_of_list ".PATH" "ZZ" ":" "${mode}" <<'EOF'
+{"PATH":":AA::CC:BB:","preserved":true}
+EOF
+		assert_success
+		expected=$(cat <<'EOF'
+{
+  "PATH": "AA:CC:BB:ZZ",
+  "preserved": true
+}
+EOF
+		)
+		assert_output "$expected"
+	done
+}
+
+@test "json_tweak_value_of_list purge empty elements of the list when removing an existing value" {
+	local mode
+
+	for mode in REMOVE REMOVE_REGEXP; do
+		run json_tweak_value_of_list ".PATH" "CC" ":" "${mode}" <<'EOF'
+{"PATH":":AA::CC:BB:","preserved":true}
+EOF
+		assert_success
+		expected=$(cat <<'EOF'
+{
+  "PATH": "AA:BB",
+  "preserved": true
+}
+EOF
+		)
+		assert_output "$expected"
+	done
+}
+
+@test "json_tweak_value_of_list purge empty elements of the list when the value is absent" {
+	local mode
+
+	for mode in REMOVE REMOVE_REGEXP; do
+		run json_tweak_value_of_list ".PATH" "ZZ" ":" "${mode}" <<'EOF'
+{"PATH":":AA::BB:","preserved":true}
+EOF
+		assert_success
+		expected=$(cat <<'EOF'
+{
+  "PATH": "AA:BB",
+  "preserved": true
+}
+EOF
+		)
+		assert_output "$expected"
+	done
+}
+
+@test "json_tweak_value_of_list_remove_entire_list" {
+  	run json_tweak_value_of_list ".PATH" "AA" ":" "REMOVE" <<'EOF'
 {"PATH":"AA:AA:AA"}
 EOF
-  expected=$(cat <<'EOF'
+  	expected=$(cat <<'EOF'
 {
   "PATH": ""
 }
 EOF
-  )
-
-  assert_success
+ 	)
+  	assert_success
 	assert_output "$expected"
 }
 
 
 @test "json_tweak_value_of_list_remove_value_containing_separator" {
 
-  run json_tweak_value_of_list ".PATH" "BB:CC" ":" "REMOVE" <<'EOF'
+  	run json_tweak_value_of_list ".PATH" "BB:CC" ":" "REMOVE" <<'EOF'
 {"PATH":"AA:BB:CC:DD:BB:CC"}
 EOF
-  expected=$(cat <<'EOF'
+  	expected=$(cat <<'EOF'
 {
   "PATH": "AA:DD"
 }
 EOF
-  )
+  	)
 
-  assert_success
+  	assert_success
 	assert_output "$expected"
 }
 

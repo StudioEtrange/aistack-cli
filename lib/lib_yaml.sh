@@ -48,9 +48,10 @@ build_yq_array_from_path() {
 
     local yq_path
     yq_path="$(
+		set -o pipefail
         printf '%s\n' "${parts[@]}" \
-        | jq -R 'if test("^[0-9]+$") then tonumber else . end' \
-        | jq -s -c .
+			| jq -R 'if test("^[0-9]+$") then tonumber else . end' \
+			| jq -s -c .
     )" || { echo "ERROR: building yq path" >&2; return 1; }
 
     printf "%s" "$yq_path"
@@ -122,20 +123,49 @@ build_yq_expr_from_path() {
     printf "%s" "$yq_expr"
 }
 
-# NOTE : with yq we cannot distinguish existing key but with empty value and non existing key
-# yaml_has_key() {
-#     local key_path="$1"
+# NOTE : yq cannot naturaly distinguish existing key but with empty value and non existing key
+# return 0 if key_path exists with empty or not empty value
+# return 10 if key_path do not exists
+yaml_has_key() {
+	local key_path="$1"
+    if [ -z "$key_path" ]; then
+        echo "ERROR : yaml key path empty"
+        return 1
+    fi
 
-#     if [ "$#" -lt 1 ]; then
-#         echo "ERROR : argument missing" >&2
-#         return 1
-#     fi
+	local yq_path parent_expr leaf_key exists rc
 
-#     if [ -z "$key_path" ]; then
-#         echo "ERROR : yaml key path empty" >&2
-#         return 1
-#     fi
-# }
+	yq_path="$(build_yq_array_from_path "${key_path}")" || return 1
+
+	parent_expr="$(printf '%s' "${yq_path}" | jq -r '
+		reduce .[0:-1][] as $key
+			("." ; . + "[" + ($key | tojson) + "]")
+	')" || return 1
+
+	leaf_key="$(printf '%s' "${yq_path}" | jq -c '.[-1]')" || return 1
+
+	exists="$(
+		PARENT_EXPR="${parent_expr}" LEAF_KEY="${leaf_key}" \
+			yq eval 'eval(strenv(PARENT_EXPR)) | has(env(LEAF_KEY))'
+	)"
+	rc=$?
+
+	# A yq error is not an absent key
+	[ "${rc}" -eq 0 ] || return "${rc}"
+
+	case "${exists}" in
+		true)
+			return 0
+			;;
+		false)
+			return 10
+			;;
+		*)
+			echo "ERROR: unexpected YAML key existence result" >&2
+			return 1
+			;;
+	esac
+}
 
 # get a key from yaml input
 # cat input.yaml | yaml_get_key <key_path>
@@ -245,7 +275,11 @@ yaml_set_key() {
 		echo "ERROR : unable to create temporary YAML file" >&2
 		return 1
 	}
-	cat > "$input_file"
+	if ! cat > "$input_file"; then
+		echo "ERROR: unable to save YAML to a temp file" >&2
+		rm -f "${input_file}"
+		return 1
+	fi
 
 	if [ -s "$input_file" ]; then
 		STRING_STYLE="${string_style}" PATH_VAR="${yq_path}" VAL="${value}" \
@@ -272,6 +306,7 @@ yaml_set_key() {
 # string_style (optional) : double|single|literal|folded|flow https://mikefarah.gitbook.io/yq/operators/style
 #   single: string with single quote
 #   double: string with double quote
+# target_file : if name given but file not exist, it is created empty
 # yaml_set_key_into_file "input.yaml" ".a.b.c" 'value' 
 yaml_set_key_into_file() {
     local target_file="$1"
@@ -287,7 +322,12 @@ yaml_set_key_into_file() {
         echo "ERROR : yaml key path to set empty"
         exit 1
     fi
+	if [ -z "$target_file" ]; then
+		echo "ERROR : target yaml file empty name given"
+        exit 1
+	fi
     if [ ! -s "$target_file" ]; then
+        echo "Valid target file not found at $target_file. Creating it."
         mkdir -p "$(dirname "$target_file")"
         touch "$target_file"
     fi
@@ -319,74 +359,109 @@ yaml_set_key_into_file() {
         return 1
     fi
 
-	cat "$tmp_target_file" > "$target_file"
-    rm -f "$tmp_target_file"
+	if ! cat "${tmp_target_file}" > "${target_file}"; then
+		echo "ERROR: unable to fill YAML file: ${target_file}" >&2
+		rm -f "$tmp_target_file"
+		return 1
+	fi
 
+    rm -f "$tmp_target_file"
+	return 0
 }
 
 
 # delete a key from yaml input
 # cat input.yaml | yaml_del_key <key_path>
 # yaml_del_key <key_path> < input.yaml
-#
+# Return 10 if key do not exist
 yaml_del_key() {
     local key_path="$1"
     if [ -z "$key_path" ]; then
         echo "ERROR : yaml key path empty"
-        exit 1
+        return 1
     fi
+	local tmp_file yq_expr rc
+	yq_expr="$(build_yq_expr_from_path "${key_path}")" || return 1
 
-    local yq_expr
-    yq_expr="$(build_yq_expr_from_path "$key_path")" || return 1
+	tmp_file="$(mktemp)" || return 1
+	if [ ! -t 0 ]; then
+		if ! cat > "${tmp_file}"; then
+			rm -f "${tmp_file}"
+			return 1
+		fi
 
-    # NOTE TODO : avoid -P usage because it simplfy style and remove some quotes
-    if [ ! -t 0 ]; then
-        yq -P "del($yq_expr)"
-    fi
+		yaml_has_key "$key_path" < "$tmp_file"
+		rc="$?"
+		if [ "${rc}" -ne 0 ]; then
+			
+			if [ "${rc}" -eq 10 ]; then
+				cat "$tmp_file"
+				rm -f "${tmp_file}"
+				return 10
+			fi
+			rm -f "${tmp_file}"
+			return "${rc}"
+		fi
+
+
+		PATH_EXPR="${yq_expr}" \
+			yq eval 'del(eval(strenv(PATH_EXPR)))' "${tmp_file}"
+		rc=$?
+		rm -f "${tmp_file}"
+		return "${rc}"
+	else
+		rm -f "${tmp_file}"
+		return 1
+	fi
+
 }
 
 # delete a yaml key from a file
 # yaml_del_key_from_file <file> <key_path>
 #
 # yaml_del_key_from_file "input.yaml" ".a.b.c"
+# if key_path do not exists return 0
 yaml_del_key_from_file() {
     local target_file="$1"
     local key_path="$2"
-
+	local tmp_file rc
 
     if [ -z "$key_path" ]; then
         echo "ERROR : yaml key path to remove empty"
-        exit 1
+        return 1
     fi
     if [ ! -s "$target_file" ]; then
         echo "WARN : file not found $target_file"
         return 0
     fi
 
-    local yq_expr
-    yq_expr="$(build_yq_expr_from_path "$key_path")" || return 1
+	tmp_file="$(mktemp "${target_file}.tmp.XXXXXX")" || {
+		echo "ERROR: unable to create temporary file for ${target_file}" >&2
+		return 1
+	}
 
-    # check if path exists
-    if ! yq -e "$yq_expr" "$target_file" >/dev/null 2>&1; then
-        return 1
-    fi
-   
-    local tmp_target_file="$(mktemp)"
-    # NOTE : avoid using -i (and -P) to preserve file formatting like quote style for values
-    #if ! yq -i -P "del($yq_expr)" "$target_file"; then
-    if ! yq "del($yq_expr)" "$target_file" > "$tmp_target_file"; then
-        echo "ERROR : processing with yq"
-        rm -f "$tmp_target_file"
-        exit 1
-    fi
+	yaml_del_key "${key_path}" < "${target_file}" > "${tmp_file}"
+	rc=$?
+	if [ "${rc}" -ne 0 ]; then
+		rm -f "${tmp_file}"
+		[ "${rc}" -eq 10 ] && return 0
+		return "${rc}"
+	fi
 
-    cat "$tmp_target_file" > "$target_file"
-    rm -f "$tmp_target_file"
+	if ! cat "${tmp_file}" > "${target_file}"; then
+		echo "ERROR: unable to fill YAML file: ${target_file}" >&2
+		rm -f "${tmp_file}"
+		return 1
+	fi
+	
+	rm -f "${tmp_file}"
+	return 0
 }
 
 
 
 # merge one yaml file (file_to_merge) into another (file_to_merge_into)
+# file_to_merge_into : if not exist, it is created empty
 # file_to_merge : have higher priority and erase file_to_merge_into content
 # file_to_merge also support environment variable injection ${VAR} (Replace ${VAR} with environnement variable if it exists)
 merge_yaml_file() {
@@ -397,6 +472,11 @@ merge_yaml_file() {
         echo "ERROR : file to merge not found $file_to_merge"
         exit 1
     fi
+
+	if [ -z "$file_to_merge_into" ]; then
+		echo "ERROR : file to merge into empty name given"
+        exit 1
+	fi
 
     if [ ! -s "$file_to_merge_into" ]; then
         mkdir -p "$(dirname "$file_to_merge_into")"

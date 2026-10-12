@@ -57,9 +57,10 @@ build_jq_array_from_path() {
 
     local jq_path
     jq_path="$(
+        set -o pipefail
         printf '%s\n' "${parts[@]}" \
-        | jq -R 'if test("^[0-9]+$") then tonumber else . end' \
-        | jq -s -c .
+            | jq -R 'if test("^[0-9]+$") then tonumber else . end' \
+            | jq -s -c .
     )" || { echo "ERROR: building jq path" >&2; return 1; }
 
     printf "%s" "$jq_path"
@@ -181,28 +182,48 @@ sanitize_json() {
 
 # test json 
 # if invalid json sanitize it
-# then exit 1 if still invalid json
+# then return 1 if still invalid json
 test_and_fix_json_file() {
-    local file_to_test="$1"
+	local file_to_test="${1}"
 
-    if [ ! -f "$file_to_test" ]; then
-        echo "ERROR : file not found $file_to_test"
-        exit 1
-    fi
+	if [ ! -f "${file_to_test}" ]; then
+		echo "ERROR: file not found ${file_to_test}" >&2
+		return 1
+	fi
 
-    if ! jq -e . "$file_to_test" >/dev/null 2>&1; then
-        echo "WARN : invalid json file : $file_to_test"
-        echo "       try to sanitize it"
-        sanitize_json "$file_to_test"
-        if ! jq -e . "$file_to_test" >/dev/null 2>&1; then
-            echo "ERROR : invalid json file : $file_to_test"
-            exit 1
-        else
-            echo "       it should be a valid json file now"
-        fi
-    fi
+	if ! jq -e 'true' "${file_to_test}" >/dev/null 2>&1; then
+		echo "WARN: invalid JSON file: ${file_to_test}" >&2
+		echo "INFO: attempting to sanitize it" >&2
 
+		sanitize_json "${file_to_test}" || return 1
+		if ! jq -e 'true' "${file_to_test}" >/dev/null 2>&1; then
+			echo "ERROR: invalid JSON file: ${file_to_test}" >&2
+			return 1
+		fi
+	fi
+
+	return 0
 }
+# test_and_fix_json_file_old() {
+#     local file_to_test="$1"
+
+#     if [ ! -f "$file_to_test" ]; then
+#         echo "ERROR : file not found $file_to_test"
+#         exit 1
+#     fi
+
+#     if ! jq -e . "$file_to_test" >/dev/null 2>&1; then
+#         echo "WARN : invalid json file : $file_to_test"
+#         echo "       try to sanitize it"
+#         sanitize_json "$file_to_test"
+#         if ! jq -e . "$file_to_test" >/dev/null 2>&1; then
+#             echo "ERROR : invalid json file : $file_to_test"
+#             exit 1
+#         else
+#             echo "       it should be a valid json file now"
+#         fi
+#     fi
+# }
 
 
 # check if a path exists in json input
@@ -215,7 +236,9 @@ test_and_fix_json_file() {
 #       false
 json_has_path() {
   local path="$1"
-  local jq_expr="$(build_jq_array_from_path "$path")" || return 1
+  local jq_expr
+  
+  jq_expr="$(build_jq_array_from_path "$path")" || return 1
 
   jq -e --argjson path "$jq_expr" '
     ($path | length) > 0
@@ -351,7 +374,7 @@ json_set_key() {
 
 # set a json key into a file
 # json_set_key_into_file <file> <key_path> <value>
-#
+# target_file : if name given but file not exist, it is created empty with "{}"
 # json_set_key_into_file "input.json" ".a.b.c" '"value"'
 json_set_key_into_file() {
     local target_file="$1"
@@ -366,6 +389,12 @@ json_set_key_into_file() {
         echo "ERROR : json key path to set empty"
         exit 1
     fi
+
+	if [ -z "$target_file" ]; then
+		echo "ERROR : target json file empty name given"
+        exit 1
+	fi
+
     if [ ! -s "$target_file" ]; then
         echo "Valid target file not found at $target_file. Creating it."
         mkdir -p "$(dirname "$target_file")"
@@ -395,7 +424,7 @@ json_set_key_into_file() {
 # cat input.json | json_del_key <key_path>
 # json_del_key <key_path> < input.json
 #
-# Return 1 without producing output when the key is absent
+# Return 10 with unchanged JSON output when the key is absent.
 #
 # echo '{"a":{"b":{"c": "value","d":"value"}}}' | json_del_key "a.b.c"
 json_del_key() {
@@ -416,18 +445,26 @@ json_del_key() {
 				| has($path[-1])
 			) catch false;
 
-		if path_exists($path) then
-			delpaths([$path])
-		else
-			empty
-		end
+        if path_exists($path) then
+            delpaths([$path])
+        else
+            ., ("" | halt_error(10))
+        end
+
+        # if (path_exists($path) | not) then
+		# 	"" | halt_error(10)
+		# elif path_exists($path) then
+		# 	delpaths([$path])
+		# else
+		# 	empty
+		# end
 	'
 }
 
 # Delete a key from a JSON stream only when its value is empty.
 # Empty values are null, an empty string, an empty array, or an empty object.
-# Return 1 without producing output when the key is absent.
-# Return 2 without producing output when its value is not empty.
+# Return 11 with unchanged JSON output when its value is not empty.
+# Return 10 with unchanged JSON output when the key is absent.
 #
 # json_del_key_if_empty <key_path> < input.json
 # cat input.json | json_del_key_if_empty <key_path>
@@ -456,19 +493,22 @@ json_del_key_if_empty() {
 			or . == {};
 
 		if (path_exists($path) | not) then
-			"" | halt_error(1)
+			., ("" | halt_error(10))
 		elif (getpath($path) | value_is_empty) then
 			delpaths([$path])
 		else
-			"" | halt_error(2)
+			., ("" | halt_error(11))
 		end
 	'
 }
 
 # delete a json key from a file
 # json_del_key_from_file <file> <key_path> [<mode>]
+# if key_path do not exists return 0
 #
 # mode IF_EMPTY: del key from file only when its value is empty.
+#                 if key_path do not exists return 0
+#                 if key_path exists and not empty return 0
 #
 # json_del_key_from_file "input.json" ".a.b.c"
 # json_del_key_from_file "input.json" ".a.b.c" "IF_EMPTY"
@@ -501,6 +541,11 @@ json_del_key_from_file() {
 			rc=$?
 			if [ "${rc}" -ne 0 ]; then
 				rm -f "${tmp_file}"
+                # key do not exist
+				[ "${rc}" -eq 10 ] && return 0
+                # key exists and not empty
+                [ "${rc}" -eq 11 ] && return 0
+
 				return "${rc}"
 			fi
 		;;
@@ -509,6 +554,7 @@ json_del_key_from_file() {
 			rc=$?
 			if [ "${rc}" -ne 0 ]; then
 				rm -f "${tmp_file}"
+				[ "${rc}" -eq 10 ] && return 0
 				return "${rc}"
 			fi
 		;;
@@ -526,8 +572,8 @@ json_del_key_from_file() {
 }
 
 
-
 # merge one json file (file_to_merge) into another (file_to_merge_into)
+# file_to_merge_into : if not exist, it is created empty with "{}"
 # file_to_merge : have higher priority and erase file_to_merge_into content
 # file_to_merge also support environment variable injection ${VAR} (Replace ${VAR} with environnement variable if it exists)
 merge_json_file() {
@@ -539,10 +585,18 @@ merge_json_file() {
         exit 1
     fi
 
+	if [ -z "$file_to_merge_into" ]; then
+		echo "ERROR : file to merge into empty name given"
+        exit 1
+	fi
+
     # do not modify file to merge
     local tmp_file_to_merge="$(mktemp)"
     cat "$file_to_merge" > "$tmp_file_to_merge"
-    test_and_fix_json_file "$tmp_file_to_merge"
+    ( test_and_fix_json_file "$tmp_file_to_merge" ) || {
+		rm -f "${tmp_file_to_merge}"
+		return 1
+	}
 
     if [ ! -s "$file_to_merge_into" ]; then
         echo "Valid target file not found at $file_to_merge_into. Creating it."
@@ -550,7 +604,10 @@ merge_json_file() {
         echo "{}" > "$file_to_merge_into"
     fi
 
-    test_and_fix_json_file "$file_to_merge_into"
+    ( test_and_fix_json_file "$file_to_merge_into" ) || {
+		rm -f "${tmp_file_to_merge}"
+		return 1
+	}
 
     local tmp_merge="$(mktemp)"
     # Replace ${VAR} with environnement variable if it exists or keep ${VAR} as is.
@@ -568,21 +625,25 @@ merge_json_file() {
             expand_env
     ' "$tmp_file_to_merge" > "$tmp_merge"; then
         echo "ERROR : expanding environment variables in $tmp_file_to_merge" >&2
-        exit 1
+		rm -f "${tmp_file_to_merge}" "${tmp_merge}"
+        return 1
     fi
 
-    test_and_fix_json_file "$tmp_merge"
+    ( test_and_fix_json_file "$tmp_merge" ) || {
+		rm -f "${tmp_file_to_merge}" "${tmp_merge}"
+		return 1
+	}
 
     local tmp_file="$(mktemp)"
     # Merge the two json files
     jq -s '.[0] * .[1]' "${file_to_merge_into}" "$tmp_merge" > "$tmp_file"
     
     if [ $? -ne 0 ]; then
-        rm -f "$tmp_file" "$tmp_merge"
-        exit 1
+        rm -f "$tmp_file" "$tmp_merge" "${tmp_file_to_merge}"
+        return 1
     else
         cat "$tmp_file" > "$file_to_merge_into"
-        rm -f "$tmp_file" "$tmp_merge"
+        rm -f "$tmp_file" "$tmp_merge" "${tmp_file_to_merge}"
     fi
 }
 
@@ -611,6 +672,10 @@ json_tweak_value_of_list_into_file() {
                 return 0
             ;;
         esac
+		if [ -z "$target_file" ]; then
+			echo "ERROR : given empty json filename"
+			return 1
+		fi
         echo "Valid target file not found at $target_file. Creating it."
         mkdir -p "$(dirname "$target_file")"
         echo "{}" > "$target_file"
@@ -618,7 +683,10 @@ json_tweak_value_of_list_into_file() {
     else
 		local save_target_file="$(mktemp)"
 		cat "$target_file" > "$save_target_file"
-        test_and_fix_json_file "$target_file"
+        ( test_and_fix_json_file "$target_file" ) || {
+			rm -f "${save_target_file}"
+			return 1
+		}
     fi
 
     local tmp_file="$(mktemp)"
@@ -626,7 +694,7 @@ json_tweak_value_of_list_into_file() {
     if [ $? -ne 0 ]; then
         echo "ERROR : processing with jq"
         rm -f "$tmp_file"
-		if [ $target_file_created -eq 1 ]; then
+		if [ "${target_file_created}" = "1" ]; then
 			rm -f "$target_file"
 		fi
 		# restore saved target file to avoid change done in test_and_fix_json_file
@@ -637,7 +705,7 @@ json_tweak_value_of_list_into_file() {
         return 1
     else
         cat "$tmp_file" > "$target_file" 
-        rm -f "$tmp_file"
+        rm -f "$tmp_file" "${save_target_file}"
     fi
     # NOTE : we do not need sanitize_json because jq always produce valid files
     #sanitize_json "$target_file"
@@ -790,6 +858,9 @@ json_escape_string_containing_char() {
 # POSTPEND_IF_NOT_EXISTS add value at the end position only if not already present
 # REMOVE remove all occurences of a fix expression
 # REMOVE_REGEXP remove all occurences of an regexp expression
+#
+# NOTE : always remove empty elements of the list 
+#       i.e :AA::BB:: became AA:BB 
 json_tweak_value_of_list() {
 	local key_path="${1}"
 	local value="${2}"
@@ -847,7 +918,7 @@ json_tweak_value_of_list() {
 				split($separator)
 			end;
 
-		def remove_value($parts; $item):
+        def remove_value($parts; $item):
 			$parts | map(select(. != "" and . != $item));
 
 		def prepend_value($parts; $item):
@@ -858,20 +929,22 @@ json_tweak_value_of_list() {
 			(remove_value($parts; $item) + [$item])
 			| join($separator);
 
-		def prepend_if_missing($parts; $item):
-			if $parts | index($item) then
-				$parts | join($separator)
-			else
-				([$item] + $parts) | join($separator)
-			end;
+        def prepend_if_missing($parts; $item):
+            ($parts | map(select(. != ""))) as $clean_parts
+            | if $clean_parts | index($item) then
+                $clean_parts | join($separator)
+            else
+                ([$item] + $clean_parts) | join($separator)
+            end;
 
-		def append_if_missing($parts; $item):
-			if $parts | index($item) then
-				$parts | join($separator)
-			else
-				($parts + [$item]) | join($separator)
-			end;
-
+        def append_if_missing($parts; $item):
+            ($parts | map(select(. != ""))) as $clean_parts
+            | if $clean_parts | index($item) then
+                $clean_parts | join($separator)
+            else
+                ($clean_parts + [$item]) | join($separator)
+            end;
+        
 		def remove_exact($parts; $item):
 			remove_value($parts; $item)
 			| join($separator);
@@ -880,7 +953,7 @@ json_tweak_value_of_list() {
 			$parts
 			| map(select(. != "" and (test($pattern) | not)))
 			| join($separator);
-
+       
 		def tweak($item):
 			if . == null or . == "" then
 				if ($mode | startswith("REMOVE")) then . else $item end

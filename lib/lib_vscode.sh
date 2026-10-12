@@ -127,24 +127,20 @@ vscode_settings_configure() {
 
     case "${target}" in
         "gemini" )
-            (
-				merge_json_file "${AISTACK_POOL}/settings/gemini-cli/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
-            ) || result=$?
+			vscode_merge_config "${AISTACK_POOL}/settings/gemini-cli/settings-for-vscode.json"
+            result=$?
 			if [ "${result}" -eq 0 ]; then
-				(
-					merge_json_file "${AISTACK_POOL}/settings/gemini-code-assist/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
-				) || result=$?
+				vscode_merge_config "${AISTACK_POOL}/settings/gemini-code-assist/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
+				result=$?
 			fi
 		;;
         "opencode" )
-            (
-				merge_json_file "${AISTACK_POOL}/settings/opencode/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
-			) || result=$?
+			vscode_merge_config "${AISTACK_POOL}/settings/opencode/settings-for-vscode.json"
+            result=$?
 		;;
 		"antigravity" )
-			(
-            	merge_json_file "${AISTACK_POOL}/settings/antigravity-cli/settings-for-vscode.json" "${AISTACK_VSCODE_CONFIG_FILE}"
-			) || result=$?
+			vscode_merge_config "${AISTACK_POOL}/settings/antigravity-cli/settings-for-vscode.json" 
+			result=$?
 		;;
     esac
 	
@@ -160,6 +156,9 @@ vscode_settings_remove() {
         "gemini");;
         "opencode" );;
 		"antigravity" );;
+		"openchamber") 
+			vscode_remove_config "openchamber\.opencodeBinary"
+		;;
     esac
 }
 
@@ -332,7 +331,14 @@ vscode_merge_config() {
 	local tmp_file=""
 	local result
 
+	if [ -z "${AISTACK_VSCODE_CONFIG_FILE}" ]; then
+		return 1
+	fi
+
 	if [ ! -f "${file_to_merge}" ]; then
+		if [ -z "${config_to_merge}" ]; then
+			return 1
+		fi
         # NOTE : it is a json string to merge
 		tmp_file="$(mktemp)" || return 1
 		printf '%s\n' "${config_to_merge}" > "${tmp_file}"
@@ -349,6 +355,9 @@ vscode_merge_config() {
 vscode_remove_config() {
     local key_path="${1}"
 	local result
+	if [ -z "${AISTACK_VSCODE_CONFIG_FILE}" ]; then
+		return 0
+	fi
 	(
     	json_del_key_from_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}"
 	) || result=$?
@@ -360,6 +369,9 @@ vscode_set_config() {
     local key_path="${1}"
     local value="${2}"
 	local result
+	if [ -z "${AISTACK_VSCODE_CONFIG_FILE}" ]; then
+		return 1
+	fi
 	(
     	json_set_key_into_file "${AISTACK_VSCODE_CONFIG_FILE}" "${key_path}" "${value}"
 	) || result=$?

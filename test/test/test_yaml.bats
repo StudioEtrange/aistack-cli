@@ -13,8 +13,77 @@ teardown() {
 
 # GENERIC -------------------------------------------------------------------
 
+@test "yaml_has_key detects a false value" {
+	run yaml_has_key "a.b" <<'EOF'
+a:
+  b: false
+EOF
+	assert_success
+	assert_output ""
+}
 
-@test "yaml_get_key1" {
+@test "yaml_has_key detects a missing key in an existing object" {
+	run yaml_has_key "a.c" <<'EOF'
+a:
+  b: value
+EOF
+	assert_failure 10
+	assert_output ""
+}
+
+@test "yaml_has_key detects an existing array index with null value" {
+	run yaml_has_key "a.0" <<'EOF'
+a:
+  - null
+EOF
+	assert_success
+	assert_output ""
+}
+
+@test "yaml_has_key check key with value exist" {
+
+	run yaml_has_key "a.b.c" <<'EOF'
+a:
+  b:
+    c: "localhost"
+EOF
+	assert_success
+	assert_output ""
+}
+
+@test "yaml_has_key check key with empty value exist" {
+
+	run yaml_has_key "a.b.c" <<'EOF'
+a:
+  b:
+    c:
+EOF
+	assert_success
+	assert_output ""
+}
+
+
+@test "yaml_has_key check root key with empty value exist" {
+
+	run yaml_has_key "a" <<'EOF'
+a:
+EOF
+	assert_success
+	assert_output ""
+}
+
+@test "yaml_has_key check key does not exist" {
+
+	run yaml_has_key "a.b.c.d" <<'EOF'
+a:
+  b:
+    c:
+EOF
+	assert_failure 10
+	assert_output ""
+}
+
+@test "yaml_get_key non existing key" {
 
 	run yaml_get_key "a.b.c" <<'EOF'
 a:
@@ -24,7 +93,7 @@ EOF
 	assert_output ""
 }
 
-@test "yaml_get_key2" {
+@test "yaml_get_key get key with true value" {
 
 	run yaml_get_key "a.b.c" <<'EOF'
 a:
@@ -40,7 +109,7 @@ EOF
 }
 
 
-@test "yaml_get_key3" {
+@test "yaml_get_key get key with false value" {
 
 	run yaml_get_key "a.b.c" <<'EOF'
 a:
@@ -55,7 +124,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_get_key4" {
+@test "yaml_get_key get key with a value" {
 
 	run yaml_get_key "a.b.c" <<'EOF'
 a:
@@ -70,7 +139,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_get_key5" {
+@test "yaml_get_key get key with key path starting with a dot" {
 
 	run yaml_get_key ".a.b.c" <<'EOF'
 a:
@@ -85,7 +154,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_get_key6" {
+@test "yaml_get_key get key with an empty value" {
 
 	run yaml_get_key "a.b.c" <<'EOF'
 a:
@@ -100,7 +169,7 @@ EOF
 }
 
 
-@test "yaml_get_key7" {
+@test "yaml_get_key get key with an empty value 2" {
 
 	run yaml_get_key "a.b.c" <<'EOF'
 a:
@@ -112,7 +181,7 @@ EOF
 	assert_output ""
 }
 
-@test "yaml_set_key1" {
+@test "yaml_set_key change existing key value" {
 
 	run yaml_set_key "a.b.c" 'new_value' <<'EOF'
 a:
@@ -130,7 +199,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_set_key2" {
+@test "yaml_set_key add a new key with an array as value" {
 
 	run yaml_set_key "users.admins" '[alice, bob]' <<'EOF'
 a:
@@ -152,7 +221,7 @@ EOF
 
 
 
-@test "yaml_set_key3" {
+@test "yaml_set_key set an indice value of an array of a key" {
 
 	run yaml_set_key "a.b.array.3" '999' <<'EOF'
 a:
@@ -169,7 +238,7 @@ EOF
 }
 
 
-@test "yaml_set_key31" {
+@test "yaml_set_key set value of an index for list of a key" {
 
 	run yaml_set_key "a.b.array.3" '999' <<'EOF'
 a:
@@ -195,7 +264,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_set_key4" {
+@test "yaml_set_key add a new key with value without quote" {
 
 	run yaml_set_key "a.b.c" 'new_value' <<'EOF'
 a:
@@ -211,7 +280,7 @@ EOF
 }
 
 
-@test "yaml_set_key6" {
+@test "yaml_set_key add a new key with value with single quote" {
 
 	run yaml_set_key ".a.b.c" "new_value" "single"
 	expected=$(cat <<'EOF'
@@ -223,7 +292,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_set_key7" {
+@test "yaml_set_key add a new key with value with double quote" {
 
 	run yaml_set_key ".a.b.c" "new_value" "double"
 	expected=$(cat <<'EOF'
@@ -235,7 +304,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_set_key8" {
+@test "yaml_set_key set a folded value" {
 
 	run yaml_set_key ".a.b.c" "new_value" "folded"
 	expected=$(cat <<'EOF'
@@ -248,7 +317,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_set_key9" {
+@test "yaml_set_key set a literal value" {
 
 	run yaml_set_key ".a.b.c" "new_value" "literal"
 	expected=$(cat <<'EOF'
@@ -261,7 +330,7 @@ EOF
 	assert_output "$expected"
 }
 
-@test "yaml_set_key10" {
+@test "yaml_set_key set a flow value" {
 
 	run yaml_set_key ".a.b.c" "new_value" "flow"
 	expected=$(cat <<'EOF'
@@ -334,7 +403,7 @@ EOF
 
 
 
-@test "yaml_del_key1" {
+@test "yaml_del_key non empty key exist" {
 
 	run yaml_del_key "a.b.c" <<'EOF'
 a:
@@ -350,7 +419,7 @@ EOF
 
 }
 
-@test "yaml_del_key2" {
+@test "yaml_del_key non empty key exist case 2" {
 
 	run yaml_del_key "a.b.c" <<'EOF'
 a:
@@ -368,7 +437,7 @@ EOF
 
 }
 
-@test "yaml_del_key3" {
+@test "yaml_del_key key do not exist" {
 
 	run yaml_del_key "a.w" <<'EOF'
 a:
@@ -383,12 +452,13 @@ a:
     d: value
 EOF
 	)
+	assert_failure 10
 	assert_output "$expected"
 
 }
 
 
-@test "yaml_del_key_from_file1" {
+@test "yaml_del_key_from_file delete a sample key with its value" {
 
 	tmp="$(mktemp)"
 	cat >"$tmp" <<'EOF'
@@ -409,7 +479,7 @@ EOF
 }
 
 
-@test "yaml_del_key_from_file2" {
+@test "yaml_del_key_from_file delete a key which have a brother" {
 
 	tmp="$(mktemp)"
 	cat >"$tmp" <<'EOF'
@@ -430,7 +500,7 @@ EOF
 
 }
 
-@test "yaml_del_key_from_file3" {
+@test "yaml_del_key_from_file delete a non existing key" {
 
 	tmp="$(mktemp)"
 	cat >"$tmp" <<'EOF'
@@ -441,7 +511,7 @@ a:
 EOF
 
 	run yaml_del_key_from_file "$tmp" "a.w.d"
- 	assert_failure
+ 	assert_success
  	expected=$( cat <<'EOF'
 a:
   b:

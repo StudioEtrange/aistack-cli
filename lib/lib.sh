@@ -1202,20 +1202,6 @@ register_path_named_bloc_for_shell() {
 				fi
 				echo "- register ${name} PATH for shell ${s} into ${rc_file}"
 				;;
-			"fish")
-				# TODO
-				echo "- WARN: fish shell not supported yet"
-				res=1
-				continue
-				if ! grep -Fq "$BEGIN_MARK" "${rc_file}"; then
-					{
-						echo "$BEGIN_MARK"
-						echo "set -gx PATH \"${path_to_add}\" \$PATH"
-						echo "$END_MARK"
-					} >> "${rc_file}" || return $?
-				fi
-				echo "- register ${name} PATH for shell ${s} into ${rc_file}"
-				;;
 			*) 
 				echo "WARN: unsupported shell $s"
 				res=1
@@ -1284,7 +1270,7 @@ unregister_named_bloc_for_shell() {
 			echo "INFO: current user shell detected: ${shell_name_list}"
 			;;
 		"all")
-			shell_name_list="bash zsh fish sh dash ksh mksh"
+			shell_name_list="bash zsh sh dash ksh mksh"
 			;;
 	esac
 
