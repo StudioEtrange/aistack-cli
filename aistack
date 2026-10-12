@@ -14,7 +14,7 @@ Options:
     init [reinstall]        Refresh dependencies while preserving installed tools. Use reinstall for a fresh installation.
     uninstall               Uninstall AIStack, all tools, mcp servers and unregister everything from PATH.
     help                    Display this help message.
-    info                    Display various aistack information and configuration.
+    info                    Display various AIStack informations and configurations.
     shell                   Enter aistack AIStack and path.
     runtime add|remove <runtime> Install/remove an AIStack managed runtime to be used in any tool run context (Available: python, nodejs, bun, rust). Core runtimes are always preinstalled ($AISTACK_RUNTIME_CORE)
     register [<current|shell list|vs>]          Register aistack-cli PATH into shell env PATH. Default value is "current" for current shell or a list of supported shells or "vs" for VS Code integrated terminal env PATH.
@@ -59,6 +59,14 @@ Options:
     oc mcp github install|uninstall             Add mcp-github remote server configuration.
     oc mcp context7 install|uninstall           Add mcp-context7 local server configuration.
     ----
+	och : OpenChamber (Desktop, web or VS Code extension) - https://openchamber.dev/
+	och connect	[<current|shell list>]  Connect OpenChamber to AIStack : OpenChamber Desktop, web and VS Code extension will use Opencode version managed by AIStack.
+										And AIStack tools and runtime will me used by OpenChamber when launching declared shell. Default value is "current" for current shell or a list of supported shells.
+	och disconnect						Disconnect OpenChamber from AIStack tools and runtimes.
+	och info							Print OpenChamber informations.
+	och show-config						Show current OpenChamber configuration.
+    och reset                           Reset all OpenChamber configuration.
+	----
     kc : Kilo Code CLI and VS Code extension - https://kilo.ai/
     kc install [cli|extension]          Install and configure Kilo Code. By default, installs the CLI.
     kc uninstall [cli|extension]        Uninstall Kilo Code and unregister Kilo Code PATH. (keep all configuration unchanged, to remove configuration use 'aistack kc reset' command)
@@ -162,8 +170,8 @@ Options:
                                         Instead use 'bmad' or 'bmad-method' command if ${AISTACK_BMAD_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack bmad register <shell>' to set it in your PATH.
     ----
-	gsd - Git. Shio. Done. - https://opengsd.net/ https://github.com/open-gsd/gsd-core
-	gsd install [<any gsd option>]        Install GSD ('aistack gsd install --local')
+    gsd - Git. Shio. Done. - https://opengsd.net/ https://github.com/open-gsd/gsd-core
+    gsd install [<any gsd option>]        Install GSD ('aistack gsd install --local')
     gsd uninstall [<any gsd option>]      Uinstall GSD ('aistack gsd uninstall --local')
     gsd help                              Show GSD help for options
     ----

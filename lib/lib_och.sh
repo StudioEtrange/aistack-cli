@@ -1,7 +1,9 @@
 
 openchamber_init() {
 	# openchamber specific variables
-
+	export AISTACK_OPENCHAMBER_CONFIG_HOME="${OPENCHAMBER_DATA_DIR:-${HOME}/.config/openchamber}"
+	export AISTACK_OPENCHAMBER_CONFIG_FILE="${AISTACK_OPENCHAMBER_CONFIG_HOME}/settings.json"
+	
 	# openchamber launcher
 
 	# openchamber context
@@ -21,7 +23,6 @@ openchamber_init() {
 	# remove from context any runtime or module any item already in generic aistack context
 	export AISTACK_OPENCHAMBER_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_OPENCHAMBER_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
 	export AISTACK_OPENCHAMBER_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_OPENCHAMBER_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
-
 }
 
 
@@ -55,9 +56,9 @@ openchamber_context_file_generate() {
 	# NOTE: special case, because it is normaly the launcher which includes those files, but there is no launcher script for openchamber
 	{
 		echo '[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"'
-		if opencode_is_installed; then
-        	echo '[ -f "${AISTACK_OPENCODE_CONTEXT_FILE}" ] && . "${AISTACK_OPENCODE_CONTEXT_FILE}"'
-		fi
+		#if opencode_is_installed; then
+        #	echo '[ -f "${AISTACK_OPENCODE_CONTEXT_FILE}" ] && . "${AISTACK_OPENCODE_CONTEXT_FILE}"'
+		#fi
 
 	} >> "${AISTACK_OPENCHAMBER_CONTEXT_FILE}"
 
@@ -74,30 +75,91 @@ openchamber_context_file_generate_remove() {
 
 openchamber_info() {
 	echo "OpenChamber context file : $AISTACK_OPENCHAMBER_CONTEXT_FILE"
+	echo "OpenChamber Configuration file : $AISTACK_OPENCHAMBER_CONFIG_FILE"
 }
 
-# openchamber will use registered aistack registered tools and runtimes while launching shell session
+openchamber_show_config() {
+    if [ -f "$AISTACK_OPENCHAMBER_CONFIG_FILE" ]; then
+        cat "$AISTACK_OPENCHAMBER_CONFIG_FILE"
+    else
+        echo "No configuration file found. ($AISTACK_OPENCHAMBER_CONFIG_FILE)"
+    fi
+}
+
+
+
+# generic config management -----------------
+openchamber_settings_remove() {
+	rm -Rf "$AISTACK_OPENCHAMBER_CONFIG_HOME"
+}
+
+
+openchamber_merge_config() {
+    local file_to_merge="$1"
+    merge_json_file "$file_to_merge" "$AISTACK_OPENCHAMBER_CONFIG_FILE"
+}
+
+openchamber_remove_config() {
+    local key_path="$1"
+    json_del_key_from_file "$AISTACK_OPENCHAMBER_CONFIG_FILE" "$key_path"
+}
+
+openchamber_set_config() {
+    local key_path="$1"
+    local value="$2"
+    json_set_key_into_file "$AISTACK_OPENCHAMBER_CONFIG_FILE" "$key_path" "$value"
+}
+
+
+
+
+# integration  management -----------------
 openchamber_connect_aistack() {
-	openchamber_context_file_generate
-	# inject openchamber context file in shell launched by openchamber
-	openchamber_context_register_for_shell "current"
+	local shell_name_list="${1:-current}"
+	local result
 
+	# generate openchamber context file
+	openchamber_context_file_generate || return $?
+	
+	# register a shell hook that loads the openchamber context file when openchamber desktop, web or ssh, launch a selected shell
+	# Load the OpenChamber context file when OPENCHAMBER_RUNTIME is setted in such process launched by OpenChamber.
+	# This allows for openchamber to use aistack managed tools and runtime
+	openchamber_context_load_register_for_shell "$shell_name_list" || return $?
 
-	# configure openchamber vscode extension to use opencode context file (instead of opencode launcher script)
-	vscode_set_config "openchamber\.opencodeBinary" "\"${AISTACK_OPENCODE_LAUNCHER_FILE}\""
+	# OpenChamber VS Code extension does not set OPENCHAMBER_RUNTIME.
+	# openchamber vs code extension using the opencode launcher loads the OpenCode context file for the OpenCode server and its child processes.
+	# This allows for opencode used by openchamber to use aistack managed tools and runtime
 
+	# force openchamber to use opencode from aistack
+	if opencode_is_installed; then
+		# NOTE : to locate opencode binary we do prefer explicit settings in settings file over relying on OPENCODE_BINARY
+
+		# openchamber setting file shared setting used by Desktop, Web and the VS Code extension
+		openchamber_set_config "opencodeBinary" "\"${AISTACK_OPENCODE_LAUNCHER_FILE}\""
+
+		# configure openchamber vscode extension to use opencode launcher file
+		# for openchamber vscode extension "openchamber.opencodeBinary" vscode settings have priority over "opencodeBinary" regular openchamber config file
+		if [ -n "${AISTACK_VSCODE_CONFIG_FILE}" ]; then
+			vscode_set_config "openchamber\.opencodeBinary" "\"${AISTACK_OPENCODE_LAUNCHER_FILE}\""
+		fi
+	fi
 }
+
+
 
 openchamber_disconnect_aistack() {
-	local shell_name="${1:-all}"
+	local shell_name_list="${1:-all}"
 	local name="aistack-openchamber-connect"
-	unregister_named_bloc_for_shell "${name}" "${shell_name}"
+	unregister_named_bloc_for_shell "${name}" "${shell_name_list}"
+
+	openchamber_remove_config "opencodeBinary"
+	vscode_remove_config "openchamber\.opencodeBinary"
 }
 
 # allow to inject openchamber context file in shell launched by openchamber
 # env var OPENCHAMBER_RUNTIME allow to detect if the current shell was launched by openchamber (desktop, web or remote ssh)
 # OPENCHAMBER_RUNTIME is not documented, see https://github.com/search?q=repo%3Aopenchamber%2Fopenchamber+OPENCHAMBER_RUNTIME&type=code
-openchamber_context_register_for_shell() {
+openchamber_context_load_register_for_shell() {
 	local name="aistack-openchamber-connect"
     local shell_name_list="${1:-current}"
     local rc_file parent_dir
@@ -123,7 +185,7 @@ openchamber_context_register_for_shell() {
             mkdir -p "${parent_dir}"
 		fi
         if [ -f "${rc_file}" ]; then
-            unregister_path_named_bloc_for_shell "${name}" "${s}" 1>/dev/null 2>&1
+            unregister_named_bloc_for_shell "${name}" "${s}" 1>/dev/null 2>&1
         else
             touch "${rc_file}"
         fi
@@ -135,17 +197,13 @@ openchamber_context_register_for_shell() {
 						echo "$BEGIN_MARK"
 						echo 'case "${OPENCHAMBER_RUNTIME:-}" in'
 						echo '	desktop|web|ssh-remote)'
-						echo "		[ -f "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")" ] && . "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")""
+						printf '\t\t[ -f %s ] && . %s\n' "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")" "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")"
 						echo '		;;'
 						echo 'esac'
 						echo "$END_MARK"
 					} >> "${rc_file}" || return $?
 				fi
 				echo "- register ${name} for shell ${s} into ${rc_file}"
-				;;
-			"fish")
-				# TODO
-				echo "- WARN: fish shell not supported yet"
 				;;
 			*) 
 				echo "WARN: unsupported shell $s"

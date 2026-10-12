@@ -222,10 +222,10 @@ opencode
 
 ## Case 7 : OpenChamber desktop + OpenCode + OpenAI
 
-_"I want to use OpenChamber Desktop with my installed OpenCode and using my OpenAI subscription."_ _(see [Case 5](#case-5--opencode--openai))_
+_"I want to use OpenChamber Desktop with my installed OpenCode from AIStack and using my OpenAI subscription."_ _(see [Case 5](#case-5--opencode--openai))_
 
 ```bash
-./aistack och connect aistack
+./aistack och connect
 ```
 
 ## Case 8 : scan skills with NVIDIA skillspector + OpenAI

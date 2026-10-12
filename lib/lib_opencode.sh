@@ -23,7 +23,7 @@ opencode_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_OPENCODE_CONTEXT_EXPORT_VARIABLES="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE OPENCODE_CONFIG OPENCODE_BINARY"
+	export AISTACK_OPENCODE_CONTEXT_EXPORT_VARIABLES="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE OPENCODE_CONFIG"
 
 	# opencode requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -43,15 +43,15 @@ opencode_is_installed() {
 	local r m
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="false"
 	export AISTACK_OPENCODE_TOOL_PATH=""
-	export OPENCODE_BINARY=""
+	#export OPENCODE_BINARY=""
 	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode" ] || return 1
 	export AISTACK_OPENCODE_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode"
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="true"
 
-	# variable used by some other tools (like openchamber)
-	export OPENCODE_BINARY="$AISTACK_OPENCODE_LAUNCHER_FILE"
+	# NOTE : we do not use it
+	# export OPENCODE_BINARY="$AISTACK_OPENCODE_LAUNCHER_FILE"
 	return 0
 }
 
