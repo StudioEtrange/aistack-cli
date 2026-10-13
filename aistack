@@ -183,6 +183,17 @@ Options:
                                         Instead use 'adk' command if ${AISTACK_ADK_LAUNCHER_HOME} is in your PATH.
                                         Use 'aistack adk register <shell>' to set it in your PATH.
     ----
+	ollama - (https://github.com/ollama/ollama)
+    ollama install [version]                  Install the isolated Ollama CLI (latest by default).
+    ollama uninstall                          Remove binaries and registration; keep models and keys.
+    ollama info                               Show installation, models directory and endpoint.
+    ollama register [<current|shell list|vs>]   Register the Ollama launcher in shell or VS Code PATH.
+    ollama unregister [<all|current|shell list|vs>]   Unregister the Ollama launcher.
+    ollama serve                              Start the API server in foreground (Ctrl+C to stop).
+    ollama <pull|run|show|stop|rm> <model>      Execute native Ollama model commands.
+    ollama <list|ps>                           List models or running models.
+    ollama launch -- <Ollama arguments>        Forward any native CLI arguments (e.g. --version).
+
 	llmfit - (https://github.com/AlexsJones/llmfit)
     llmfit <install|uninstall>             Install/Uninstall llmfit.
     llmfit register [<current|shell list|vs>]         Register llmfit PATH into shell env PATH. Default value is "current" for current shell or a list of supported shells or "vs" for VS Code integrated terminal env PATH.
@@ -435,6 +446,9 @@ main() {
             ;;
 		plw)
 			. "${AISTACK_CURRENT_FILE_DIR}/lib/main_playwright.sh"
+			;;
+		ollama)
+			. "${AISTACK_CURRENT_FILE_DIR}/lib/main_ollama.sh"
 			;;
 		llmfit)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_llmfit.sh"

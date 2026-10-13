@@ -97,6 +97,7 @@ AIStack CLI offers functionalities for these tools
 * [Kilo Code](doc/kilocode.md)
 * [Orla](doc/orla.md)
 * [llmfit](doc/llmfit.md)
+* [Ollama](doc/ollama.md) — isolated local model CLI and API server
 * [BMAD](doc/bmad.md)
 * [GSD - Get Shit Done](https://opengsd.net/) ([source](https://github.com/open-gsd/gsd-core))
 * [Agent Development Kit (ADK)](doc/adk.md)

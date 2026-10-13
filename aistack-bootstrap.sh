@@ -32,6 +32,7 @@ fi
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_playwright.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_mcp.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_llmfit.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_ollama.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_sktor.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_ciss.sh"
 

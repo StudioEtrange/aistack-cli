@@ -18,6 +18,7 @@ Right to the point how-to
   - [Case 12 : Configure Node.js internal runtime](#case-12--configure-nodejs-internal-runtime)
   - [Case 13 : install gemini-cli](#case-13--install-gemini-cli)
   - [Case 14 : gemini-cli and local MCP server](#case-14--gemini-cli-and-local-mcp-server)
+  - [Case 15 : Ollama local models](#case-15--ollama-local-models)
 
 ## Case 0 : AIStack install and init
 
@@ -388,3 +389,23 @@ _"I want to register intoto gemini-cli installation, a local MCP server calculat
 cd aistack
 ./aistack gc mcp calculator install
 ```
+
+## Case 15 : Ollama local models
+
+Install the isolated CLI and start the local API server:
+
+```bash
+./aistack ollama install
+./aistack ollama serve
+```
+
+In another terminal:
+
+```bash
+./aistack ollama pull llama3.2
+./aistack ollama run llama3.2 "Hello!"
+./aistack ollama list
+```
+
+Stop the server with Ctrl+C. See [Ollama documentation](ollama.md) for storage
+isolation, Linux prerequisites, shell registration, and custom endpoints.

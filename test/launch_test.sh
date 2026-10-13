@@ -5,7 +5,7 @@ STELLA_LOG_STATE=OFF
 . "$_CURRENT_FILE_DIR/stella-link.sh" include
 
 usage() {
-	echo " * Usage $0 lib|json|yaml|glibc|vs|node|playwright|opencode|all [test-name]"
+	echo " * Usage $0 lib|json|yaml|glibc|vs|node|playwright|opencode|ollama|all [test-name]"
 	echo "sample:"
 	echo "$0 json json_has_path"
 }
@@ -114,7 +114,7 @@ case $1 in
   all|"")
 	init_aistack_test_env
 	test_status=0
-	for domain in lib json yaml glibc vs node playwright opencode; do
+	for domain in lib json yaml glibc vs node playwright opencode ollama; do
 		test_launch_bats "${domain}" "${2}" || test_status=1
 	done
 
@@ -148,6 +148,10 @@ case $1 in
   playwright)
 	init_aistack_test_env
 	test_launch_bats playwright $2
+	;;
+  ollama)
+	init_aistack_test_env
+	test_launch_bats ollama "$2"
 	;;
   opencode)
 	init_aistack_test_env

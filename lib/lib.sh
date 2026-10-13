@@ -80,6 +80,7 @@ aistack_initialize() {
     asm_init
 	playwright_init
 	llmfit_init
+	ollama_init
     sktor_init
 	ciss_init
 }
@@ -785,6 +786,7 @@ aistack_tool_launcher_and_context_files_regenerate() (
 	openchamber_launcher_and_context_files_manage "refresh_if_exists"
 	orla_launcher_and_context_files_manage "refresh_if_exists"
 	llmfit_launcher_and_context_files_manage "refresh_if_exists"
+	ollama_launcher_and_context_files_manage "refresh_if_exists"
 	sktor_launcher_and_context_files_manage "refresh_if_exists"
 	ciss_launcher_and_context_files_manage "refresh_if_exists"
 
@@ -806,6 +808,7 @@ aistack_tool_launcher_and_context_files_remove() (
 	openchamber_launcher_and_context_files_manage "delete"
 	orla_launcher_and_context_files_manage "delete"
 	llmfit_launcher_and_context_files_manage "delete"
+	ollama_launcher_and_context_files_manage "delete"
 	sktor_launcher_and_context_files_manage "delete"
 	ciss_launcher_and_context_files_manage "delete"
 
@@ -827,6 +830,7 @@ aistack_tool_detect() {
 	opencode_is_installed
 	orla_is_installed
 	llmfit_is_installed
+	ollama_is_installed
     sktor_is_installed
 	ciss_is_installed
 }
@@ -935,6 +939,10 @@ aistack_component_is_installed() {
             [ -f "${AISTACK_ISOLATED_ROOT}/miniforge3/bin/python" ]
             return $?
             ;;
+		ollama)
+			ollama_is_installed
+			return $?
+			;;
 		llmfit)
             [ -f "${AISTACK_ISOLATED_ROOT}/llmfit/llmfit" ]
             return $?
@@ -1784,4 +1792,3 @@ remove_dir_with_exceptions() {
         "${find_args[@]}" \
         -exec rm -rf -- {} +
 }
-
