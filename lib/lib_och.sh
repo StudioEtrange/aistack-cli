@@ -121,7 +121,7 @@ openchamber_connect_aistack() {
 	# generate openchamber context file
 	openchamber_context_file_generate || return $?
 	
-	# register a shell hook that loads the openchamber context file when openchamber desktop, web or ssh, launch a selected shell
+	# register a shell hook that loads the openchamber context file when openchamber desktop, web or ssh, launch a selected shell with its builtin terminal
 	# Load the OpenChamber context file when OPENCHAMBER_RUNTIME is setted in such process launched by OpenChamber.
 	# This allows for openchamber to use aistack managed tools and runtime
 	openchamber_context_load_register_for_shell "$shell_name_list" || return $?
@@ -156,7 +156,7 @@ openchamber_disconnect_aistack() {
 	vscode_remove_config "openchamber\.opencodeBinary"
 }
 
-# allow to inject openchamber context file in shell launched by openchamber
+# allow to inject openchamber context file in shell launched by openchamber builtin terminal
 # env var OPENCHAMBER_RUNTIME allow to detect if the current shell was launched by openchamber (desktop, web or remote ssh)
 # OPENCHAMBER_RUNTIME is not documented, see https://github.com/search?q=repo%3Aopenchamber%2Fopenchamber+OPENCHAMBER_RUNTIME&type=code
 openchamber_context_load_register_for_shell() {
