@@ -157,13 +157,6 @@ nvm_install() {
 	local version="${1}"
 	local install_dir
 
-	if [ -s "${NVM_DIR}/nvm.sh" ]; then
-		if [ -d "${AISTACK_NVM_CACHE}" ] && [ ! -e "${NVM_DIR}/.cache" ] && [ ! -L "${NVM_DIR}/.cache" ]; then
-			ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache" || return 1
-		fi
-		return 0
-	fi
-
 	if [ -z "${version}" ] || [ "${version}" = "latest" ]; then
 		echo "No version provided, fetching the latest version..."
 		version="$(github_get_latest_release "nvm-sh/nvm")"
@@ -207,8 +200,8 @@ nvm_install() {
 	fi
 
 	# Keep the NVM cache outside its installation directory.
-	if [ -d "${AISTACK_NVM_CACHE}" ]; then
-		ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache" || return 1
+	if [ -d "${AISTACK_NVM_CACHE}" ] && [ ! -e "${NVM_DIR}/.cache" ] && [ ! -L "${NVM_DIR}/.cache" ]; then
+		ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache"
 	fi
 }
 
