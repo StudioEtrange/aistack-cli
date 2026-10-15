@@ -87,7 +87,7 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 To select an explicit default model and an optional small model:
 
 ```bash
-./aistack kc connect cpa "gpt-5.6-sol" "gpt-5.6-luna"
+./aistack kc connect cpa "gpt-6.1-sol" "gpt-6-luna"
 ```
 
 
@@ -126,7 +126,7 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 To select an explicit default model and an optional small model:
 
 ```bash
-./aistack kc connect cpa "gpt-5.6-sol" "gpt-5.6-luna"
+./aistack kc connect cpa "gpt-6.1-sol" "gpt-6-luna"
 ```
 
 
@@ -156,7 +156,7 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 ```
 **_orla connection_** :
 ```
-./aistack orla connect agent cpa gpt-5.6-luna
+./aistack orla connect agent cpa gpt-6-luna
 ```
 **_orla agent test_** :
 ```
@@ -212,7 +212,7 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 
 To select an explicit default model and an optional session-title model (`agents.title.model`, OpenCode 2):
 ```bash
-./aistack oc connect cpa "gpt-5.6-sol" "gpt-5.6-luna"
+./aistack oc connect cpa "gpt-6.1-sol" "gpt-6-luna"
 ```
 
 **_in another shell session, launch_** :
@@ -237,7 +237,7 @@ _"I want to install NVIDIA skillspector and use it connected to my OpenAI subscr
 ./aistack sktor install
 ./aistack sktor register
 
-./aistack sktor connect cpa gpt-5.4-mini
+./aistack sktor connect cpa gpt-6-luna
 ./aistack sktor launch
 ```
 
@@ -314,7 +314,7 @@ Use `./aistack cpa status` to check the CPA daemon, `./aistack cpa logs` to foll
 ./aistack ciss install
 ./aistack ciss register
 
-./aistack ciss connect cpa "gpt-5.6-luna"
+./aistack ciss connect cpa "gpt-6-luna"
 ```
 
 **_in another shell session, scan a skill_** :
