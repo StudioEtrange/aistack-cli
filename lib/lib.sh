@@ -111,8 +111,8 @@ aistack_info() {
     echo "NVM_DIR : $NVM_DIR"
     echo "NVM_BIN : $NVM_BIN"
     echo "NVM_INC : $NVM_INC"
-    echo "AISTACK_NVM_CACHE : $AISTACK_NVM_CACHE"
-    echo "AISTACK_NVM_DEFAULT_BIN_CACHE : $AISTACK_NVM_DEFAULT_BIN_CACHE"
+    echo "AISTACK_NVM_BIN_CACHE : $AISTACK_NVM_BIN_CACHE"
+    echo "AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH : $AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH"
 
     echo "AISTACK_MODULE_NVM_AVAILABLE : $AISTACK_MODULE_NVM_AVAILABLE"
     echo "AISTACK_MODULE_NVM_LOADED : $AISTACK_MODULE_NVM_LOADED"
@@ -323,7 +323,7 @@ aistack_uninstall() {
 	# NOTE: we intentionnaly keep cache
 	# TODO add an option to delete cache at install/uninstall
 	#echo "INFO : delete NVM cache"
-    #rm -Rf "${AISTACK_NVM_CACHE}"
+    #rm -Rf "${AISTACK_NVM_BIN_CACHE}"
 	#echo "INFO : delete all cache"
 	#rm -Rf "${STELLA_APP_CACHE_DIR}"
     

@@ -4,12 +4,16 @@ node_init() {
     mkdir -p "${AISTACK_NVM_HOME}"
     export NVM_DIR="${AISTACK_NVM_HOME}"
 
-    # cache folder for NVM
-	export AISTACK_NVM_CACHE="${AISTACK_NVM_CACHE:-${STELLA_APP_CACHE_DIR}/nvm-cache}"
-    mkdir -p "${AISTACK_NVM_CACHE}"
-	export AISTACK_NVM_DEFAULT_BIN_CACHE="${AISTACK_NVM_HOME}/aistack-default-bin"
+    # cache folder for binaries downloaded by NVM
+	export AISTACK_NVM_BIN_CACHE="${AISTACK_NVM_BIN_CACHE:-${STELLA_APP_CACHE_DIR}/nvm-bin-cache}"
+    mkdir -p "${AISTACK_NVM_BIN_CACHE}"
+	export AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH="${AISTACK_NVM_HOME}/aistack-nvm-default-nodejs-search-path"
 
-
+	# NVM lock parameters
+	# allows recovery of a lock older than X minutes
+	export NVM_INSTALL_LOCK_STALE=10
+	# wait up to X seconds to acquire an installation lock before stop and fail
+	export NVM_INSTALL_LOCK_TIMEOUT=60
 
 	# requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -112,13 +116,14 @@ node_uninstall() {
 }
 
 # select a nodejs version
+# and fix NVM_BIN and NVM_INC variables
 nvm_default_node_activate() {
 	local cached_nvm_bin=""
 
 	[ "${AISTACK_MODULE_NVM_LOADED}" = "true" ] || return 1
 
-	if [ -f "${AISTACK_NVM_DEFAULT_BIN_CACHE}" ]; then
-		IFS= read -r cached_nvm_bin < "${AISTACK_NVM_DEFAULT_BIN_CACHE}"
+	if [ -f "${AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH}" ]; then
+		IFS= read -r cached_nvm_bin < "${AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH}"
 		case "${cached_nvm_bin}" in
 			"${AISTACK_NVM_HOME}"/versions/node/*/bin)
 				if [ -x "${cached_nvm_bin}/node" ]; then
@@ -141,19 +146,20 @@ nvm_default_node_activate() {
 	return 0
 }
 
+# generate file AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH
 nvm_default_node_cache_write() {
 	local tmp_file
 
 	[ -n "${NVM_BIN}" ] || return 1
 	[ -x "${NVM_BIN}/node" ] || return 1
 
-	tmp_file="${AISTACK_NVM_DEFAULT_BIN_CACHE}.tmp.$$"
+	tmp_file="${AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH}.tmp.$$"
 	printf '%s\n' "${NVM_BIN}" > "${tmp_file}" || return 1
-	mv "${tmp_file}" "${AISTACK_NVM_DEFAULT_BIN_CACHE}"
+	mv "${tmp_file}" "${AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH}"
 }
 
 nvm_default_node_cache_remove() {
-	rm -f "${AISTACK_NVM_DEFAULT_BIN_CACHE}"
+	rm -f "${AISTACK_NVM_DEFAULT_NODEJS_SEARCH_PATH}"
 }
 
 
@@ -211,9 +217,11 @@ nvm_install() {
 		return 1
 	fi
 
-	# Keep the NVM cache outside its installation directory.
-	if [ -d "${AISTACK_NVM_CACHE}" ] && [ ! -e "${NVM_DIR}/.cache" ] && [ ! -L "${NVM_DIR}/.cache" ]; then
-		ln -s "${AISTACK_NVM_CACHE}" "${NVM_DIR}/.cache"
+	# keep the NVM .cache/bin folder cache outside
+	# but not .cache/locks and other folders
+	if [ -d "${AISTACK_NVM_BIN_CACHE}" ] && [ ! -e "${NVM_DIR}/.cache/bin" ] && [ ! -L "${NVM_DIR}/.cache/bin" ]; then
+		mkdir -p "${NVM_DIR}/.cache" || return 1
+		ln -s "${AISTACK_NVM_BIN_CACHE}" "${NVM_DIR}/.cache/bin"
 	fi
 }
 

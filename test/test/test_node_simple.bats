@@ -14,8 +14,8 @@ teardown() {
 @test "nvm_install replaces an incomplete installation after a successful clone" {
 	tmp="$(mktemp -d)"
 	NVM_DIR="${tmp}/nvm"
-	AISTACK_NVM_CACHE="${tmp}/nvm-cache"
-	mkdir -p "${NVM_DIR}" "${AISTACK_NVM_CACHE}"
+	AISTACK_NVM_BIN_CACHE="${tmp}/nvm-bin-cache"
+	mkdir -p "${NVM_DIR}" "${AISTACK_NVM_BIN_CACHE}"
 	printf '%s\n' 'partial installation' > "${NVM_DIR}/partial"
 
 	git() {
@@ -35,7 +35,7 @@ teardown() {
 	[ -s "${NVM_DIR}/nvm.sh" ]
 	[ ! -e "${NVM_DIR}/partial" ]
 	[ -L "${NVM_DIR}/.cache" ]
-	assert_equal "$(readlink "${NVM_DIR}/.cache")" "${AISTACK_NVM_CACHE}"
+	assert_equal "$(readlink "${NVM_DIR}/.cache")" "${AISTACK_NVM_BIN_CACHE}"
 
 	rm -rf "${tmp}"
 }

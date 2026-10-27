@@ -60,16 +60,29 @@
   exec "npx" -y @upstash/context7-mcp --api-key "${CONTEXT7_API_KEY}"
   ```
 
-## Set a cache path for nvm binaries
+## Set a cache path for nvm downloaded binaries
 
-define AISTACK_NVM_CACHE before using aistack
+- define AISTACK_NVM_BIN_CACHE before using aistack
 
   ```
-  export AISTACK_NVM_CACHE=/opt/nvm-cache
+  export AISTACK_NVM_BIN_CACHE=/opt/nvm-bin-cache
   cd aistack-cli
   ./aistack init
   ```
 
+- sample usage with a shared folder on a host mounted as volume in containers
+
+  ```
+  sudo mkdir -p /opt/nvm-bin-cache
+  sudo chmod -R 777 /opt/nvm-bin-cache
+
+  # launch containers with --volume /opt/nvm-bin-cache:/opt/nvm-bin-cache
+
+  # inside containers
+  export AISTACK_NVM_BIN_CACHE=/opt/nvm-bin-cache
+  cd aistack-cli
+  ./aistack init
+  ```
 
 ## Using your own npm registry
 
