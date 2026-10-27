@@ -8,6 +8,8 @@
 
 * for installed version by aistack, npm cache dir is in user home and npm config file is in user home. see `aistack info`
 
+**[see NodeJS](./nodejs.md)**
+
 ## Bun
 
 * https://bun.sh/docs

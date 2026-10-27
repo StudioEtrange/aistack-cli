@@ -319,16 +319,58 @@ __htpasswd_crypt() {
 }
 
 
-# generate an unique id for a machine
-# MACHINE_ID (default) use /etc/machine-id https://unix.stackexchange.com/a/144915
-# PRODUCT_UUID use product_uuid -- need sudo -- https://unix.stackexchange.com/a/144892
+# Generate a deterministic environment identifier (OS, hostname, architecture, and machine ID).
+# Environments sharing the same OS ID, hostname, architecture, and machine ID
+# produce the same identifier.
+__generate_environment_id() {
+    local os_id machine_id machine_name machine_arch machine_hash
+
+    case "$OSTYPE" in
+        darwin*)
+            os_id="macos"
+            machine_id=$(ioreg -rd1 -c IOPlatformExpertDevice | awk -F '"' '/IOPlatformUUID/ {print $4}')
+            ;;
+        *)
+            os_id=$(
+                unset ID
+                if [ -r /etc/os-release ]; then
+                    . /etc/os-release
+                elif [ -r /usr/lib/os-release ]; then
+                    . /usr/lib/os-release
+                fi
+                printf '%s' "${ID:-unknown}"
+            )
+            machine_id=$(cat /etc/machine-id 2>/dev/null)
+            ;;
+    esac
+
+    machine_name=$(uname -n)
+    machine_arch=$(uname -m)
+
+    machine_hash=$(
+		printf '%s\n' "$machine_name" "$machine_arch" "$machine_id" "$os_id" |
+		if [[ "$OSTYPE" == darwin* ]]; then
+			shasum -a 256
+		else
+			sha256sum
+		fi
+	)
+
+    printf '%s-%s-%.16s\n' "$os_id" "$machine_name" "$machine_hash"
+}
+
+# generate an id for a machine
+# choose which method to use
+# MACHINE_ID (default) use /etc/machine-id https://unix.stackexchange.com/a/144915 # option ignored on macos
+# PRODUCT_UUID use product_uuid -- need sudo -- https://unix.stackexchange.com/a/144892 # option ignored on macos
 # SEED is a way to salt result with a constant
 __generate_machine_id() {
 	local _OPT="$1"
-
-	local _flag_puuid=
-	local _flag_mid=1
-	local _seed=
+	local _flag_puuid=""
+	local _flag_mid="1"
+	local _seed=""
+	local _flag_seed=""
+	local o
 	for o in $_OPT; do
 		[ "$o" = "PRODUCT_UUID" ] && _flag_puuid="1"
 		[ "$o" = "MACHINE_ID" ] && _flag_mid="1"
@@ -336,13 +378,36 @@ __generate_machine_id() {
 		[ "$o" = "SEED" ] && _flag_seed="1"
 	done
 
-	# NOTE : order is important
-	local _file_list=
-	[ "${_flag_mid}" = "1" ] && _file_list="${_file_list} /etc/machine-id"
-	[ "${_flag_puuid}" = "1" ] && _file_list="${_file_list} /sys/class/dmi/id/product_uuid"
+	case ${STELLA_CURRENT_PLATFORM} in
+		darwin)
+			#_id=$(ioreg -rd1 -c IOPlatformExpertDevice | awk -F '"' '/IOPlatformUUID/ {print $4}')
+			ioreg -rd1 -c IOPlatformExpertDevice |
+                awk -F '"' '/IOPlatformUUID/ {print $4}' |
+                awk -v seed="$_seed" '{printf "%s%s", seed, $0}' |
+                shasum -a 256 |
+                awk '{print $1}'
+			;;
+		linux)
+			local _file_list=
+			# NOTE : order is important
+			if [ "${_flag_mid}" = "1" ]; then
+				[ -f "/etc/machine-id" ] && _file_list="${_file_list} /etc/machine-id"
+			fi
+			if [ "${_flag_puuid}" = "1" ]; then
+				[ -f "/sys/class/dmi/id/product_uuid" ] && _file_list="${_file_list} /sys/class/dmi/id/product_uuid"
+			fi
 
-
-	awk '{printf "'${_seed}'%s",$0}' ${_file_list} | sha256sum | tr -dc '[:alnum:]'
+			[ -n "$_file_list" ] || return 1
+			
+            awk -v seed="$_seed" \
+                '{printf "%s%s", seed, $0}' ${_file_list} |
+                sha256sum |
+                awk '{print $1}'
+			;;
+		*)
+			return 1
+			;;
+	esac
 }
 
 # generate a random password

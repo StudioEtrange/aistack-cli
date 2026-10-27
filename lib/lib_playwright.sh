@@ -3,6 +3,8 @@ playwright_init() {
 	export AISTACK_PLAYWRIGHT_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/playwright-cli"
 	mkdir -p "${AISTACK_PLAYWRIGHT_LAUNCHER_HOME}"
 	export AISTACK_PLAYWRIGHT_LAUNCHER_FILE="${AISTACK_PLAYWRIGHT_LAUNCHER_HOME}/playwright-cli"
+	export PLAYWRIGHT_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/playwright-cli"
+	mkdir -p "${PLAYWRIGHT_FEAT_INSTALL_ROOT}"
 
 	# playwright cli context
 	export AISTACK_PLAYWRIGHT_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/playwright-cli"
@@ -12,7 +14,7 @@ playwright_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_PLAYWRIGHT_CONTEXT_EXPORT_VARIABLES=""
+	export AISTACK_PLAYWRIGHT_CONTEXT_EXPORT_VARIABLES="PLAYWRIGHT_FEAT_INSTALL_ROOT"
 
 	# playwright cli requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -30,13 +32,15 @@ playwright_init() {
 playwright_is_installed() {
 	local r m
 	export AISTACK_PLAYWRIGHT_TOOL_AVAILABLE="false"
+	export AISTACK_PLAYWRIGHT_TOOL_SEARCH_PATH=""
 	export AISTACK_PLAYWRIGHT_TOOL_PATH=""
 	for r in ${AISTACK_PLAYWRIGHT_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_PLAYWRIGHT_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 
-	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/playwright-cli" ] || return 1
-	export AISTACK_PLAYWRIGHT_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/playwright-cli"
+	[ -x "${PLAYWRIGHT_FEAT_INSTALL_ROOT}/bin/playwright-cli" ] || return 1
 	export AISTACK_PLAYWRIGHT_TOOL_AVAILABLE="true"
+	export AISTACK_PLAYWRIGHT_TOOL_SEARCH_PATH="${PLAYWRIGHT_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_PLAYWRIGHT_TOOL_PATH="${AISTACK_PLAYWRIGHT_TOOL_SEARCH_PATH}/playwright-cli"
 	return 0
 }
 
@@ -56,14 +60,15 @@ playwright_install() {
 	done
 
 	echo "Installing Playwright CLI ${version}"
-	node_package_install "@playwright/cli${version}" || return $?
+	node_isolated_package_install "${PLAYWRIGHT_FEAT_INSTALL_ROOT}" --allow-scripts="@playwright/cli" "@playwright/cli${version}" || return $?
 	playwright_is_installed
 	return $?
 }
 
 playwright_uninstall() {
 	if playwright_is_installed; then
-		node_package_uninstall "@playwright/cli" || return $?
+		node_package_uninstall --prefix "${PLAYWRIGHT_FEAT_INSTALL_ROOT}" "@playwright/cli" || return $?
+		rm -Rf "${PLAYWRIGHT_FEAT_INSTALL_ROOT}"
 		playwright_is_installed && return 1
 		return 0
 	else
@@ -99,9 +104,9 @@ playwright_launch() {
 		[ -f "${AISTACK_PLAYWRIGHT_CONTEXT_FILE}" ] && . "${AISTACK_PLAYWRIGHT_CONTEXT_FILE}"
 		
 		if [ "$#" -gt 0 ]; then
-			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/playwright-cli" "$@"
+			"${PLAYWRIGHT_FEAT_INSTALL_ROOT}/bin/playwright-cli" "$@"
 		else
-			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/playwright-cli"
+			"${PLAYWRIGHT_FEAT_INSTALL_ROOT}/bin/playwright-cli"
 		fi
 	)
 }
@@ -154,8 +159,8 @@ playwright_context_file_generate() {
 
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_PLAYWRIGHT_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_PLAYWRIGHT_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_PLAYWRIGHT_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_PLAYWRIGHT_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_PLAYWRIGHT_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 
@@ -168,6 +173,7 @@ playwright_info() {
 	echo "PLAYWRIGHT CLI path : ${AISTACK_PLAYWRIGHT_TOOL_PATH}"
 	echo "PLAYWRIGHT CLI needed managed runtime : ${AISTACK_PLAYWRIGHT_RUNTIME_REQUIRED}"
 	echo "PLAYWRIGHT CLI needed managed module : ${AISTACK_PLAYWRIGHT_MODULE_REQUIRED}"
+	echo "PLAYWRIGHT CLI install root : ${PLAYWRIGHT_FEAT_INSTALL_ROOT}"
 	echo "PLAYWRIGHT CLI launcher : ${AISTACK_PLAYWRIGHT_LAUNCHER_FILE}"
 	echo "PLAYWRIGHT CLI context file : ${AISTACK_PLAYWRIGHT_CONTEXT_FILE}"
 }

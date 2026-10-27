@@ -23,7 +23,7 @@ orla_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_ORLA_CONTEXT_EXPORT_VARIABLES="AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_ORLA_CONFIG_FILE ORLA_FEAT_INSTALL_ROOT"
+	export AISTACK_ORLA_CONTEXT_EXPORT_VARIABLES="ORLA_FEAT_INSTALL_ROOT AISTACK_CLIPROXYAPI_KEY_FOR_ORLA AISTACK_ORLA_CONFIG_FILE"
 
 	# orla requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -42,12 +42,14 @@ orla_init() {
 orla_is_installed() {
 	local r m
 	export AISTACK_ORLA_TOOL_AVAILABLE="false"
+	export AISTACK_ORLA_TOOL_SEARCH_PATH=""
 	export AISTACK_ORLA_TOOL_PATH=""
 	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_ORLA_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${ORLA_FEAT_INSTALL_ROOT}/orla" ] || return 1
 	export AISTACK_ORLA_TOOL_AVAILABLE="true"
-	export AISTACK_ORLA_TOOL_PATH="${ORLA_FEAT_INSTALL_ROOT}/orla"
+	export AISTACK_ORLA_TOOL_SEARCH_PATH="${ORLA_FEAT_INSTALL_ROOT}"
+	export AISTACK_ORLA_TOOL_PATH="${AISTACK_ORLA_TOOL_SEARCH_PATH}/orla"
 	return 0
 }
 
@@ -200,8 +202,8 @@ orla_context_file_generate() {
 
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_ORLA_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_ORLA_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_ORLA_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_ORLA_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 

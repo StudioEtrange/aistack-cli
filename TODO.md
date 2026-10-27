@@ -61,6 +61,9 @@
   drwxr-xr-x    4 nomorgan  staff   128 Aug  8 09:48 rustup-init
   ```
 
+* check aistack requirements : git for node only
+  * aistack-cli/lib/lib_node.sh: line 189: git: command not found
+
 ## TO EXPLORE
 
 * ghostdesk

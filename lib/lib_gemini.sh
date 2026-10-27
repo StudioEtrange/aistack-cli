@@ -3,6 +3,8 @@ gemini_init() {
 	export AISTACK_GEMINI_CONFIG_HOME="${HOME}/.gemini"
 	export AISTACK_GEMINI_CONFIG_CMD_HOME="${AISTACK_GEMINI_CONFIG_HOME}/commands"
 	export AISTACK_GEMINI_CONFIG_FILE="${AISTACK_GEMINI_CONFIG_HOME}/settings.json"
+	export GEMINI_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/gemini"
+	mkdir -p "${GEMINI_FEAT_INSTALL_ROOT}"
 
 	# gemini cli launcher
 	export AISTACK_GEMINI_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/gemini-cli"
@@ -17,7 +19,7 @@ gemini_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_GEMINI_CONTEXT_EXPORT_VARIABLES=""
+	export AISTACK_GEMINI_CONTEXT_EXPORT_VARIABLES="GEMINI_FEAT_INSTALL_ROOT"
 
 	# gemini cli requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -36,12 +38,14 @@ gemini_init() {
 gemini_is_installed() {
 	local r m
 	export AISTACK_GEMINI_TOOL_AVAILABLE="false"
+	export AISTACK_GEMINI_TOOL_SEARCH_PATH=""
 	export AISTACK_GEMINI_TOOL_PATH=""
 	for r in ${AISTACK_GEMINI_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_GEMINI_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/gemini" ] || return 1
-	export AISTACK_GEMINI_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/gemini"
+	[ -x "${GEMINI_FEAT_INSTALL_ROOT}/bin/gemini" ] || return 1
 	export AISTACK_GEMINI_TOOL_AVAILABLE="true"
+	export AISTACK_GEMINI_TOOL_SEARCH_PATH="${GEMINI_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_GEMINI_TOOL_PATH="${AISTACK_GEMINI_TOOL_SEARCH_PATH}/gemini"
 	return 0
 }
 
@@ -63,8 +67,7 @@ gemini_install() {
 
 	echo "Installing Gemini CLI ${version}"
 	# available versions : https://www.npmjs.com/package/@google/gemini-cli-core
-	node_package_install "@google/gemini-cli${version}" || return $?
-	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @google/gemini-cli${version}
+	node_isolated_package_install "${GEMINI_FEAT_INSTALL_ROOT}" --allow-scripts="@google/gemini-cli" "@google/gemini-cli${version}" || return $?
 
 	gemini_is_installed
 	return $?
@@ -72,8 +75,8 @@ gemini_install() {
 
 gemini_uninstall() {
 	if gemini_is_installed; then
-		node_package_uninstall "@google/gemini-cli" || return $?
-		#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @google/gemini-cli
+		node_package_uninstall --prefix "${GEMINI_FEAT_INSTALL_ROOT}" "@google/gemini-cli" || return $?
+		rm -Rf "${GEMINI_FEAT_INSTALL_ROOT}"
 		gemini_is_installed && return 1
 		return 0
 	else
@@ -107,9 +110,9 @@ gemini_launch() {
 		[ -f "${AISTACK_GEMINI_CONTEXT_FILE}" ] && . "${AISTACK_GEMINI_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
-			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/gemini" "$@"
+			"${GEMINI_FEAT_INSTALL_ROOT}/bin/gemini" "$@"
 		else
-			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/gemini"
+			"${GEMINI_FEAT_INSTALL_ROOT}/bin/gemini"
 		fi
 	)
 }
@@ -161,8 +164,8 @@ gemini_context_file_generate() {
 
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_GEMINI_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_GEMINI_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_GEMINI_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_GEMINI_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_GEMINI_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 
@@ -178,6 +181,7 @@ gemini_info() {
 	echo "GEMINI CLI path : $AISTACK_GEMINI_TOOL_PATH"
 	echo "GEMINI CLI needed managed runtime : $AISTACK_GEMINI_RUNTIME_REQUIRED"
 	echo "GEMINI CLI needed managed module : $AISTACK_GEMINI_MODULE_REQUIRED"
+	echo "GEMINI CLI install root : $GEMINI_FEAT_INSTALL_ROOT"
 	echo "GEMINI CLI launcher : $AISTACK_GEMINI_LAUNCHER_FILE"
 	echo "GEMINI CLI context file : $AISTACK_GEMINI_CONTEXT_FILE"
 	echo

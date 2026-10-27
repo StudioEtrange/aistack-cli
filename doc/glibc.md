@@ -1,6 +1,6 @@
 # Alternative glibc runtimes
 
-AIStack can use custom glibc runtimes through [glibc-binary-compat](https://github.com/StudioEtrange/glibc-binary-compat) when an installed tool requires a newer glibc than the host system provides.
+AIStack can use custom glibc runtimes through [GBC (glibc-binary-compat)](https://github.com/StudioEtrange/glibc-binary-compat) when an installed tool requires a newer glibc than the host system provides.
 
 ## Tool requirements
 
@@ -44,7 +44,7 @@ AIStack can use custom glibc runtimes through [glibc-binary-compat](https://gith
 
 ## Override automatic glibc selection
 
-You can set tool-specific environment variable to override automatic selection for that tool:
+You can set tool-specific environment variable to override automatic glibc selection for that tool:
 
 - `AISTACK_INIT_FORCE_NODE_GBC`
 - `AISTACK_INIT_FORCE_AGY_GBC`

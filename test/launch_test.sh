@@ -5,7 +5,7 @@ STELLA_LOG_STATE=OFF
 . "$_CURRENT_FILE_DIR/stella-link.sh" include
 
 usage() {
-	echo " * Usage $0 lib|json|yaml|glibc|vs|node|playwright|opencode|all [test-name]"
+	echo " * Usage $0 lib|json|yaml|glibc|vs|node|node|python|playwright|opencode|all [test-name]"
 	echo "sample:"
 	echo "$0 json json_has_path"
 }
@@ -63,8 +63,8 @@ init_aistack_test_env() {
 }
 
 test_launch_bats() {
-	local domain="$1"
-	local filter="$2"
+	local domain="${1}"
+	local filter="${2}"
 	local _v
 	local test_status
 	local cleanup_status
@@ -114,44 +114,70 @@ case $1 in
   all|"")
 	init_aistack_test_env
 	test_status=0
-	for domain in lib json yaml glibc vs node playwright opencode; do
+	for domain in lib json yaml glibc vs playwright opencode node_simple python_simple; do
 		test_launch_bats "${domain}" "${2}" || test_status=1
 	done
+
+	aistack_runtime_require "nodejs"
+	if node_is_installed; then
+		test_launch_bats node_integration "${2}" || test_status=1
+	else
+		test_status=1
+	fi
+
+	aistack_runtime_require "python"
+	if python_is_installed; then
+		test_launch_bats python_integration "${2}" || test_status=1
+	else
+		test_status=1
+	fi
 
 	exit "${test_status}"
 	;;
 
   lib)
 	init_aistack_test_env
-    test_launch_bats lib $2
+    test_launch_bats lib "${2}"
 	;;
   json)
 	init_aistack_test_env
-    test_launch_bats json $2
+    test_launch_bats json "${2}"
   	;;
   yaml)
 	init_aistack_test_env
-    test_launch_bats yaml $2
+    test_launch_bats yaml "${2}"
   	;;
   glibc)
 	init_aistack_test_env
-    test_launch_bats glibc $2
+    test_launch_bats glibc "${2}"
 	;;
   vs)
 	init_aistack_test_env
-    test_launch_bats vs $2
+    test_launch_bats vs "${2}"
   	;;
   node)
 	init_aistack_test_env
-    test_launch_bats node $2
+    test_launch_bats node_simple "${2}"
+
+	aistack_runtime_require "nodejs"
+	node_is_installed || exit 1
+	test_launch_bats node_integration "${2}"
+	;;
+  python)
+	init_aistack_test_env
+	test_launch_bats python_simple "${2}"
+
+	aistack_runtime_require "python"
+	python_is_installed || exit 1
+	test_launch_bats python_integration "${2}"
 	;;
   playwright)
 	init_aistack_test_env
-	test_launch_bats playwright $2
+	test_launch_bats playwright "${2}"
 	;;
   opencode)
 	init_aistack_test_env
-	test_launch_bats opencode $2
+	test_launch_bats opencode "${2}"
 	;;
   *)
 	usage

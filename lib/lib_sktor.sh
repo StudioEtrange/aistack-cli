@@ -3,6 +3,8 @@ sktor_init() {
 	export AISTACK_SKTOR_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/sktor"
 	mkdir -p "${AISTACK_SKTOR_LAUNCHER_HOME}"
 	export AISTACK_SKTOR_LAUNCHER_FILE="${AISTACK_SKTOR_LAUNCHER_HOME}/skillspector"
+	export SKTOR_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/sktor"
+	mkdir -p "${SKTOR_FEAT_INSTALL_ROOT}"
 
 	# skillspector context
 	export AISTACK_SKTOR_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/sktor"
@@ -12,7 +14,7 @@ sktor_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_SKTOR_CONTEXT_EXPORT_VARIABLES=""
+	export AISTACK_SKTOR_CONTEXT_EXPORT_VARIABLES="SKTOR_FEAT_INSTALL_ROOT"
 
 	# cpa key for skillspector to connect to cpa backend
 	# context folder will also contain CPA key
@@ -58,12 +60,14 @@ sktor_init() {
 sktor_is_installed() {
 	local r m
 	export AISTACK_SKTOR_TOOL_AVAILABLE="false"
+	export AISTACK_SKTOR_TOOL_SEARCH_PATH=""
 	export AISTACK_SKTOR_TOOL_PATH=""
 	for r in ${AISTACK_SKTOR_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_SKTOR_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skillspector" ] || return 1
-	export AISTACK_SKTOR_TOOL_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skillspector"
+	[ -x "${SKTOR_FEAT_INSTALL_ROOT}/bin/skillspector" ] || return 1
 	export AISTACK_SKTOR_TOOL_AVAILABLE="true"
+	export AISTACK_SKTOR_TOOL_SEARCH_PATH="${SKTOR_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_SKTOR_TOOL_PATH="${AISTACK_SKTOR_TOOL_SEARCH_PATH}/skillspector"
 	return 0
 }
 
@@ -82,7 +86,9 @@ sktor_install() {
 	done
 
 	echo "Installing skillspector"
-	python_uv_package_install 'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git' || return $?
+	#python_uv_package_install 'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git' || return $?
+	#python_uv_isolated_tool_clean_install "${SKTOR_FEAT_INSTALL_ROOT}" 'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git' || return $?
+	python_uv_isolated_package_clean_install "${SKTOR_FEAT_INSTALL_ROOT}" 'skillspector[mcp] @ git+https://github.com/NVIDIA/skillspector.git' || return $?
 	
 	sktor_is_installed
 	return $?
@@ -90,7 +96,10 @@ sktor_install() {
  
 sktor_uninstall() {
 	if sktor_is_installed; then
-		python_uv_package_uninstall 'skillspector[mcp]' || return $?
+		#python_uv_package_uninstall 'skillspector[mcp]' || return $?
+		#python_uv_isolated_tool_uninstall "${SKTOR_FEAT_INSTALL_ROOT}" 'skillspector[mcp]' || return $?
+		python_uv_isolated_package_uninstall "${SKTOR_FEAT_INSTALL_ROOT}" 'skillspector[mcp]' || return $?
+		rm -Rf "${SKTOR_FEAT_INSTALL_ROOT}"
 		sktor_is_installed && return 1
 		return 0
 	else
@@ -124,9 +133,9 @@ sktor_launch() {
 		[ -f "${AISTACK_SKTOR_CONTEXT_FILE}" ] && . "${AISTACK_SKTOR_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
-			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skillspector" "$@"
+			"${SKTOR_FEAT_INSTALL_ROOT}/bin/skillspector" "$@"
 		else
-			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skillspector"
+			"${SKTOR_FEAT_INSTALL_ROOT}/bin/skillspector"
 		fi
 	)
 }
@@ -175,6 +184,7 @@ sktor_info() {
 	echo "SKTOR path : ${AISTACK_SKTOR_TOOL_PATH}"
 	echo "SKTOR needed managed runtime : ${AISTACK_SKTOR_RUNTIME_REQUIRED}"
 	echo "SKTOR needed managed module : ${AISTACK_SKTOR_MODULE_REQUIRED}"
+	echo "SKTOR install root : ${SKTOR_FEAT_INSTALL_ROOT}"
 	echo "SKTOR launcher : ${AISTACK_SKTOR_LAUNCHER_FILE}"
 	echo "SKTOR context file : ${AISTACK_SKTOR_CONTEXT_FILE}"
 	echo
@@ -253,8 +263,8 @@ sktor_context_file_generate() {
 	aistack_context_file_export_variables "${AISTACK_SKTOR_CONTEXT_FILE}" "${AISTACK_SKTOR_CONTEXT_EXPORT_VARIABLES}"
     
 	# PATH
-	for r in ${AISTACK_SKTOR_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_SKTOR_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_SKTOR_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_SKTOR_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_SKTOR_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 
 }

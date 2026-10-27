@@ -5,6 +5,8 @@ adk_init() {
 	export AISTACK_ADK_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/adk"
 	mkdir -p "${AISTACK_ADK_LAUNCHER_HOME}"
 	export AISTACK_ADK_LAUNCHER_FILE="${AISTACK_ADK_LAUNCHER_HOME}/adk"
+	export ADK_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/adk"
+	mkdir -p "${ADK_FEAT_INSTALL_ROOT}"
 
 	# adk context
 	export AISTACK_ADK_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/adk"
@@ -14,7 +16,7 @@ adk_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_ADK_CONTEXT_EXPORT_VARIABLES=""
+	export AISTACK_ADK_CONTEXT_EXPORT_VARIABLES="ADK_FEAT_INSTALL_ROOT"
 
 	# adk requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -33,12 +35,14 @@ adk_init() {
 adk_is_installed() {
 	local r m
 	export AISTACK_ADK_TOOL_AVAILABLE="false"
+	export AISTACK_ADK_TOOL_SEARCH_PATH=""
 	export AISTACK_ADK_TOOL_PATH=""
 	for r in ${AISTACK_ADK_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_ADK_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk" ] || return 1
-	export AISTACK_ADK_TOOL_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk"
+	[ -x "${ADK_FEAT_INSTALL_ROOT}/bin/adk" ] || return 1
 	export AISTACK_ADK_TOOL_AVAILABLE="true"
+	export AISTACK_ADK_TOOL_SEARCH_PATH="${ADK_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_ADK_TOOL_PATH="${AISTACK_ADK_TOOL_SEARCH_PATH}/adk"
 	return 0
 }
 
@@ -56,16 +60,17 @@ adk_install() {
 	done
 
 	echo "Installing adk for python"
-	python_uv_package_install "google-adk" || return $?
-	#PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip install --system --reinstall --verbose google-adk
+	#python_uv_package_install "google-adk" || return $?
+	python_uv_isolated_tool_clean_install "${ADK_FEAT_INSTALL_ROOT}" "google-adk" || return $?
 	adk_is_installed
 	return $?
 }
 
 adk_uninstall() {
 	if adk_is_installed; then
-		python_uv_package_uninstall "google-adk" || return $?
-		#PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" uv pip uninstall --system --verbose google-adk
+		#python_uv_package_uninstall "google-adk" || return $?
+		python_uv_isolated_tool_uninstall "${ADK_FEAT_INSTALL_ROOT}" "google-adk"
+		rm -Rf "${ADK_FEAT_INSTALL_ROOT}"
 		adk_is_installed && return 1
 		return 0
 	else
@@ -99,9 +104,9 @@ adk_launch() {
 		[ -f "${AISTACK_ADK_CONTEXT_FILE}" ] && . "${AISTACK_ADK_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
-			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk" "$@"
+			"${ADK_FEAT_INSTALL_ROOT}/bin/adk" "$@"
 		else
-			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/adk"
+			"${ADK_FEAT_INSTALL_ROOT}/bin/adk"
 		fi
 	)
 }
@@ -153,8 +158,8 @@ adk_context_file_generate() {
 
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_ADK_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_ADK_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_ADK_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_ADK_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_ADK_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 
@@ -168,6 +173,7 @@ adk_info() {
 	echo "ADK path : $AISTACK_ADK_TOOL_PATH"
 	echo "ADK needed managed runtime : $AISTACK_ADK_RUNTIME_REQUIRED"
 	echo "ADK needed managed module : $AISTACK_ADK_MODULE_REQUIRED"
+	echo "ADK install root : $ADK_FEAT_INSTALL_ROOT"
 	echo "ADK launcher : $AISTACK_ADK_LAUNCHER_FILE"
 	echo "ADK context file : $AISTACK_ADK_CONTEXT_FILE"
 }

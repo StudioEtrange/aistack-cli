@@ -5,6 +5,8 @@ kilo_init() {
     # The Kilo CLI is a fork of OpenCode and supports the same configuration options
     # KILO_CONFIG takes precedence over the global configuration file.
     [ -z "${KILO_CONFIG}" ] && export AISTACK_KILO_CONFIG_FILE="${AISTACK_KILO_CONFIG_HOME}/kilo.jsonc" || export AISTACK_KILO_CONFIG_FILE="${KILO_CONFIG}"
+	export KILO_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/kilo"
+	mkdir -p "${KILO_FEAT_INSTALL_ROOT}"
 
     # cpa key for kilo to connect to cpa backend
     export AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE="${AISTACK_KILO_CONFIG_HOME}/cpa_key_for_kc"
@@ -24,7 +26,7 @@ kilo_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_KILO_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_KILO_CONTEXT_EXPORT_VARIABLES="AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
+	export AISTACK_KILO_CONTEXT_EXPORT_VARIABLES="KILO_FEAT_INSTALL_ROOT AISTACK_CLIPROXYAPI_KEY_FOR_KILO"
 
 	# kilo code requirements
 	export AISTACK_KILO_RUNTIME_REQUIRED="nodejs"
@@ -41,12 +43,15 @@ kilo_init() {
 kilo_is_installed() {
 	local r m
 	export AISTACK_KILO_TOOL_AVAILABLE="false"
+	export AISTACK_KILO_TOOL_SEARCH_PATH=""
 	export AISTACK_KILO_TOOL_PATH=""
 	for r in ${AISTACK_KILO_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_KILO_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/kilo" ] || return 1
+	[ -x "${KILO_FEAT_INSTALL_ROOT}/bin/kilo" ] || return 1
 	export AISTACK_KILO_TOOL_AVAILABLE="true"
-	export AISTACK_KILO_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/kilo"
+	export AISTACK_KILO_TOOL_SEARCH_PATH="${KILO_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_KILO_TOOL_PATH="${AISTACK_KILO_TOOL_SEARCH_PATH}/kilo"
+
 	return 0
 }
 
@@ -70,8 +75,7 @@ kilo_install() {
 			done
 			
             echo "Installing Kilo Code CLI ${version}"
-			node_package_install "@kilocode/cli${version}" || return $?
-            #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g @kilocode/cli${version}
+			node_isolated_package_install  "${KILO_FEAT_INSTALL_ROOT}" --allow-scripts="@kilocode/cli" "@kilocode/cli${version}" || return $?
             kilo_is_installed
 			return $?
 			;;
@@ -90,8 +94,8 @@ kilo_uninstall() {
         "cli")
 			if kilo_is_installed; then
 				echo "Uninstalling Kilo Code CLI"
-				node_package_uninstall "@kilocode/cli" || return $?
-				#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g @kilocode/cli
+				node_package_uninstall --prefix "${KILO_FEAT_INSTALL_ROOT}" "@kilocode/cli" || return $?
+				rm -Rf "${KILO_FEAT_INSTALL_ROOT}"
 				kilo_is_installed && return 1
 				return 0
 			else
@@ -132,9 +136,9 @@ kilo_launch() {
 		[ -f "${AISTACK_KILO_CONTEXT_FILE}" ] && . "${AISTACK_KILO_CONTEXT_FILE}"
 
         if [ "$#" -gt 0 ]; then
-            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo" "$@"
+            "$KILO_FEAT_INSTALL_ROOT/bin/kilo" "$@"
         else
-            "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/kilo"
+            "$KILO_FEAT_INSTALL_ROOT/bin/kilo"
         fi
     )
 }
@@ -188,8 +192,8 @@ kilo_context_file_generate() {
 	
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_KILO_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_KILO_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_KILO_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_KILO_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_KILO_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 
@@ -199,17 +203,18 @@ kilo_context_file_generate_remove() {
 
 
 kilo_info() {
-    echo "Configuration file : $AISTACK_KILO_CONFIG_FILE"
+    echo "Configuration file : ${AISTACK_KILO_CONFIG_FILE}"
 	echo
-	echo "Kilo Code available : $AISTACK_KILO_TOOL_AVAILABLE"
-	echo "Kilo Code path : $AISTACK_KILO_TOOL_PATH"
-	echo "Kilo Code needed managed runtime : $AISTACK_KILO_RUNTIME_REQUIRED"
-	echo "Kilo Code needed managed module : $AISTACK_KILO_MODULE_REQUIRED"
-	echo "Kilo Code launcher : $AISTACK_KILO_LAUNCHER_FILE"
-	echo "Kilo Code context file : $AISTACK_KILO_CONTEXT_FILE"
+	echo "Kilo Code available : ${AISTACK_KILO_TOOL_AVAILABLE}"
+	echo "Kilo Code path : ${AISTACK_KILO_TOOL_PATH}"
+	echo "Kilo Code needed managed runtime : ${AISTACK_KILO_RUNTIME_REQUIRED}"
+	echo "Kilo Code needed managed module : ${AISTACK_KILO_MODULE_REQUIRED}"
+	echo "Kilo Code install root : ${KILO_FEAT_INSTALL_ROOT}"
+	echo "Kilo Code launcher : ${AISTACK_KILO_LAUNCHER_FILE}"
+	echo "Kilo Code context file : ${AISTACK_KILO_CONTEXT_FILE}"
 	echo
-    [ -n "$AISTACK_CLIPROXYAPI_KEY_FOR_KILO" ] && echo "To request CLIProxyAPI, use API key : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO (from file : $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)" || \
-        echo "Not connected to CLIProxyAPI (no API key for CPA found in file $AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE)"
+    [ -n "${AISTACK_CLIPROXYAPI_KEY_FOR_KILO}" ] && echo "To request CLIProxyAPI, use API key : ${AISTACK_CLIPROXYAPI_KEY_FOR_KILO} (from file : ${AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE})" || \
+        echo "Not connected to CLIProxyAPI (no API key for CPA found in file ${AISTACK_CLIPROXYAPI_KEY_FOR_KILO_FILE})"
 }
 
 kilo_show_config() {

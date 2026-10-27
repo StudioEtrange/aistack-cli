@@ -15,7 +15,7 @@ Right to the point how-to
   - [Case 9 : scan skills with Agent Skill Manager](#case-9--scan-skills-with-agent-skill-manager)
   - [Case 10 : scan skills with Cisco AI Skill Scanner + OpenAI](#case-10--scan-skills-with-cisco-ai-skill-scanner--openai)
   - [Case 11 : install the Rust runtime](#case-11--install-the-rust-runtime)
-  - [Case 12 : Configure Node.js internal runtime](#case-12--configure-nodejs-internal-runtime)
+  - [Case 12 : configure Node.js internal runtime](#case-12--configure-nodejs-internal-runtime)
   - [Case 13 : install gemini-cli](#case-13--install-gemini-cli)
   - [Case 14 : gemini-cli and local MCP server](#case-14--gemini-cli-and-local-mcp-server)
 
@@ -346,7 +346,7 @@ Remove the managed Rust runtime with:
 ./aistack runtime remove rust
 ```
 
-## Case 12 : Configure Node.js internal runtime
+## Case 12 : configure Node.js internal runtime
 
 _"I want to set a npm registry for the internal Node.js runtime."_
 

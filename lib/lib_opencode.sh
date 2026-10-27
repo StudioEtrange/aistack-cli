@@ -5,6 +5,8 @@ opencode_init() {
 	# OPENCODE_CONFIG takes precedence over the global and project configurations.
 	[ -z "${OPENCODE_CONFIG}" ] && export AISTACK_OPENCODE_CONFIG_FILE="${AISTACK_OPENCODE_CONFIG_HOME}/opencode.json" || export AISTACK_OPENCODE_CONFIG_FILE="${OPENCODE_CONFIG}"
 	export OPENCODE_CONFIG="${AISTACK_OPENCODE_CONFIG_FILE}"
+	export OPENCODE_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/opencode"
+	mkdir -p "${OPENCODE_FEAT_INSTALL_ROOT}"
 
 	export AISTACK_OPENCODE_CLI_CONFIG_FILE="${AISTACK_OPENCODE_CONFIG_HOME}/cli.json"
 
@@ -25,7 +27,7 @@ opencode_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_OPENCODE_CONTEXT_EXPORT_VARIABLES="AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE OPENCODE_CONFIG"
+	export AISTACK_OPENCODE_CONTEXT_EXPORT_VARIABLES="OPENCODE_FEAT_INSTALL_ROOT AISTACK_CLIPROXYAPI_KEY_FOR_OPENCODE OPENCODE_CONFIG"
 
 	# opencode requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -44,13 +46,15 @@ opencode_init() {
 opencode_is_installed() {
 	local r m
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="false"
+	export AISTACK_OPENCODE_TOOL_SEARCH_PATH=""
 	export AISTACK_OPENCODE_TOOL_PATH=""
 	#export OPENCODE_BINARY=""
 	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode" ] || return 1
-	export AISTACK_OPENCODE_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode"
+	[ -x "${OPENCODE_FEAT_INSTALL_ROOT}/bin/opencode" ] || return 1
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="true"
+	export AISTACK_OPENCODE_TOOL_SEARCH_PATH="${OPENCODE_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_OPENCODE_TOOL_PATH="${AISTACK_OPENCODE_TOOL_SEARCH_PATH}/opencode"
 
 	# NOTE : we do not use it
 	# export OPENCODE_BINARY="$AISTACK_OPENCODE_LAUNCHER_FILE"
@@ -79,10 +83,10 @@ opencode_install() {
 	echo "Installing Opencode CLI flavor $flavor version ${version}"
 	case "$flavor" in
 		"1")
-			node_package_install --allow-scripts=opencode-ai "opencode-ai${version}" || return $?
+			node_isolated_package_install "${OPENCODE_FEAT_INSTALL_ROOT}" --allow-scripts=opencode-ai "opencode-ai${version}" || return $?
 			;;
 		"2")
-			node_package_install --allow-scripts=@opencode/cli "@opencode/cli${version}" || return $?
+			node_isolated_package_install "${OPENCODE_FEAT_INSTALL_ROOT}" --allow-scripts=@opencode/cli "@opencode/cli${version}" || return $?
 			;;
 	esac
 
@@ -98,12 +102,13 @@ opencode_uninstall() {
 	if opencode_is_installed; then
 		case "$flavor" in
 			"1")
-				node_package_uninstall "opencode-ai" || return $?
+				node_package_uninstall --prefix "${OPENCODE_FEAT_INSTALL_ROOT}" "opencode-ai" || return $?
 				;;
 			"2")
-				node_package_uninstall "@opencode/cli" || return $?
+				node_package_uninstall --prefix "${OPENCODE_FEAT_INSTALL_ROOT}" "@opencode/cli" || return $?
 				;;
 		esac
+		rm -Rf "${OPENCODE_FEAT_INSTALL_ROOT}"
 		opencode_is_installed && return 1
 		return 0
 	else
@@ -137,9 +142,9 @@ opencode_launch() {
 		[ -f "${AISTACK_OPENCODE_CONTEXT_FILE}" ] && . "${AISTACK_OPENCODE_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
-			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode" "$@"
+			"${OPENCODE_FEAT_INSTALL_ROOT}/bin/opencode" "$@"
 		else
-			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/opencode"
+			"${OPENCODE_FEAT_INSTALL_ROOT}/bin/opencode"
 		fi
 	)
 }
@@ -190,8 +195,8 @@ opencode_context_file_generate() {
 
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_OPENCODE_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 
@@ -215,6 +220,7 @@ opencode_info() {
 	echo "OPENCODE path : $AISTACK_OPENCODE_TOOL_PATH"
 	echo "OPENCODE needed managed runtime : $AISTACK_OPENCODE_RUNTIME_REQUIRED"
 	echo "OPENCODE needed managed module : $AISTACK_OPENCODE_MODULE_REQUIRED"
+	echo "OPENCODE install root : $OPENCODE_FEAT_INSTALL_ROOT"
 	echo "OPENCODE launcher : $AISTACK_OPENCODE_LAUNCHER_FILE"
 	echo "OPENCODE context file : $AISTACK_OPENCODE_CONTEXT_FILE"
 	echo

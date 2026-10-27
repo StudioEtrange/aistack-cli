@@ -9,14 +9,14 @@ AIStack CLI is an experimental swiss-knife command-line application designed to 
 
 *   **AI Tool Management**: Streamlines the installation and configuration of AI tools like `OpenCode`, `Antigravity CLI`, `Kilo Code` _([see full list](#integrations))_. Provides some minimal convenient default settings.
 *   **MCP Server Integration**: Easily configure and manage connections to various MCP (Model Context Protocol) servers.
-*   **Isolated Environments**: All tools are installed into a local `workspace/` directory, preventing system-wide conflicts. Installing any tools or runtimes will not pollute in anyway your system nor your development environment. Everything is contained in an easy deletable internal folder.
+*   **Isolated Environments**: All tools are installed into it's own tree folder into a `workspace/` directory, preventing system-wide conflicts. Installing any tools or runtimes will not pollute in anyway your system nor your development environment. Everything is contained in an easy deletable internal folder.
 *   **Portability**: Bash application, works on Linux & MacOS.
 
 ## Getting Started
 
 ### Requirements
 
-*   `bash`
+*   `bash 3.2+`
 *   `git`
 
 ### Commands
@@ -32,6 +32,7 @@ To see complete commands use `aistack help`.
 | **help** | Display help message |
 | **info** | Display various AIStack information and configuration |
 | **shell** | Enter a sub-shell with the `aistack` environment and paths configured |
+| **register [current, shell list, vs]** | Register aistack command search path into shell. current shell or a list of supported shells or "vs" for VS Code integrated terminal |
 
 Managed runtimes can be installed or removed independently. Rust uses the official standalone `tar.xz` installers and remains isolated from any system Rust installation:
 
@@ -87,7 +88,6 @@ agy
 
 AIStack CLI offers functionalities for these tools
 
-* [Gemini CLI](doc/geminicli.md) 
 * [Opencode](doc/opencode.md)
 * [OpenChamber](doc/openchamber.md)
 * [CLIProxyAPI](doc/cliproxyapi.md) 
@@ -103,6 +103,7 @@ AIStack CLI offers functionalities for these tools
 * [NVIDIA skillspector](doc/skillspector.md)
 * [Cisco AI Skill Scanner](doc/ciss.md)
 * [VS Code](doc/vscode.md)
+* [Gemini CLI](doc/geminicli.md)
 
 ### MCP Servers
 
@@ -135,20 +136,21 @@ AIStack defines
 
 * module :
   * A module is a kind of component used internally by AIStack.
-  * The PATH of each module is always injected into AIStack run context and may be injected into each tool run context. 
-    * Exception : when a module requires a runtime : the module PATH is not injected into AIStack run context and may be injected into each tool run context. (because the module is included in the search path of the runtime)
+  * The search path of each module is always injected into AIStack run context and may be optionnaly injected into each tool run context. 
+    * Exception : when a module requires a runtime : the module search path is not injected into AIStack run context (because the module is already included in the search path of the runtime).
 
 * runtime : 
   * A runtime is a kind of component used to execute code (Python, Nodejs, and so on...). 
   * Runtimes are fully managed by AIStack and internally installed. 
   * A core runtime is mandatory and is always installed when initializing AIStack.
   * A runtime managed and installed by AIStack takes precedence over existing system runtimes.
-  * The PATH of each runtime is not injected into AIStack run context but may be injected into each tool run context.
+
 
 * tool :
-  * Tools are the main purpose of AIStack : managing tools exposed for direct use by AIStack, agents, or users.
-  * The PATH of each tool is not injected into AIStack run context but may be injected into each tool run context.
-  * A launcher for each tool is generated and the launcher PATH may be injected into shell context so that the tool can be used directly and autonomously.
+  * Tools are the main purpose of AIStack : managing tools exposed for direct use by AIStack, agents or users.
+  * Each tools (binaries, js, python, ...) are installed in an isolated way, within it's own tree folder.
+  * A launcher for each tool is generated and the launcher search path may be injected into shell context (via rc files, with command register) so that the tool can be used directly and autonomously.
+
 
 
 
@@ -158,6 +160,10 @@ AIStack leverages the **[Stella](https://github.com/StudioEtrange/stella)** fram
 Stella provides the infrastructure for application structure, environment isolation, and package management. 
 
 About *Package Management*: Stella uses a concept of "Features" (software packages) which are defined by "Recipes" (Bash scripts). `AIStack` uses this system to provide some of the components it manages or use. Stella features recipes are located in `pool/stella/nix/pool/feature-recipe/`.
+
+## AIStack-cli Unit testing
+
+[see test](./doc/test.md)
 
 ## Contributors
 

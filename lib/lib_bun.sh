@@ -7,23 +7,31 @@ bun_init() {
     #export BUN_INSTALL_CACHE_DIR="${BUN_FEAT_INSTALL_ROOT}/install/cache"
 
 
-    export AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED=""
+	# bun requirement - those will be installed and presence checked to run the current component
+	# NOTE:	those search path will be injected in context file
+	export AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED=""
+	export AISTACK_RUNTIME_BUN_MODULE_REQUIRED=""
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_RUNTIME_BUN_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_RUNTIME_BUN_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
+
 }
 
 # return 0 : is installed
 # return 1 : tool is not installed
 # return 2 : missing runtime
 bun_is_installed() {
-    local r
+    local r m
     
     export AISTACK_RUNTIME_BUN_AVAILABLE="false"
+	export AISTACK_RUNTIME_BUN_SEARCH_PATH=""
+	export AISTACK_RUNTIME_BUN_PATH=""
 	for r in ${AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
-
+	for m in ${AISTACK_RUNTIME_BUN_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
     if aistack_component_is_installed "bun"; then
         export AISTACK_RUNTIME_BUN_AVAILABLE="true"
-        export AISTACK_RUNTIME_BUN_PATH="${AISTACK_ISOLATED_ROOT}/bun/bun"
-        # bin folder which contains bun
-        export AISTACK_RUNTIME_BUN_SEARCH_PATH="$(dirname ${AISTACK_RUNTIME_BUN_PATH})"
+        export AISTACK_RUNTIME_BUN_SEARCH_PATH="${BUN_FEAT_INSTALL_ROOT}"
+        export AISTACK_RUNTIME_BUN_PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}/bun"
         return 0
     fi
     return 1
@@ -37,19 +45,24 @@ bun_is_installed() {
 # This function relies on the following environment variables to be set:
 # - BUN_FEAT_INSTALL_ROOT: The directory where bun will be installed.
 bun_install() {
+	local r m
     local version="$1"
-    
     if [ -z "$version" ] || [ "$version" = "latest" ]; then
         echo "No version provided, fetching the latest version..."
         version=$(github_get_latest_release "oven-sh/bun")
         echo "latest version is ${version}"
     fi
 
-    local r
     for r in $AISTACK_RUNTIME_BUN_RUNTIME_REQUIRED; do 
-		echo "Require needed ${r} managed runtime"
+		echo "INFO: require needed ${r} managed runtime"
 		aistack_runtime_require "${r}"
 	done
+
+	for m in $AISTACK_RUNTIME_BUN_MODULE_REQUIRED; do 
+		echo "INFO: require needed ${m} managed module"
+		aistack_module_require "${m}"
+	done
+
 
 
     local os_arch
@@ -85,6 +98,9 @@ bun_install() {
 	# DEST_ERASE allow to uninstall before install
 	$STELLA_API get_resource "Bun" "${download_url}" "HTTP_ZIP" "$BUN_FEAT_INSTALL_ROOT" "DEST_ERASE STRIP"
     echo "Bun installed successfully."
+
+	bun_is_installed
+	return $?
 }
  
 bun_uninstall() {

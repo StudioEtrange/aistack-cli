@@ -120,12 +120,14 @@ aistack_info() {
     echo "AISTACK_RUNTIME_NODEJS_AVAILABLE: $AISTACK_RUNTIME_NODEJS_AVAILABLE"
     if [ "$AISTACK_RUNTIME_NODEJS_AVAILABLE" = "true" ]; then
         echo "AISTACK_RUNTIME_NODEJS_SEARCH_PATH: $AISTACK_RUNTIME_NODEJS_SEARCH_PATH"
-        echo "AISTACK_RUNTIME_NODEJS_PATH: $AISTACK_RUNTIME_NODEJS_PATH"
+        echo "AISTACK_RUNTIME_NODEJS_PATH: ${AISTACK_RUNTIME_NODEJS_PATH}"
         echo "AISTACK_MODULE_NPM_AVAILABLE: $AISTACK_MODULE_NPM_AVAILABLE"
-        echo "NodeJS version: $($AISTACK_RUNTIME_NODEJS_PATH --version)"
-        echo "NPM version: $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --version)"
-        echo "NPM cache dir: $(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get cache)"
-        local npm_userconfig="$(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm --global config get userconfig)"
+        echo "NodeJS version: $(${AISTACK_RUNTIME_NODEJS_PATH} --version)"
+		echo "NodeJS global installation prefix: $("${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" prefix -g)"
+        echo "NodeJS global nodes modules root folder: $("${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" root -g)"
+		echo "NPM version: $("${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" --version)"
+        echo "NPM cache dir: $("${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" --global config get cache)"
+        local npm_userconfig="$("${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" --global config get userconfig)"
         case "$npm_userconfig" in
             "undefined"|"")
                 echo "NPM userconfig file : not defined"
@@ -354,10 +356,12 @@ aistack_context_load_module_path() {
     [ -n "${list_path}" ] && export PATH="${list_path}:${PATH}"
 }
 
-# VARIABLE_LIST : consider list_path as variables names to append to path list PATH=${VAR}:$PATH
+# add to a sh context file PATH declaration
+# PATH values to add could be values list (VALUE_LIST) or list of variable names (VARIABLE_LIST)
 # VALUE_LIST : consider list_path as raw path to append to path list PATH=/foo/bar:$PATH
+# VARIABLE_LIST : consider list_path as variables names to append to path list PATH=${VAR}:$PATH
 aistack_context_file_export_path() {
-	local f="$1"
+	local file="$1"
 	local list_path="$2"
 	local mode="${3:-VALUE_LIST}"
 
@@ -381,56 +385,22 @@ aistack_context_file_export_path() {
 			;;
 	esac
 
-	# export variable used in VARIABLE_LIST
+	# export variables used in VARIABLE_LIST
 	if [ -n "${variable_list_to_export}" ]; then
-		aistack_context_file_export_variables "${f}" "${variable_list_to_export}" || return $?
+		aistack_context_file_export_variables "${file}" "${variable_list_to_export}" || return $?
 	fi
 
 	# export PATH
 	if [ -n "${list_path_to_export}" ]; then
-		echo "export PATH=\"${list_path_to_export}:\${PATH}\"" >> "${f}" || return $?
+		echo "export PATH=\"${list_path_to_export}:\${PATH}\"" >> "${file}" || return $?
 	fi
 	return 0
 }
 
 
-# TODO : add type tool support ?
-# add a runtime or module path into a context file
-#		VARIABLE_LIST : add variable name to path list PATH=${VAR}:$PATH
-# 		VALUE_LIST : add real path to path list PATH=/foo/bar:$PATH
-aistack_context_path_add_component() {
-	local type="$1"
-	local name="$2"
-	local mode="${3:-VALUE_LIST}"
-
-	local path_to_add
-	# NOTE : we do not check with if folder exists with, it will be checked later in aistack_context_file_export_path
-	case "${type}" in
-		"runtime")
-			va="AISTACK_RUNTIME_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
-        	vp="AISTACK_RUNTIME_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
-		;;
-		"module")
-			va="AISTACK_MODULE_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
-        	vp="AISTACK_MODULE_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
-		;;
-	esac
-
-	case "$mode" in
-		"VALUE_LIST")
-			[ "${!va}" = "true" ] && [ -n "${!vp}" ] && path_to_add="${!vp}"
-		;;
-		"VARIABLE_LIST")
-			[ "${!va}" = "true" ] && [ -n "${vp}" ] && path_to_add="${vp}"
-		;;
-	esac
-
-	[ -n "${path_to_add}" ] && echo "${path_to_add}"
-}
-
-# add an export section of variable in a context file
+# add an export section of variable in a sh context file
 aistack_context_file_export_variables() {
-	local f="$1"
+	local file="$1"
 	local variable_list="$2"
 	local v
 
@@ -438,7 +408,7 @@ aistack_context_file_export_variables() {
 		for v in ${variable_list}; do
 			printf '[ -n "$%s" ] || %s=%s; export %s\n' "$v" "$v" "$(shell_quote_posix "${!v}")" "$v"
 		done
-	} >> "${f}"
+	} >> "${file}"
 }
 
 
@@ -454,10 +424,10 @@ aistack_generic_context_file_generate() {
 	
 	# PATH
     for r in ${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}; do
-		list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") "${list_path}""
+		list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") "${list_path}""
     done
     for m in ${AISTACK_GENERIC_CONTEXT_ADD_MODULE}; do
-		list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") "${list_path}""
+		list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") "${list_path}""
     done
 	aistack_context_file_export_path "${AISTACK_GENERIC_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
@@ -641,7 +611,7 @@ aistack_runtime_uninstall() {
 
 # --------------- MODULE MANAGEMENT -----------------------------
 
-# detect all installed module
+# detect all installed modules
 aistack_module_detect() {
     local m
 
@@ -656,8 +626,8 @@ aistack_module_detect() {
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_JQ_PATH="$(command -v jq)"
                     if [ -n "${AISTACK_MODULE_JQ_PATH}" ]; then
-                        export AISTACK_MODULE_JQ_SEARCH_PATH="$(dirname ${AISTACK_MODULE_JQ_PATH})"
                         export AISTACK_MODULE_JQ_AVAILABLE="true"
+                        export AISTACK_MODULE_JQ_SEARCH_PATH="$(dirname ${AISTACK_MODULE_JQ_PATH})"
                     fi
                 fi
                 ;;
@@ -666,8 +636,8 @@ aistack_module_detect() {
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_YQ_PATH="$(command -v yq)"
                     if [ -n "${AISTACK_MODULE_YQ_PATH}" ]; then
-                        export AISTACK_MODULE_YQ_SEARCH_PATH="$(dirname ${AISTACK_MODULE_YQ_PATH})"
                         export AISTACK_MODULE_YQ_AVAILABLE="true"
+                        export AISTACK_MODULE_YQ_SEARCH_PATH="$(dirname ${AISTACK_MODULE_YQ_PATH})"
                     fi
                 fi
                 ;;
@@ -677,9 +647,8 @@ aistack_module_detect() {
                 export AISTACK_MODULE_JSON5_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_JSON5_AVAILABLE="true"
-                    #export AISTACK_MODULE_JSON5_PATH="$(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" command -v json5)"
-                    export AISTACK_MODULE_JSON5_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/json5"
-                    export AISTACK_MODULE_JSON5_SEARCH_PATH="$(dirname ${AISTACK_MODULE_JSON5_PATH})"
+                    export AISTACK_MODULE_JSON5_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
+                    export AISTACK_MODULE_JSON5_PATH="$AISTACK_MODULE_JSON5_SEARCH_PATH/json5"
 
                 fi
                 ;;
@@ -687,9 +656,8 @@ aistack_module_detect() {
                 export AISTACK_MODULE_PNPM_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_PNPM_AVAILABLE="true"
-                    export AISTACK_MODULE_PNPM_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/pnpm"
-                    export AISTACK_MODULE_PNPM_SEARCH_PATH="$(dirname ${AISTACK_MODULE_PNPM_PATH})"
-
+                    export AISTACK_MODULE_PNPM_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
+                    export AISTACK_MODULE_PNPM_PATH="${AISTACK_MODULE_PNPM_SEARCH_PATH}/pnpm"
                 fi
                 ;;
             # python modules -------
@@ -697,23 +665,21 @@ aistack_module_detect() {
                 export AISTACK_MODULE_PIPX_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_PIPX_AVAILABLE="true"
-                    #export AISTACK_MODULE_PIPX_PATH="$(PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" command -v json5)"
-                    export AISTACK_MODULE_PIPX_PATH="$AISTACK_RUNTIME_PYTHON_SEARCH_PATH/pipx"
-                    export AISTACK_MODULE_PIPX_SEARCH_PATH="$(dirname ${AISTACK_MODULE_PIPX_PATH})"
+                    export AISTACK_MODULE_PIPX_SEARCH_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}"
+                    export AISTACK_MODULE_PIPX_PATH="${AISTACK_MODULE_PIPX_SEARCH_PATH}/pipx"
                 fi
                 ;;
             uv)
                 export AISTACK_MODULE_UV_AVAILABLE="false"
                 if aistack_component_is_installed "${m}"; then
                     export AISTACK_MODULE_UV_AVAILABLE="true"
-                    #export AISTACK_MODULE_UV_PATH="$(PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" command -v json5)"
-                    export AISTACK_MODULE_UV_PATH="$AISTACK_RUNTIME_PYTHON_SEARCH_PATH/uv"
-                    export AISTACK_MODULE_UV_SEARCH_PATH="$(dirname ${AISTACK_MODULE_UV_PATH})"
+                    export AISTACK_MODULE_UV_SEARCH_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}"
+                    export AISTACK_MODULE_UV_PATH="${AISTACK_MODULE_UV_SEARCH_PATH}/uv"
                 fi
                 ;;
             # various modules -------
             mamba|npm|cargo)
-                # already detected at python/nodejs/rust runtime install
+                # NOTE: already detected at python/nodejs/rust runtime install
                 ;;
 			nvm)
                 export AISTACK_MODULE_NVM_AVAILABLE="false"
@@ -889,14 +855,14 @@ aistack_component_core_install() {
     echo "- Install some modules to bootstrap AIStack"
     for m in ${AISTACK_MODULE_CORE_BOOTSTRAP}; do
         aistack_component_install "${m}"
-        aistack_module_detect
+        aistack_module_detect || exit 1
     done
 
     echo "- Install core mandatories runtimes managed by AIStack"
     for r in ${AISTACK_RUNTIME_CORE}; do
 		# NOTE: aistack_runtime_install use each runtime installer which check themselves if we need to upgrade the already installed runtimes
         #aistack_runtime_require "${r}"
-		aistack_runtime_install "${r}"
+		aistack_runtime_install "${r}" || exit 1
     done
 
 	# NOTE: aistack_runtime_require include aistack_runtime_detect call
@@ -905,7 +871,7 @@ aistack_component_core_install() {
 	echo "- Install internal core mandatories modules for AIStack"
     for m in ${AISTACK_MODULE_CORE}; do
         aistack_component_install "${m}"
-        aistack_module_detect
+        aistack_module_detect || exit 1
     done
 
 }
@@ -954,7 +920,7 @@ aistack_component_is_installed() {
             return 1
             ;;
         bun)
-            [ -f "${AISTACK_ISOLATED_ROOT}/bun/bun" ]
+            [ -f "${BUN_FEAT_INSTALL_ROOT}/bun" ]
             return $?
             ;;
 		rust)
@@ -967,7 +933,7 @@ aistack_component_is_installed() {
             return $?
             ;;
         npm|json5|pnpm)
-            [ -f "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/${c}" ]
+            [ -f "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/${c}" ]
             return $?
             ;;
         # other  -----------
@@ -1018,8 +984,9 @@ aistack_component_install() {
             ;;
         json5|pnpm) 
             aistack_runtime_require "nodejs"
-            PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install -g "${c}" 1>/dev/null
-            [ $? -ne 0 ] && {
+            #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install -g "${c}" 1>/dev/null
+            node_package_install "${c}" 1>/dev/null
+			[ $? -ne 0 ] && {
                 echo "ERROR : installing module ${c}"
                 return 1
             }
@@ -1031,6 +998,43 @@ aistack_component_install() {
     esac
 }
 
+
+# get a component search path (runtime or module or tool)
+#		VARIABLE_LIST : add variable name to path list PATH=${VAR}:$PATH
+# 		VALUE_LIST : add real path to path list PATH=/foo/bar:$PATH
+aistack_component_get_search_path() {
+	local type="$1"
+	local name="$2"
+	local mode="${3:-VALUE_LIST}"
+
+	local path_to_add
+	# NOTE : we do not check with if folder exists with, it will be checked later in aistack_context_file_export_path
+	case "${type}" in
+		"runtime")
+			va="AISTACK_RUNTIME_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
+        	vp="AISTACK_RUNTIME_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
+		;;
+		"module")
+			va="AISTACK_MODULE_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_AVAILABLE"
+        	vp="AISTACK_MODULE_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_SEARCH_PATH"
+		;;
+		"tool")
+			va="AISTACK_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_TOOL_AVAILABLE"
+        	vp="AISTACK_$(printf '%s' "${name}" | tr '[:lower:]' '[:upper:]')_TOOL_SEARCH_PATH"
+		;;
+	esac
+
+	case "$mode" in
+		"VALUE_LIST")
+			[ "${!va}" = "true" ] && [ -n "${!vp}" ] && path_to_add="${!vp}"
+		;;
+		"VARIABLE_LIST")
+			[ "${!va}" = "true" ] && [ -n "${vp}" ] && path_to_add="${vp}"
+		;;
+	esac
+
+	[ -n "${path_to_add}" ] && echo "${path_to_add}"
+}
 
 
 
@@ -1564,7 +1568,7 @@ glibc_binary_compat() {
     local binary="${1}"
     local search_folder="${2}"
     local custom_glibc_runtime_path="${3}"
-    
+
 	"$STELLA_API" link_to_glibc_binary_compat "${binary}" "${search_folder}" "${custom_glibc_runtime_path}"
 
 }

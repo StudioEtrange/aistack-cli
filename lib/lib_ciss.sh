@@ -3,6 +3,9 @@ ciss_init() {
 	export AISTACK_CISS_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/ciss"
 	mkdir -p "${AISTACK_CISS_LAUNCHER_HOME}"
 	export AISTACK_CISS_LAUNCHER_FILE="${AISTACK_CISS_LAUNCHER_HOME}/skill-scanner"
+	export CISS_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/ciss"
+	mkdir -p "${CISS_FEAT_INSTALL_ROOT}"
+
 
 	# cisco ai skill scanner context
 	export AISTACK_CISS_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/ciss"
@@ -12,7 +15,7 @@ ciss_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_CISS_CONTEXT_EXPORT_VARIABLES=""
+	export AISTACK_CISS_CONTEXT_EXPORT_VARIABLES="CISS_FEAT_INSTALL_ROOT"
 
 	export AISTACK_CLIPROXYAPI_KEY_FOR_CISS_FILE="${AISTACK_CISS_CONTEXT_HOME}/cpa_key_for_ciss"
 	[ -f "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS_FILE}" ] && export AISTACK_CLIPROXYAPI_KEY_FOR_CISS="$(cat "${AISTACK_CLIPROXYAPI_KEY_FOR_CISS_FILE}")"
@@ -44,12 +47,14 @@ ciss_init() {
 ciss_is_installed() {
 	local r m
 	export AISTACK_CISS_TOOL_AVAILABLE="false"
+	export AISTACK_CISS_TOOL_SEARCH_PATH=""
 	export AISTACK_CISS_TOOL_PATH=""
 	for r in ${AISTACK_CISS_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_CISS_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner" ] || return 1
-	export AISTACK_CISS_TOOL_PATH="${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner"
+	[ -x "${CISS_FEAT_INSTALL_ROOT}/bin/skill-scanner" ] || return 1
 	export AISTACK_CISS_TOOL_AVAILABLE="true"
+	export AISTACK_CISS_TOOL_SEARCH_PATH="${CISS_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_CISS_TOOL_PATH="${AISTACK_CISS_TOOL_SEARCH_PATH}/skill-scanner"
 	return 0
 }
 
@@ -64,18 +69,38 @@ ciss_install() {
 		echo "INFO: CISS require ${m} managed module"
 		aistack_module_require "${m}"
 	done
+	
+	local tmp_dir wheel
 
-	if [ ! "${STELLA_CURRENT_PLATFORM}" = "darwin" ]; then
-		case $(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.17") in
-			-1|0) 
-				# yara-x is available for glibc 2.17 with yara-x<1.0.2 but cisco-ai-skill-scanner 2.x needs yara-x=>1.10
-				# need to build it and install it before cisco-ai-skill-scanner
-				python_yara_x_package_build_install || return $?
-				;;
-		esac
-	fi
+	case "${STELLA_CURRENT_PLATFORM}" in
+		"darwin")
+			python_uv_isolated_tool_clean_install "${CISS_FEAT_INSTALL_ROOT}" "cisco-ai-skill-scanner" || return $?
+			;;
+		"linux")
+			case $(glibc_version_compare "${AISTACK_GLIBC_CURRENT_VERSION}" "2.17") in
+				-1|0)
+					tmp_dir="$(mktemp -d)"
 
-	python_uv_package_install "cisco-ai-skill-scanner" || return $?
+					# yara-x is available for glibc 2.17 with yara-x<1.0.2 but cisco-ai-skill-scanner 2.x needs yara-x=>1.10
+					# need to build it and install it
+					if wheel="$(python_yara_x_package_build_wheel "v1.19.0" "${tmp_dir}")"; then
+						python_uv_isolated_tool_clean_install \
+							"${CISS_FEAT_INSTALL_ROOT}" \
+							"cisco-ai-skill-scanner" \
+							--with "${wheel}" || install_status=$?
+					else
+						install_status=$?
+					fi
+
+					rm -Rf "${tmp_dir}"
+					;;
+				1)
+					python_uv_isolated_tool_clean_install "${CISS_FEAT_INSTALL_ROOT}" "cisco-ai-skill-scanner" || return $?
+					;;
+			esac
+			;;
+	esac
+	
 	ciss_is_installed
 	return $?
 }
@@ -85,7 +110,9 @@ ciss_install() {
 
 ciss_uninstall() {
 	if ciss_is_installed; then
-		python_uv_package_uninstall "cisco-ai-skill-scanner" || return $?
+		#python_uv_package_uninstall "cisco-ai-skill-scanner" || return $?
+		python_uv_isolated_tool_uninstall "${CISS_FEAT_INSTALL_ROOT}" "cisco-ai-skill-scanner"
+		rm -Rf "${CISS_FEAT_INSTALL_ROOT}"
 		ciss_is_installed && return 1
 		return 0
 	else
@@ -121,9 +148,9 @@ ciss_launch() {
 		[ -f "${AISTACK_CISS_CONTEXT_FILE}" ] && . "${AISTACK_CISS_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
-			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner" "$@"
+			"${CISS_FEAT_INSTALL_ROOT}/bin/skill-scanner" "$@"
 		else
-			"${AISTACK_RUNTIME_PYTHON_SEARCH_PATH}/skill-scanner"
+			"${CISS_FEAT_INSTALL_ROOT}/bin/skill-scanner"
 		fi
 	)
 }
@@ -168,6 +195,7 @@ ciss_info() {
 	echo "CISS path: ${AISTACK_CISS_TOOL_PATH}"
 	echo "CISS needed managed runtime: ${AISTACK_CISS_RUNTIME_REQUIRED}"
 	echo "CISS needed managed module: ${AISTACK_CISS_MODULE_REQUIRED}"
+	echo "CISS install root: ${CISS_FEAT_INSTALL_ROOT}"
 	echo "CISS launcher: ${AISTACK_CISS_LAUNCHER_FILE}"
 	echo "CISS context file: ${AISTACK_CISS_CONTEXT_FILE}"
 	echo
@@ -227,8 +255,8 @@ ciss_context_file_generate() {
 	aistack_context_file_export_variables "${AISTACK_CISS_CONTEXT_FILE}" "${AISTACK_CISS_CONTEXT_EXPORT_VARIABLES}"
 
 	# PATH
-	for r in ${AISTACK_CISS_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_CISS_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_CISS_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_CISS_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_CISS_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 
 	chmod +x "${AISTACK_CISS_CONTEXT_FILE}"

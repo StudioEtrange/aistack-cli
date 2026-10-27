@@ -3,6 +3,8 @@ asm_init() {
 	export AISTACK_ASM_CONFIG_HOME="${HOME}/.config/agent-skill-manager"
 	mkdir -p "${AISTACK_ASM_CONFIG_HOME}"
 	export AISTACK_ASM_CONFIG_FILE="${AISTACK_ASM_CONFIG_HOME}/settings.json"
+	export ASM_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/asm"
+	mkdir -p "${ASM_FEAT_INSTALL_ROOT}"
 
 	# asm launcher
 	export AISTACK_ASM_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/asm"
@@ -17,7 +19,7 @@ asm_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_ASM_CONTEXT_EXPORT_VARIABLES=""
+	export AISTACK_ASM_CONTEXT_EXPORT_VARIABLES="ASM_FEAT_INSTALL_ROOT"
 
 	# asm requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -37,12 +39,14 @@ asm_init() {
 asm_is_installed() {
 	local r m
 	export AISTACK_ASM_TOOL_AVAILABLE="false"
+	export AISTACK_ASM_TOOL_SEARCH_PATH=""
 	export AISTACK_ASM_TOOL_PATH=""
 	for r in ${AISTACK_ASM_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_ASM_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm" ] || return 1
-	export AISTACK_ASM_TOOL_PATH="$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm"
+	[ -x "${ASM_FEAT_INSTALL_ROOT}/bin/asm" ] || return 1
 	export AISTACK_ASM_TOOL_AVAILABLE="true"
+	export AISTACK_ASM_TOOL_SEARCH_PATH="${ASM_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_ASM_TOOL_PATH="${AISTACK_ASM_TOOL_SEARCH_PATH}/asm"
 	return 0
 }
 
@@ -62,8 +66,7 @@ asm_install() {
 	done
 
 	echo "Installing Agent Skill Manager ${version}"
-	node_package_install "agent-skill-manager${version}" || return $?
-	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g agent-skill-manager${version}
+	node_isolated_package_install "${ASM_FEAT_INSTALL_ROOT}" --allow-scripts="agent-skill-manager" "agent-skill-manager${version}" || return $?
 	# using bun package manager
 	# PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun add --verbose -g agent-skill-manager${version}
 	asm_is_installed
@@ -72,10 +75,10 @@ asm_install() {
 
 asm_uninstall() {
 	if asm_is_installed; then
-		node_package_uninstall "agent-skill-manager" || return $?
-		#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g agent-skill-manager
+		node_package_uninstall --prefix "${ASM_FEAT_INSTALL_ROOT}" "agent-skill-manager" || return $?
 		# using bun package manager
 		# PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g agent-skill-manager
+		rm -Rf "${ASM_FEAT_INSTALL_ROOT}"
 		asm_is_installed && return 1
 		return 0
 	else
@@ -109,9 +112,9 @@ asm_launch() {
 		[ -f "${AISTACK_ASM_CONTEXT_FILE}" ] && . "${AISTACK_ASM_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
-			"$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm" "$@"
+			"${ASM_FEAT_INSTALL_ROOT}/bin/asm" "$@"
 		else
-			"$AISTACK_RUNTIME_NODEJS_SEARCH_PATH/asm"
+			"${ASM_FEAT_INSTALL_ROOT}/bin/asm"
 		fi
 	)
 }
@@ -163,8 +166,8 @@ asm_context_file_generate() {
 	
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_ASM_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_ASM_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_ASM_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_ASM_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_ASM_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 
@@ -180,6 +183,7 @@ asm_info() {
 	echo "Agent Skill Manager path : $AISTACK_ASM_TOOL_PATH"
 	echo "Agent Skill Manager needed managed runtime : $AISTACK_ASM_RUNTIME_REQUIRED"
 	echo "Agent Skill Manager needed managed module : $AISTACK_ASM_MODULE_REQUIRED"
+	echo "Agent Skill Manager install root : $ASM_FEAT_INSTALL_ROOT"
 	echo "Agent Skill Manager launcher : $AISTACK_ASM_LAUNCHER_FILE"
 	echo "Agent Skill Manager context file : $AISTACK_ASM_CONTEXT_FILE"
 }

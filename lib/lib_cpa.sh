@@ -39,12 +39,14 @@ cpa_init() {
 cpa_is_installed() {
 	local r m
 	export AISTACK_CLIPROXYAPI_TOOL_AVAILABLE="false"
+	export AISTACK_CLIPROXYAPI_TOOL_SEARCH_PATH=""
 	export AISTACK_CLIPROXYAPI_TOOL_PATH=""
 	for r in ${AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_CLIPROXYAPI_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${CLIPROXYAPI_FEAT_INSTALL_ROOT}/cli-proxy-api" ] || return 1
 	export AISTACK_CLIPROXYAPI_TOOL_AVAILABLE="true"
-	export AISTACK_CLIPROXYAPI_TOOL_PATH="${CLIPROXYAPI_FEAT_INSTALL_ROOT}/cli-proxy-api"
+	export AISTACK_CLIPROXYAPI_TOOL_SEARCH_PATH="${CLIPROXYAPI_FEAT_INSTALL_ROOT}"
+	export AISTACK_CLIPROXYAPI_TOOL_PATH="${AISTACK_CLIPROXYAPI_TOOL_SEARCH_PATH}/cli-proxy-api"
 	return 0
 }
 
@@ -229,8 +231,8 @@ cpa_context_file_generate() {
 
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_CLIPROXYAPI_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_CLIPROXYAPI_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_CLIPROXYAPI_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_CLIPROXYAPI_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 

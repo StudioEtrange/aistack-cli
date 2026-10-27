@@ -1,31 +1,42 @@
 rust_init() {
 	export RUST_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/rust"
 	mkdir -p "${RUST_FEAT_INSTALL_ROOT}"
-	export AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED=""
+
+	# requirement - those will be installed and presence checked to run the current component
+	# NOTE:	those search path will be injected in context file
+    export AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED=""
+	export AISTACK_RUNTIME_RUST_MODULE_REQUIRED=""
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_RUNTIME_RUST_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_RUNTIME_RUST_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
+
 }
 
 # return 0 : is installed
 # return 1 : runtime is not installed
 # return 2 : missing runtime
 rust_is_installed() {
-	local r
+	local r m
 
 	export AISTACK_RUNTIME_RUST_AVAILABLE="false"
-    export AISTACK_MODULE_CARGO_AVAILABLE="false"
+	export AISTACK_RUNTIME_RUST_SEARCH_PATH=""
+	export AISTACK_RUNTIME_RUST_PATH=""
 
-	for r in ${AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED}; do
-		aistack_runtime_is_detected "${r}" || return 2
-	done
+    export AISTACK_MODULE_CARGO_AVAILABLE="false"
+	export AISTACK_MODULE_CARGO_SEARCH_PATH=""
+	export AISTACK_MODULE_CARGO_PATH=""
+	for r in ${AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_RUNTIME_RUST_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 
 	if aistack_component_is_installed "rust"; then
 		export AISTACK_RUNTIME_RUST_AVAILABLE="true"
-		export AISTACK_RUNTIME_RUST_PATH="${RUST_FEAT_INSTALL_ROOT}/bin/rustc"
 		export AISTACK_RUNTIME_RUST_SEARCH_PATH="${RUST_FEAT_INSTALL_ROOT}/bin"
+		export AISTACK_RUNTIME_RUST_PATH="${AISTACK_RUNTIME_RUST_SEARCH_PATH}/rustc"
 		
 		# cargo module is always included in rust installation
         export AISTACK_MODULE_CARGO_AVAILABLE="true"
-        export AISTACK_MODULE_CARGO_PATH="${RUST_FEAT_INSTALL_ROOT}/bin/cargo"
         export AISTACK_MODULE_CARGO_SEARCH_PATH="${RUST_FEAT_INSTALL_ROOT}/bin"
+        export AISTACK_MODULE_CARGO_PATH="${AISTACK_MODULE_CARGO_SEARCH_PATH}/cargo"
         
 		return 0
 	fi
@@ -43,11 +54,16 @@ rust_install() {
 	local download_url
 	local tmp_dir
 	local install_status
-	local r
+	local r m
 
     for r in $AISTACK_RUNTIME_RUST_RUNTIME_REQUIRED; do 
-		echo "Require needed ${r} managed runtime"
+		echo "INFO: rust require needed ${r} managed runtime"
 		aistack_runtime_require "${r}"
+	done
+
+	for m in $AISTACK_RUNTIME_RUST_MODULE_REQUIRED; do 
+		echo "INFO: rust require needed ${m} managed module"
+		aistack_module_require "${m}"
 	done
 
 	if [ -z "${version}" ] || [ "${version}" = "latest" ]; then

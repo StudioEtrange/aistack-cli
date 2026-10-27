@@ -4,6 +4,8 @@ bmad_init() {
 	mkdir -p "${AISTACK_BMAD_LAUNCHER_HOME}"
 	export AISTACK_BMAD_LAUNCHER_FILE="${AISTACK_BMAD_LAUNCHER_HOME}/bmad"
 	export AISTACK_BMAD_METHOD_LAUNCHER_FILE="${AISTACK_BMAD_LAUNCHER_HOME}/bmad-method"
+	export BMAD_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/bmad"
+	mkdir -p "${BMAD_FEAT_INSTALL_ROOT}"
 
 	# bmad context
 	export AISTACK_BMAD_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/bmad"
@@ -13,7 +15,7 @@ bmad_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_BMAD_CONTEXT_EXPORT_VARIABLES=""
+	export AISTACK_BMAD_CONTEXT_EXPORT_VARIABLES="BMAD_FEAT_INSTALL_ROOT"
 
 	# bmad requirement - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
@@ -32,12 +34,14 @@ bmad_init() {
 bmad_is_installed() {
 	local r m
 	export AISTACK_BMAD_TOOL_AVAILABLE="false"
+	export AISTACK_BMAD_TOOL_SEARCH_PATH=""
 	export AISTACK_BMAD_TOOL_PATH=""
 	for r in ${AISTACK_BMAD_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_BMAD_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
-	[ -x "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/bmad-method" ] || return 1
-	export AISTACK_BMAD_TOOL_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/bmad-method"
+	[ -x "${BMAD_FEAT_INSTALL_ROOT}/bin/bmad-method" ] || return 1
 	export AISTACK_BMAD_TOOL_AVAILABLE="true"
+	export AISTACK_BMAD_TOOL_SEARCH_PATH="${BMAD_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_BMAD_TOOL_PATH="${AISTACK_BMAD_TOOL_SEARCH_PATH}/bmad-method"
 	return 0
 }
 
@@ -58,16 +62,16 @@ bmad_install() {
 	done
 
 	echo "Installing bmad-method ${version}"
-	node_package_install "bmad-method${version}" || return $?
-	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g bmad-method${version}
+	node_isolated_package_install "${BMAD_FEAT_INSTALL_ROOT}" --allow-scripts="bmad-method" "bmad-method${version}" || return $?
+	
 	bmad_is_installed
 	return $?
 }
 
 bmad_uninstall() {
 	if bmad_is_installed; then
-		node_package_uninstall "bmad-method" || return $?
-		#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g bmad-method
+		node_package_uninstall --prefix "${BMAD_FEAT_INSTALL_ROOT}" "bmad-method" || return $?
+		rm -Rf "${BMAD_FEAT_INSTALL_ROOT}"
 		bmad_is_installed && return 1
 		return 0
 	else
@@ -103,9 +107,9 @@ bmad_launch() {
 
 		# NOTE: both bmad and bmad-method are links to the same binary
 		if [ "$#" -gt 0 ]; then
-			"${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/bmad-method" "$@"
+			"${BMAD_FEAT_INSTALL_ROOT}/bin/bmad-method" "$@"
         else
-            "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/bmad-method"
+            "${BMAD_FEAT_INSTALL_ROOT}/bin/bmad-method"
         fi
 	)
 }
@@ -160,8 +164,8 @@ bmad_context_file_generate() {
 
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_BMAD_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_BMAD_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_BMAD_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_BMAD_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_BMAD_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 
@@ -175,6 +179,7 @@ bmad_info() {
 	echo "BMAD path : $AISTACK_BMAD_TOOL_PATH"
 	echo "BMAD needed managed runtime : $AISTACK_BMAD_RUNTIME_REQUIRED"
 	echo "BMAD needed managed module : $AISTACK_BMAD_MODULE_REQUIRED"
+	echo "BMAD install root : $BMAD_FEAT_INSTALL_ROOT"
 	echo "BMAD launcher : $AISTACK_BMAD_LAUNCHER_FILE"
 	echo "BMAD method launcher : $AISTACK_BMAD_METHOD_LAUNCHER_FILE"
 	echo "BMAD context file : $AISTACK_BMAD_CONTEXT_FILE"

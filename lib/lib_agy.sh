@@ -37,12 +37,14 @@ agy_init() {
 agy_is_installed() {
 	local r m
 	export AISTACK_ANTIGRAVITY_TOOL_AVAILABLE="false"
+	export AISTACK_ANTIGRAVITY_TOOL_SEARCH_PATH=""
 	export AISTACK_ANTIGRAVITY_TOOL_PATH=""
 	for r in ${AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_ANTIGRAVITY_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${AGY_FEAT_INSTALL_ROOT}/agy" ] || return 1
 	export AISTACK_ANTIGRAVITY_TOOL_AVAILABLE="true"
-	export AISTACK_ANTIGRAVITY_TOOL_PATH="${AGY_FEAT_INSTALL_ROOT}/agy"
+	export AISTACK_ANTIGRAVITY_TOOL_SEARCH_PATH="${AGY_FEAT_INSTALL_ROOT}"
+	export AISTACK_ANTIGRAVITY_TOOL_PATH="${AISTACK_ANTIGRAVITY_TOOL_SEARCH_PATH}/agy"
 	return 0
 }
 
@@ -69,7 +71,8 @@ agy_install() {
 	rm -Rf "${AGY_FEAT_INSTALL_ROOT}" || return $?
 	mkdir -p "${AGY_FEAT_INSTALL_ROOT}" || return $?
 
-	# use a temporary HOME to avoid rc file modification in HOME
+	# use a temporary HOME to avoid shell rc file modification in HOME
+	# TODO: really check that bashrc file is NOT modified with an added PATH by this install.sh script
 	local tmp_home="$(mktemp -d)"
 	local install_script="${tmp_home}/install.sh"
 	curl -fsSL https://antigravity.google/cli/install.sh -o "${install_script}" || {
@@ -190,8 +193,8 @@ agy_context_file_generate() {
 
 	# PATH
 	local m r list_path
-	for r in ${AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
-	for m in ${AISTACK_ANTIGRAVITY_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_context_path_add_component "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
+	for r in ${AISTACK_ANTIGRAVITY_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
+	for m in ${AISTACK_ANTIGRAVITY_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_ANTIGRAVITY_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
 }
 

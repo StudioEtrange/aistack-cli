@@ -9,8 +9,16 @@ node_init() {
     mkdir -p "${AISTACK_NVM_CACHE}"
 	export AISTACK_NVM_DEFAULT_BIN_CACHE="${AISTACK_NVM_HOME}/aistack-default-bin"
 
+
+
+	# requirement - those will be installed and presence checked to run the current component
+	# NOTE:	those search path will be injected in context file
     export AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED=""
 	export AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED="nvm"
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
+
 
 	if aistack_component_is_installed "nvm"; then
 		export AISTACK_MODULE_NVM_AVAILABLE="true"
@@ -32,19 +40,22 @@ node_is_installed() {
 
     export AISTACK_RUNTIME_NODEJS_AVAILABLE="false"
     export AISTACK_MODULE_NPM_AVAILABLE="false"
+	export AISTACK_RUNTIME_NODEJS_SEARCH_PATH=""
+	export AISTACK_RUNTIME_NODEJS_PATH=""
+	export AISTACK_MODULE_NPM_SEARCH_PATH=""
+	export AISTACK_MODULE_NPM_PATH=""
 
 	for r in ${AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 
 	if aistack_component_is_installed "nodejs"; then
 		export AISTACK_RUNTIME_NODEJS_AVAILABLE="true"
-		[ -n "${NVM_BIN}" ] && export AISTACK_RUNTIME_NODEJS_PATH="${NVM_BIN}/node"
-		# bin folder which contains node
-		[ -n "${NVM_BIN}" ] && export AISTACK_RUNTIME_NODEJS_SEARCH_PATH="${NVM_BIN}"
-		# npm module is always included in nodejs installation
+		export AISTACK_RUNTIME_NODEJS_SEARCH_PATH="${NVM_BIN}"
+		export AISTACK_RUNTIME_NODEJS_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/node"
+		# NOTE: module npm is considered always included in a nodejs installation, we do not call aistack_component_is_installed to test its existence
 		export AISTACK_MODULE_NPM_AVAILABLE="true"
-		export AISTACK_MODULE_NPM_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}/npm"
 		export AISTACK_MODULE_NPM_SEARCH_PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
+		export AISTACK_MODULE_NPM_PATH="${AISTACK_MODULE_NPM_SEARCH_PATH}/npm"
 		return 0
 	fi
     return 1
@@ -68,10 +79,11 @@ node_install() {
 
     # NOTE : Here $AISTACK_RUNTIME_NODEJS_SEARCH_PATH is empty so we launch aistack_runtime_detect
     # to set it to be able to install node package with npm
-    aistack_runtime_detect
+    #aistack_runtime_detect
+	node_is_installed || return 1
 
     if [ -n "${AISTACK_INIT_FORCE_NPM_REGISTRY}" ]; then
-        if [ "$AISTACK_MODULE_NPM_AVAILABLE" = "true" ]; then
+        if [ "${AISTACK_MODULE_NPM_AVAILABLE}" = "true" ]; then
             "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" config set registry "${AISTACK_INIT_FORCE_NPM_REGISTRY}" -g
         else
             echo "WARN : can not set npm registry, npm is not available"
@@ -250,14 +262,53 @@ nvm_unload() {
 
 
 
-
-
 # note : install or reinstall/complete package
+# npm install -g "@bar/foo"
+# global prefix:
+# /usr/local/
+# .../nvm/versions/node/v24.x.x (sample in case of using nvm)
+# ├── bin/
+# │   └── foo -> ../lib/node_modules/@bar/foo/cli.js
+# └── lib/
+#     └── node_modules/
+#         ├── @bar/
+#         │   └── foo/
+#         │       ├── cli.js
+#         │       └── node_modules/   # Potential nested dependencies
+#         └── ...                     # Shared dependencies
 node_package_install() {
-	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" npm install --verbose -g "${@}"
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" install --verbose -g "${@}"
+	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" npm install --verbose -g "${@}"
 	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install --verbose -g "${@}"
 }
 node_package_uninstall() {
-	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" npm uninstall -g "${@}"
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" uninstall -g "${@}"
+	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" npm uninstall -g "${@}"
 	#PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm uninstall -g "${@}"
+}
+
+# NOTE : install or reinstall/complete package in its own tree
+#
+# npm install --prefix="/opt/prefix" -g "@bar/foo"
+# /opt/prefix
+# ├── bin/
+# │   └── foo -> ../lib/node_modules/@bar/foo/cli.js
+# └── lib/
+#     └── node_modules/
+#         ├── @bar/
+#         │   └── foo/
+#         │       ├── cli.js
+#         │       └── node_modules/   # Potential nested dependencies
+#         └── ...                     # Shared dependencies
+node_isolated_package_install() {
+	local prefix="${1}"
+	[ -n "${prefix}" ] || return 1
+	shift
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" install --verbose --prefix "${prefix}" -g "${@}"
+}
+node_isolated_package_uninstall() {
+	local prefix="${1}"
+	[ -n "$prefix" ] || return 1
+	shift
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" uninstall --prefix "${prefix}"  -g "${@}"
 }

@@ -1,8 +1,15 @@
 gsd_init() {
 	# GSD is a one shot installer/uninstaller and does not have a launcher or context
 	export AISTACK_GSD_LAUNCHER_HOME=""
+
+	# requirement - those will be installed and presence checked to run the current component
+	# NOTE:	those search path will be injected in context file
 	export AISTACK_GSD_RUNTIME_REQUIRED="nodejs"
 	export AISTACK_GSD_MODULE_REQUIRED=""
+	# remove from context any runtime or module any item already in generic aistack context
+	export AISTACK_GSD_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_GSD_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
+	export AISTACK_GSD_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_GSD_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
+
 }
 
 # test if GSD can be run
@@ -15,7 +22,7 @@ gsd_is_installed() {
 	for r in ${AISTACK_GSD_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_GSD_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	export AISTACK_GSD_TOOL_PATH=""
-	# GSD is considered always installable because it is a one shot installer/uninstaller
+	# GSD is considered always installable because it is a one shot installer/uninstaller in a project folder, and do not stay in an installation root
 	export AISTACK_GSD_TOOL_AVAILABLE="true"
 	return 0
 }
