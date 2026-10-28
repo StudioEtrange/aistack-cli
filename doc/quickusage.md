@@ -18,6 +18,7 @@ Right to the point how-to
   - [Case 12 : configure Node.js internal runtime](#case-12--configure-nodejs-internal-runtime)
   - [Case 13 : install gemini-cli](#case-13--install-gemini-cli)
   - [Case 14 : gemini-cli and local MCP server](#case-14--gemini-cli-and-local-mcp-server)
+  - [Case 15 : inventory AI tools with Geiger](#case-15--inventory-ai-tools-with-geiger)
 
 ## Case 0 : AIStack install and init
 
@@ -388,3 +389,15 @@ _"I want to register intoto gemini-cli installation, a local MCP server calculat
 cd aistack
 ./aistack gc mcp calculator install
 ```
+
+## Case 15 : inventory AI tools with Geiger
+
+After initializing AIStack once with `./aistack init`:
+
+```bash
+./aistack geiger install
+./aistack geiger launch -- --help
+./aistack geiger launch /path/to/project -- --json inventory.json
+```
+
+See [Geiger](geiger.md) for launcher registration, scan scope and limitations.

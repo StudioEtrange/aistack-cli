@@ -163,13 +163,21 @@
 * router
   * litellm
     * https://github.com/BerriAI/litellm
+  * omniroute
+    * https://github.com/cheaper-inference/OmniRoute/tree/main
+    * also provide proxy for claude web https://github.com/cheaper-inference/OmniRoute/blob/main/docs/providers/CLAUDE_WEB.md
 
 * turn cli into API
   * sub2API
     * https://github.com/Wei-Shaw/sub2api
     * AI API Gateway Platform for Subscription Quota Distribution
     * supports gemini-cli and google one account
-    * high requirements including postgres !
+    * high requirements including postgres
+
+
+* clewdr
+  * proxy for Claude — both Claude.ai and Claude Code — serving native Claude and OpenAI-compatible endpoints 
+  * https://github.com/Xerxes-2/clewdr
  
 
 * optimization

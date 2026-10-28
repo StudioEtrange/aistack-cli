@@ -75,7 +75,7 @@ asm_install() {
 
 asm_uninstall() {
 	if asm_is_installed; then
-		node_package_uninstall --prefix "${ASM_FEAT_INSTALL_ROOT}" "agent-skill-manager" || return $?
+		node_isolated_package_uninstall "${ASM_FEAT_INSTALL_ROOT}" --allow-scripts="agent-skill-manager" "agent-skill-manager" || return $?
 		# using bun package manager
 		# PATH="${AISTACK_RUNTIME_BUN_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" bun remove -g agent-skill-manager
 		rm -Rf "${ASM_FEAT_INSTALL_ROOT}"

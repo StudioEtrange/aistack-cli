@@ -79,6 +79,7 @@ aistack_initialize() {
     adk_init
     asm_init
 	playwright_init
+	geiger_init
 	llmfit_init
     sktor_init
 	ciss_init
@@ -742,6 +743,7 @@ aistack_tool_launcher_and_context_files_regenerate() (
 	agy_launcher_and_context_files_manage "refresh_if_exists"
 	asm_launcher_and_context_files_manage "refresh_if_exists"
 	playwright_launcher_and_context_files_manage "refresh_if_exists"
+	geiger_launcher_and_context_files_manage "refresh_if_exists"
 	bmad_launcher_and_context_files_manage "refresh_if_exists"
 	cpa_launcher_and_context_files_manage "refresh_if_exists"
 	gemini_launcher_and_context_files_manage "refresh_if_exists"
@@ -763,6 +765,7 @@ aistack_tool_launcher_and_context_files_remove() (
 	agy_launcher_and_context_files_manage "delete"
 	asm_launcher_and_context_files_manage "delete"
 	playwright_launcher_and_context_files_manage "delete"
+	geiger_launcher_and_context_files_manage "delete"
 	bmad_launcher_and_context_files_manage "delete"
 	cpa_launcher_and_context_files_manage "delete"
 	gemini_launcher_and_context_files_manage "delete"
@@ -784,6 +787,7 @@ aistack_tool_detect() {
 	agy_is_installed
 	asm_is_installed
 	playwright_is_installed
+	geiger_is_installed
 	adk_is_installed
 	bmad_is_installed
 	cpa_is_installed
@@ -1788,4 +1792,3 @@ remove_dir_with_exceptions() {
         "${find_args[@]}" \
         -exec rm -rf -- {} +
 }
-

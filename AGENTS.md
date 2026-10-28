@@ -58,6 +58,10 @@ Use `./README.md` for complete functional documentation.
 - `lib/main_<domain>.sh`: CLI wiring, argument routing, subcommands
 - `./aistack`: top-level entrypoint and menu only
 
+### Component kind
+
+see `README.md` to know the difference between different kind of component managed by AIStack CLI : runtime, module and tool.
+
 ### Tool Addition Workflow
 When adding a new tool:
 
@@ -73,6 +77,11 @@ When adding a new tool:
 4. Add documentation in:
    - `README.md`
    - `doc/<domain>.md`
+
+For a tool, based on node, installed in an isolated way, use geiger relatives files `lib/lib_geiger.sh` as files models.
+For a tool, a single binary tool, installed in an isolated way, use orla relatives files `lib/lib_orla.sh` as files models.
+For a runtime, use python relatives files `lib/lib_python.sh` as files models.
+When using a file as model do not remove component or blank line. Do not simplify code. Do not remove empty variable.
 
 ---
 
