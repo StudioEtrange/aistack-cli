@@ -133,6 +133,7 @@ geiger_launcher_and_context_files_manage() {
 				} > "${AISTACK_GEIGER_LAUNCHER_FILE}"
 
 				chmod +x "${AISTACK_GEIGER_LAUNCHER_FILE}"
+			fi
 			;;
 
 		delete)
