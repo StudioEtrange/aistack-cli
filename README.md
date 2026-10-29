@@ -94,6 +94,7 @@ AIStack CLI offers functionalities for these tools
 * [Antigravity CLI](doc/antigravity.md)
 * [asm - agent skill manager](doc/asm.md)
 * [Playwright CLI](doc/playwright-cli.md)
+* [Geiger](doc/geiger.md) — inventory AI agents, MCP servers, hooks and extensions and their exposure.
 * [Kilo Code](doc/kilocode.md)
 * [Orla](doc/orla.md)
 * [llmfit](doc/llmfit.md)

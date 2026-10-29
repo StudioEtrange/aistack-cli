@@ -162,6 +162,16 @@ Options:
                                           Launch Playwright CLI. Instead use 'playwright-cli' if ${AISTACK_PLAYWRIGHT_LAUNCHER_HOME} is in your PATH.
                                           Use 'aistack plw register <shell>' to set it in your PATH.
     ----
+	geiger : Geiger - https://github.com/Atomburstofficial/geiger
+	geiger install [@version]             Install geiger-scan in an isolated directory. Default: @latest. Requires Node.js >=18.
+	geiger uninstall                      Uninstall Geiger and unregister its launcher (keep reports).
+	geiger info                           Print Geiger installation information.
+	geiger register [<current|shell list|vs>]       Register the Geiger launcher in the shell or VS Code terminal PATH.
+	geiger unregister [<all|current|shell list|vs>] Unregister the Geiger launcher. Default: all.
+	geiger launch [context folder] -- <Geiger options>
+	                                      Launch Geiger; without options, scan the machine and current directory.
+	                                      Or use 'geiger' after 'aistack geiger register'.
+	----
     BMAD-Method - https://docs.bmad-method.org/
     bmad <install|uninstall>            Install/Uninstall bmad cli.
     bmad register [<current|shell list|vs>]        Register bmad cli PATH into shell env PATH. Default value is "current" for current shell or a list of supported shells or "vs" for VS Code integrated terminal env PATH.
@@ -430,6 +440,9 @@ main() {
         kc)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_kilo.sh"
             ;;
+		geiger)
+			. "${AISTACK_CURRENT_FILE_DIR}/lib/main_geiger.sh"
+			;;
         asm)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_asm.sh"
             ;;

@@ -264,6 +264,7 @@ vscode_path_unregister_all_for_vs_terminal() {
 			adk_path_unregister_for_vs_terminal
 			asm_path_unregister_for_vs_terminal
 			playwright_path_unregister_for_vs_terminal
+			geiger_path_unregister_for_vs_terminal
 			kilo_path_unregister_for_vs_terminal
 			agy_path_unregister_for_vs_terminal
 			llmfit_path_unregister_for_vs_terminal
