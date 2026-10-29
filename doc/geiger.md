@@ -16,7 +16,7 @@ Initialize AIStack once with `./aistack init`, then:
 ```
 
 AIStack installs the npm package `geiger-scan` (executable `geiger`) under
-`workspace/<platform>/isolated_dependencies/geiger`, using its managed Node.js
+`workspace/<platform>/isolated/geiger`, using its managed Node.js
 runtime (Node.js >=18 required). It does not use `npx` or install into the host's
 global npm prefix. Installation scripts are disabled. Re-run `install` to update,
 or select a version explicitly:

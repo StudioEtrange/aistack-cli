@@ -56,7 +56,7 @@
   * script launcher for context7 :
   ```
   #!/bin/sh
-  export PATH="/home/nomorgan/workspace/aistack/workspace/isolated_dependencies/nodejs/bin/:${PATH}"
+  export PATH="/home/nomorgan/workspace/aistack/workspace/isolated/nodejs/bin/:${PATH}"
   exec "npx" -y @upstash/context7-mcp --api-key "${CONTEXT7_API_KEY}"
   ```
 

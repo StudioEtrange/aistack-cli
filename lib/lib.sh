@@ -47,7 +47,7 @@ aistack_initialize() {
     export AISTACK_MCP_LAUNCHER_HOME="${STELLA_APP_WORK_ROOT}/launcher-mcp"
     mkdir -p "${AISTACK_MCP_LAUNCHER_HOME}"
 
-    export AISTACK_ISOLATED_ROOT="${STELLA_APP_WORK_ROOT}/isolated_dependencies"
+    export AISTACK_ISOLATED_ROOT="${STELLA_APP_WORK_ROOT}/isolated"
     mkdir -p "${AISTACK_ISOLATED_ROOT}"
 
     export AISTACK_CONTEXT_HOME="${STELLA_APP_WORK_ROOT}/context"
