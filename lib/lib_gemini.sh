@@ -75,7 +75,7 @@ gemini_install() {
 
 gemini_uninstall() {
 	if gemini_is_installed; then
-		node_package_uninstall --prefix "${GEMINI_FEAT_INSTALL_ROOT}" "@google/gemini-cli" || return $?
+		node_isolated_package_uninstall "${GEMINI_FEAT_INSTALL_ROOT}" "@google/gemini-cli" || return $?
 		rm -Rf "${GEMINI_FEAT_INSTALL_ROOT}"
 		gemini_is_installed && return 1
 		return 0

@@ -70,7 +70,7 @@ bmad_install() {
 
 bmad_uninstall() {
 	if bmad_is_installed; then
-		node_package_uninstall --prefix "${BMAD_FEAT_INSTALL_ROOT}" "bmad-method" || return $?
+		node_isolated_package_uninstall "${BMAD_FEAT_INSTALL_ROOT}" "bmad-method" || return $?
 		rm -Rf "${BMAD_FEAT_INSTALL_ROOT}"
 		bmad_is_installed && return 1
 		return 0

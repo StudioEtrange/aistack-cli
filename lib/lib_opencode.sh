@@ -102,10 +102,10 @@ opencode_uninstall() {
 	if opencode_is_installed; then
 		case "$flavor" in
 			"1")
-				node_package_uninstall --prefix "${OPENCODE_FEAT_INSTALL_ROOT}" "opencode-ai" || return $?
+				node_isolated_package_uninstall "${OPENCODE_FEAT_INSTALL_ROOT}" "opencode-ai" || return $?
 				;;
 			"2")
-				node_package_uninstall --prefix "${OPENCODE_FEAT_INSTALL_ROOT}" "@opencode/cli" || return $?
+				node_isolated_package_uninstall "${OPENCODE_FEAT_INSTALL_ROOT}" "@opencode/cli" || return $?
 				;;
 		esac
 		rm -Rf "${OPENCODE_FEAT_INSTALL_ROOT}"

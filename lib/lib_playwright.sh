@@ -67,7 +67,7 @@ playwright_install() {
 
 playwright_uninstall() {
 	if playwright_is_installed; then
-		node_package_uninstall --prefix "${PLAYWRIGHT_FEAT_INSTALL_ROOT}" "@playwright/cli" || return $?
+		node_isolated_package_uninstall "${PLAYWRIGHT_FEAT_INSTALL_ROOT}" "@playwright/cli" || return $?
 		rm -Rf "${PLAYWRIGHT_FEAT_INSTALL_ROOT}"
 		playwright_is_installed && return 1
 		return 0

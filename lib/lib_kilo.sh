@@ -94,7 +94,7 @@ kilo_uninstall() {
         "cli")
 			if kilo_is_installed; then
 				echo "Uninstalling Kilo Code CLI"
-				node_package_uninstall --prefix "${KILO_FEAT_INSTALL_ROOT}" "@kilocode/cli" || return $?
+				node_isolated_package_uninstall "${KILO_FEAT_INSTALL_ROOT}" "@kilocode/cli" || return $?
 				rm -Rf "${KILO_FEAT_INSTALL_ROOT}"
 				kilo_is_installed && return 1
 				return 0
