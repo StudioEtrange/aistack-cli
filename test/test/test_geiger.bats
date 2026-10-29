@@ -8,6 +8,8 @@ setup() {
 	AISTACK_ISOLATED_ROOT="${GEIGER_TEST_TMP}/isolated dependencies"
 	AISTACK_CONTEXT_HOME="${GEIGER_TEST_TMP}/context"
 	AISTACK_GENERIC_CONTEXT_FILE="${GEIGER_TEST_TMP}/generic context.sh"
+	AISTACK_ASM_CONTEXT_FILE="${GEIGER_TEST_TMP}/asm context.sh"
+	printf '%s\n' '# ASM context must remain unchanged' > "${AISTACK_ASM_CONTEXT_FILE}"
 	AISTACK_RUNTIME_NODEJS_SEARCH_PATH="${GEIGER_TEST_TMP}/node/bin"
 	mkdir -p "${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}"
 	printf '%s\n' '#!/bin/sh' > "${AISTACK_GENERIC_CONTEXT_FILE}"
@@ -48,7 +50,7 @@ geiger_test_main() {
 
 @test "geiger_install defaults to latest and detects the isolated binary" {
 	geiger_install
-	assert_equal "$(cat "${GEIGER_TEST_TMP}/installed-package")" "$(printf '%s\n' "${GEIGER_FEAT_INSTALL_ROOT}" --ignore-scripts geiger-scan@latest)"
+	assert_equal "$(cat "${GEIGER_TEST_TMP}/installed-package")" "$(printf '%s\n' "${GEIGER_FEAT_INSTALL_ROOT}" --allow-scripts=geiger-scan geiger-scan@latest)"
 	assert_equal "${AISTACK_GEIGER_TOOL_PATH}" "${GEIGER_FEAT_INSTALL_ROOT}/bin/geiger"
 	assert_equal "${AISTACK_GEIGER_TOOL_AVAILABLE}" true
 }
@@ -162,7 +164,7 @@ geiger_test_main() {
 	vscode_path_unregister_for_vs_terminal() { return 0; }
 	run geiger_test_main uninstall
 	assert_success
-	assert_equal "$(cat "${GEIGER_TEST_TMP}/uninstalled-package")" "$(printf '%s\n' "${GEIGER_FEAT_INSTALL_ROOT}" --ignore-scripts geiger-scan)"
+	assert_equal "$(cat "${GEIGER_TEST_TMP}/uninstalled-package")" "$(printf '%s\n' "${GEIGER_FEAT_INSTALL_ROOT}" --allow-scripts=geiger-scan geiger-scan)"
 	[ ! -f "${AISTACK_GEIGER_LAUNCHER_FILE}" ]
 	[ ! -f "${AISTACK_GEIGER_CONTEXT_FILE}" ]
 	[ -f "${GEIGER_TEST_TMP}/report.json" ]
@@ -199,4 +201,21 @@ geiger_test_main() {
 	geiger_launcher_and_context_files_manage delete
 	[ ! -f "${AISTACK_GEIGER_LAUNCHER_FILE}" ]
 	[ ! -f "${AISTACK_GEIGER_CONTEXT_FILE}" ]
+}
+
+@test "geiger context lifecycle never modifies or sources the ASM context" {
+	geiger_install
+	geiger_launcher_and_context_files_manage create
+	assert_equal "$(cat "${AISTACK_ASM_CONTEXT_FILE}")" '# ASM context must remain unchanged'
+	assert_equal "$(head -n 1 "${AISTACK_GEIGER_CONTEXT_FILE}")" '#!/bin/sh'
+	printf '%s\n' 'export GEIGER_TEST_CONTEXT=geiger' >> "${AISTACK_GEIGER_CONTEXT_FILE}"
+	printf '%s\n' 'export GEIGER_TEST_CONTEXT=asm' >> "${AISTACK_ASM_CONTEXT_FILE}"
+	printf '%s\n' '#!/bin/sh' 'printf "%s\n" "$GEIGER_TEST_CONTEXT"' > "${GEIGER_FEAT_INSTALL_ROOT}/bin/geiger"
+	run /bin/sh "${AISTACK_GEIGER_LAUNCHER_FILE}"
+	assert_success
+	assert_output geiger
+	geiger_launcher_and_context_files_manage refresh_if_exists
+	assert_equal "$(cat "${AISTACK_ASM_CONTEXT_FILE}")" "$(printf '%s\n' '# ASM context must remain unchanged' 'export GEIGER_TEST_CONTEXT=asm')"
+	geiger_launcher_and_context_files_manage delete
+	[ -f "${AISTACK_ASM_CONTEXT_FILE}" ]
 }

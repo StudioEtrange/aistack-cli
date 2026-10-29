@@ -32,7 +32,7 @@ geiger_init() {
 # return 1 : tool is not installed
 # return 2 : missing runtime
 geiger_is_installed() {
-	local r
+	local r m
 	export AISTACK_GEIGER_TOOL_AVAILABLE="false"
 	export AISTACK_GEIGER_TOOL_SEARCH_PATH=""
 	export AISTACK_GEIGER_TOOL_PATH=""
@@ -101,7 +101,7 @@ geiger_path_unregister_for_vs_terminal() {
 geiger_launch() {
 	(
 		[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"
-		[ -f "${AISTACK_GEIGER_CONTEXT_FILE}" ] && . "${AISTACK_ASM_CONTEXT_FILE}"
+		[ -f "${AISTACK_GEIGER_CONTEXT_FILE}" ] && . "${AISTACK_GEIGER_CONTEXT_FILE}"
 
 		if [ "$#" -gt 0 ]; then
 			"${GEIGER_FEAT_INSTALL_ROOT}/bin/geiger" "$@"
@@ -129,7 +129,7 @@ geiger_launcher_and_context_files_manage() {
 
 					declare -f geiger_launch
 
-					echo asm_launch \"\$@\"
+					echo geiger_launch \"\$@\"
 				} > "${AISTACK_GEIGER_LAUNCHER_FILE}"
 
 				chmod +x "${AISTACK_GEIGER_LAUNCHER_FILE}"
@@ -143,15 +143,18 @@ geiger_launcher_and_context_files_manage() {
 			;;
 
 		refresh_if_exists)
-			[ -f "${AISTACK_GEIGER_LAUNCHER_FILE}" ]  && ( geiger_launcher_and_context_files_manage "delete"; geiger_launcher_and_context_files_manage "create" )
+			if [ -f "${AISTACK_GEIGER_LAUNCHER_FILE}" ]; then
+				geiger_launcher_and_context_files_manage "delete" || return $?
+				geiger_launcher_and_context_files_manage "create"
+			fi
 			;;
 	esac
 }
 
 geiger_context_file_generate() {
 	# GENERATE CONTEXT FILE ----
-	echo '#!/bin/sh' > "${AISTACK_ASM_CONTEXT_FILE}"
-	chmod +x "${AISTACK_ASM_CONTEXT_FILE}"
+	echo '#!/bin/sh' > "${AISTACK_GEIGER_CONTEXT_FILE}"
+	chmod +x "${AISTACK_GEIGER_CONTEXT_FILE}"
 
 	# VARIABLES
 	aistack_context_file_export_variables "${AISTACK_GEIGER_CONTEXT_FILE}" "${AISTACK_GEIGER_CONTEXT_EXPORT_VARIABLES}"
