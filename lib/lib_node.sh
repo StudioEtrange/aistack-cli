@@ -103,7 +103,7 @@ node_install() {
     fi
 
     echo "-- install pnpm"
-    aistack_module_install "pnpm"
+    aistack_module_install "pnpm" --allow-scripts="pnpm"
 }
 
 
