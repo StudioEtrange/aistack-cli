@@ -49,6 +49,99 @@ setup() {
 	assert_output "ERROR: unsupported init mode: force"
 }
 
+@test "aistack_init rejects invalid Node.js versions before refresh or purge" {
+	AISTACK_INIT_FORCE_NODE_VERSION="--lts"
+	aistack_install_refresh() { fail "must not refresh"; }
+	aistack_install_purge() { fail "must not purge"; }
+	local mode
+	for mode in refresh reinstall; do
+		run aistack_init "${mode}"
+		assert_failure
+		assert_output --partial "ERROR: invalid Node.js version:"
+	done
+}
+
+@test "aistack_runtime_install propagates Node.js installation failure" {
+	aistack_component_install() { return 3; }
+	aistack_runtime_detect() { fail "must not detect an old runtime"; }
+	run aistack_runtime_install nodejs
+	assert_equal "${status}" 3
+}
+
+@test "aistack_runtime_install forwards an explicit Node.js version even when installed" {
+	AISTACK_INIT_FORCE_NODE_VERSION="22"
+	aistack_runtime_is_detected() { return 0; }
+	aistack_component_install() { printf '%s:%s' "${1}" "${3}"; }
+	aistack_runtime_detect() { :; }
+	aistack_module_detect() { :; }
+	aistack_tool_detect() { :; }
+	aistack_generic_context_file_generate() { :; }
+	aistack_launcher_and_context_files_regenerate() { :; }
+	local version
+	for version in 24 24.1 24.1.0 v24.1.0; do
+		run aistack_runtime_install nodejs "${version}"
+		assert_success
+		assert_output "nodejs:${version}"
+	done
+	aistack_runtime_install nodejs 24.1 >/dev/null
+	assert_equal "${AISTACK_INIT_FORCE_NODE_VERSION}" "22"
+}
+
+@test "aistack_runtime_install runs installers for existing runtimes without a version" {
+	AISTACK_INIT_FORCE_NODE_VERSION=""
+	aistack_runtime_is_detected() { return 0; }
+	aistack_component_install() { echo "install ${1}"; }
+	aistack_runtime_detect() { :; }
+	aistack_module_detect() { :; }
+	aistack_tool_detect() { :; }
+	aistack_generic_context_file_generate() { :; }
+	aistack_launcher_and_context_files_regenerate() { :; }
+	local runtime
+	for runtime in nodejs python rust bun; do
+		run aistack_runtime_install "${runtime}"
+		assert_success
+		assert_output "install ${runtime}"
+	done
+}
+
+@test "aistack_runtime_install rejects missing extra and invalid arguments before installing" {
+	aistack_component_install() { echo "unexpected installation"; return 0; }
+	run aistack_runtime_install
+	assert_failure
+	assert_output --partial "ERROR: usage:"
+	refute_output --partial "unexpected installation"
+	run aistack_runtime_install nodejs 24.1 extra
+	assert_failure
+	assert_output --partial "ERROR: usage:"
+	refute_output --partial "unexpected installation"
+	local runtime
+	for runtime in python rust bun; do
+		run aistack_runtime_install "${runtime}" 24.1
+		assert_failure
+		assert_output --partial "ERROR: version selection is only supported"
+		refute_output --partial "unexpected installation"
+	done
+	run aistack_runtime_install unknown
+	assert_failure
+	assert_output "ERROR: Unknown runtime unknown"
+	local version
+	for version in '' --lts invalid 24.1.0.1; do
+		run aistack_runtime_install nodejs "${version}"
+		assert_failure
+		assert_output --partial "ERROR: invalid Node.js version:"
+		refute_output --partial "unexpected installation"
+	done
+}
+
+@test "aistack_runtime_install validates the Node.js environment version before installing" {
+	AISTACK_INIT_FORCE_NODE_VERSION="invalid"
+	aistack_component_install() { echo "unexpected installation"; }
+	run aistack_runtime_install nodejs
+	assert_failure
+	assert_output --partial "ERROR: invalid Node.js version:"
+	refute_output --partial "unexpected installation"
+}
+
 @test "shell_quote_posix quotes an empty string" {
 	run shell_quote_posix ""
 

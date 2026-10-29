@@ -349,6 +349,25 @@ Remove the managed Rust runtime with:
 
 ## Case 12 : configure Node.js internal runtime
 
+Choose another managed Node.js version after initialization:
+
+```bash
+./aistack runtime add nodejs 24.1
+./aistack node --version
+```
+
+This selects the latest `24.1.x`, even if another version is installed. Without a version argument, the installer still runs and selects `AISTACK_INIT_FORCE_NODE_VERSION` or the latest LTS. NVM reuses an already installed release. More generally, `runtime add` always runs the installer: Rust/Bun replace their runtime directory, while Python delegates to Stella/Miniforge, which may keep an existing installation.
+
+_"I want to choose the core Node.js runtime version during initialization."_
+
+```bash
+AISTACK_INIT_FORCE_NODE_VERSION=22 ./aistack init
+# Or use an exact version:
+AISTACK_INIT_FORCE_NODE_VERSION=22.14.0 ./aistack init
+```
+
+Without this variable, the latest LTS is installed. See [Node.js](nodejs.md#choosing-the-core-nodejs-version).
+
 _"I want to set a npm registry for the internal Node.js runtime."_
 
 ```

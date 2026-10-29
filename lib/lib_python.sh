@@ -70,6 +70,7 @@ python_is_installed() {
 }
 
 python_install() {
+	local reinstall="${1:-false}"
     local r m
     for r in $AISTACK_RUNTIME_PYTHON_RUNTIME_REQUIRED; do 
 		echo "INFO: python require needed ${r} managed runtime"
@@ -82,7 +83,7 @@ python_install() {
 	done
 
     #stella_feature_install "miniforge3" "NOT_LOADED_IN_PATH"
-    aistack_component_install "miniforge3"
+    aistack_component_install "miniforge3" "${reinstall}"
 
     # NOTE : Here $AISTACK_RUNTIME_PYTHON_SEARCH_PATH is empty so we launch aistack_runtime_detect
     # to set it to be able to install pipx and uv with mamba

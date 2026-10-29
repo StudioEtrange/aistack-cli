@@ -67,6 +67,9 @@ node_is_installed() {
 }
 
 node_install() {
+	local version="${1:-${AISTACK_INIT_FORCE_NODE_VERSION:-}}"
+	[ -z "${version}" ] || node_version_validate "${version}" || return $?
+
     local r m
     for r in $AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED; do 
 		echo "INFO: Nodejs require ${r} managed runtime"
@@ -79,7 +82,12 @@ node_install() {
 	done
 
 	
-    node_install_lts
+
+	if [ -z "${version}" ]; then 
+		node_install_lts || return $?
+	else
+		node_install_version "${version}" || return $? 
+	fi
 
     # NOTE : Here $AISTACK_RUNTIME_NODEJS_SEARCH_PATH is empty so we launch aistack_runtime_detect
     # to set it to be able to install node package with npm
@@ -100,15 +108,38 @@ node_install() {
 
 
 node_install_lts() {
+	node_install_version
+}
+
+# Accept a major, major.minor or exact version, optionally prefixed with v.
+node_version_validate() {
+	if [[ ! "${1}" =~ ^v?[0-9]+(\.[0-9]+)?(\.[0-9]+)?$ ]]; then
+		echo "ERROR: invalid Node.js version: ${1}; expected a version such as 22 or 22.14.0" >&2
+		return 1
+	fi
+}
+
+# install a version and set it as default version
+node_install_version() {
+	local version="${1}"
+
 	[ "${AISTACK_MODULE_NVM_LOADED}" = "true" ] || return 1
 
 	# Install Node.js, update the default alias, then refresh the cached binary path.
-	nvm install --lts || return $?
-	nvm alias default 'lts/*' || return $?
+	if [ -n "${version}" ]; then
+		nvm install "${version}" || return $?
+		nvm alias default "${version}" || return $?
+	else
+		nvm install --lts || return $?
+		nvm alias default 'lts/*' || return $?
+	fi
 	nvm_default_node_cache_remove
 	nvm_default_node_activate || return $?
 
-    [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ] && glibc_binary_compat "node" "${AISTACK_NVM_HOME}" "${AISTACK_INIT_FORCE_NODE_GBC}"
+	if [ -n "${AISTACK_INIT_FORCE_NODE_GBC}" ]; then
+		glibc_binary_compat "node" "${AISTACK_NVM_HOME}" "${AISTACK_INIT_FORCE_NODE_GBC}" || return $?
+	fi
+	return 0
 }
 
 node_uninstall() {

@@ -34,13 +34,6 @@ To see complete commands use `aistack help`.
 | **shell** | Enter a sub-shell with the `aistack` environment and paths configured |
 | **register [current, shell list, vs]** | Register aistack command search path into shell. current shell or a list of supported shells or "vs" for VS Code integrated terminal |
 
-Managed runtimes can be installed or removed independently. Rust uses the official standalone `tar.xz` installers and remains isolated from any system Rust installation:
-
-```bash
-./aistack runtime add rust
-./aistack rustc --version
-./aistack runtime remove rust
-```
 
 ## How-To and Quick Usage
 

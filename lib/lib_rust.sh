@@ -46,6 +46,7 @@ rust_is_installed() {
 
 # Download and install an official Rust standalone installer.
 # See https://forge.rust-lang.org/infra/other-installation-methods.html
+# NOTE: rust is always reinstalled in rust_install
 rust_install() {
 	local version="$1"
 	local target=""

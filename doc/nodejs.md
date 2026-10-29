@@ -1,12 +1,38 @@
 # Node.js
 
 - [Node.js](#nodejs)
+  - [Choosing the core Node.js version](#choosing-the-core-nodejs-version)
   - [Node.js and glibc](#nodejs-and-glibc)
   - [Notes](#notes)
   - [About MCP server](#about-mcp-server)
   - [Set a cache path for nvm binaries](#set-a-cache-path-for-nvm-binaries)
   - [Using your own npm registry](#using-your-own-npm-registry)
 
+
+## Choosing the core Node.js version
+
+Set `AISTACK_INIT_FORCE_NODE_VERSION` when initializing AIStack to choose the managed core runtime instead of the latest LTS:
+
+```bash
+AISTACK_INIT_FORCE_NODE_VERSION=22 ./aistack init
+AISTACK_INIT_FORCE_NODE_VERSION=22.14.0 ./aistack init
+```
+Accepted formats are a major version (`22`), major.minor (`22.14`), or an exact version (`22.14.0`), optionally prefixed with `v`. NVM resolves partial versions to the latest matching release. Invalid formats or unavailable versions cause initialization to fail.
+
+Without this variable (or when empty), initialization installs the latest LTS. The variable also applies to `init reinstall`. See [Node.js version selection](doc/nodejs.md#choosing-the-core-nodejs-version) for details.
+
+
+
+## Selecting a version after initialization
+
+To select a managed Node.js version after initialization:
+
+```bash
+./aistack runtime add nodejs 24.1
+./aistack node --version
+```
+
+The version argument accepts a major, major.minor or exact version, optionally prefixed with `v`. `24.1` selects the latest `24.1.x`, even when another version is installed, and refreshes launchers and contexts. Older versions are not removed. The argument overrides `AISTACK_INIT_FORCE_NODE_VERSION` for this command only. The installer runs even when Node.js is already installed. Without a version argument, it selects the environment variable or the latest LTS, rather than leaving the active version unchanged. NVM reuses the selected release if it is already installed. Other runtimes do not accept a version argument.
 
 ## Node.js and glibc
 
@@ -100,5 +126,3 @@ cd aistack-cli
 cd aistack-cli
 ./aistack npm config set registry https://registry.local.org/ -g
 ```
-
-

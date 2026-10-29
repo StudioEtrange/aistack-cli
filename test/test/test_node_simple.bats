@@ -10,6 +10,88 @@ teardown() {
     true
 }
 
+@test "node_install_version uses latest LTS when no version is provided" {
+	AISTACK_MODULE_NVM_LOADED="true"
+	AISTACK_INIT_FORCE_NODE_GBC=""
+	nvm() { printf 'nvm %s\n' "$*"; }
+	nvm_default_node_cache_remove() { echo "cache removed"; }
+	nvm_default_node_activate() { echo "default activated"; }
+
+	run node_install_version
+	assert_success
+	assert_output "$(printf '%s\n' 'nvm install --lts' 'nvm alias default lts/*' 'cache removed' 'default activated')"
+}
+
+@test "node_install_version selects supported explicit versions" {
+	AISTACK_MODULE_NVM_LOADED="true"
+	AISTACK_INIT_FORCE_NODE_GBC=""
+	nvm() { printf 'nvm %s\n' "$*"; }
+	nvm_default_node_cache_remove() { echo "cache removed"; }
+	nvm_default_node_activate() { echo "default activated"; }
+	local version
+	for version in 22 22.14 22.14.0 v22.14.0; do
+		run node_install_version "${version}"
+		assert_success
+		assert_output "$(printf '%s\n' "nvm install ${version}" "nvm alias default ${version}" 'cache removed' 'default activated')"
+	done
+}
+
+@test "node_install_version rejects invalid versions before calling nvm" {
+	AISTACK_MODULE_NVM_LOADED="true"
+	nvm() { fail "nvm must not be called"; }
+	local version
+	for version in latest --lts '22 bad' '22;echo bad' 22. 22.14.0.1; do
+		run node_install_version "${version}"
+		assert_failure
+		assert_output --partial "ERROR: invalid Node.js version:"
+	done
+}
+
+@test "node_install_version fails when nvm is not loaded" {
+	AISTACK_MODULE_NVM_LOADED="false"
+	run node_install_version 22
+	assert_failure
+}
+
+@test "node_install_version preserves default and cache on installation failure" {
+	AISTACK_MODULE_NVM_LOADED="true"
+	nvm() {
+		[ "${1}" = "install" ] || fail "default must not change"
+		return 3
+	}
+	nvm_default_node_cache_remove() { fail "cache must not change"; }
+	run node_install_version 99999
+	assert_equal "${status}" 3
+}
+
+@test "node_install honors the version environment variable" {
+	AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED=""
+	AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED=""
+	AISTACK_INIT_FORCE_NPM_REGISTRY=""
+	node_install_version() { echo "version ${1}"; }
+	node_install_lts() { echo "latest LTS"; }
+	node_is_installed() { return 0; }
+	aistack_module_install() { return 0; }
+
+	AISTACK_INIT_FORCE_NODE_VERSION=22 run node_install
+	assert_success
+	assert_output --partial "version 22"
+	AISTACK_INIT_FORCE_NODE_VERSION="" run node_install
+	assert_success
+	assert_output --partial "latest LTS"
+}
+
+@test "node_install stops before installing packages when version installation fails" {
+	AISTACK_RUNTIME_NODEJS_RUNTIME_REQUIRED=""
+	AISTACK_RUNTIME_NODEJS_MODULE_REQUIRED=""
+	AISTACK_INIT_FORCE_NODE_VERSION=99999
+	node_install_version() { return 3; }
+	node_is_installed() { fail "must not reuse the previous runtime"; }
+	aistack_module_install() { fail "must not install packages"; }
+	run node_install
+	assert_equal "${status}" 3
+}
+
 
 @test "nvm_install replaces an incomplete installation after a successful clone" {
 	tmp="$(mktemp -d)"

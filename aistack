@@ -237,6 +237,7 @@ Options:
     nvm|npm|npx|pnpm|bun|node|python|pip|pipx|uv|conda|mamba|rustc|cargo|rustdoc [<command>]
                                         Execute a command using the matching internal runtime from AIStack. (i.e: aistack cargo --version)
     runtime add|remove <runtime>        Install|remove a runtime ($AISTACK_RUNTIME_TO_DETECT)
+    runtime add nodejs [version]		installs and select a version for nodejs to become the default node active version
     api <command>                       Call any internal AIStack function.
     ----
     app killport <port>                 Kill process running on a specific port.
@@ -370,11 +371,7 @@ main() {
 			shift
             case "${sub_command}" in
                 add)
-                    if ! aistack_runtime_is_detected "${1}"; then
-                        aistack_runtime_require "$1"
-                    else
-                        echo "runtime $1 already installed"
-                    fi
+					aistack_runtime_install "$@"
 				;;
 				remove)
 					aistack_runtime_uninstall "$1"

@@ -238,6 +238,10 @@ aistack_info() {
 aistack_init() {
 	local mode="${1:-refresh}"
 
+	if [ -n "${AISTACK_INIT_FORCE_NODE_VERSION}" ]; then
+		node_version_validate "${AISTACK_INIT_FORCE_NODE_VERSION}" || return $?
+	fi
+
 	case "${mode}" in
 		"refresh")
 			aistack_install_refresh
@@ -514,12 +518,14 @@ aistack_runtime_require() {
 
 
 # install managed runtime
+# each runtime installer have its own behavior when installing an already installed runtime
 aistack_runtime_install() {
-    local r="$1"
+    local runtime="${1}"
+	local other_option="${2}"
 
-    case "${r}" in
+    case "${runtime}" in
         "python")
-            aistack_component_install "python"
+            aistack_component_install "python" ""
             aistack_runtime_detect
 			aistack_module_detect
 			aistack_tool_detect
@@ -529,7 +535,8 @@ aistack_runtime_install() {
             return $?
             ;;
         "nodejs")
-            aistack_component_install "nodejs"
+			# NOTE: node has it own mechanism to select version as default version and choose if he need to reinstall a version or not
+            aistack_component_install "nodejs" "" "$other_option" || return $?
             aistack_runtime_detect
 			aistack_module_detect
 			aistack_tool_detect
@@ -539,7 +546,8 @@ aistack_runtime_install() {
             return $?
             ;;
         "bun")
-            aistack_component_install "bun"
+			# NOTE: bun is always reinstalled in bun_install
+            aistack_component_install "bun" ""
             aistack_runtime_detect
 			aistack_module_detect
 			aistack_tool_detect
@@ -549,7 +557,8 @@ aistack_runtime_install() {
             return $?
             ;;
 		"rust")
-			aistack_component_install "rust"
+			# NOTE: rust is always reinstalled in rust_install
+			aistack_component_install "rust" ""
             aistack_runtime_detect
 			aistack_module_detect
 			aistack_tool_detect
@@ -558,18 +567,14 @@ aistack_runtime_install() {
             aistack_runtime_is_detected "rust"
             return $?
 			;;
-        *)
-			echo "ERROR: Unknown runtime $r"
-            return 1
-            ;;
     esac
 }
 
 aistack_runtime_uninstall() {
-    local r="$1"
+    local runtime="$1"
 	# NOTE: remove a runtime may remove some modules or tools instaleld INSIDE the runtime path
 	#		thats why we need to redetect moodule and tool, and regenerate files because runtimes path may have changed
-    case "${r}" in
+    case "${runtime}" in
         "python")
             python_uninstall
             aistack_runtime_detect
@@ -603,7 +608,7 @@ aistack_runtime_uninstall() {
 			aistack_launcher_and_context_files_regenerate
 			;;
          *)
-			echo "ERROR: Unknown runtime $r"
+			echo "ERROR: Unknown runtime $runtime"
             return 1
             ;;
     esac
@@ -951,30 +956,38 @@ aistack_component_is_installed() {
 # install components of any kind
 aistack_component_install() {
     local c="$1"
-    
-    echo "INFO: install component ${c}"
+    local reinstall="${2:-false}"
+	local other_option="${3}"
+	
+	 echo "INFO: install component ${c}"
 
     case ${c} in
         # components LOADED IN_PATH -----------
         # module --
         jq|yq)
+			[ "${reinstall}" = "true" ] && stella_feature_uninstall "${c}" "LOADED_IN_PATH"
             stella_feature_install "${c}" "LOADED_IN_PATH"
             ;;
         # components NOT_LOADED_IN_PATH -----------
         miniforge3)
+			[ "${reinstall}" = "true" ] && stella_feature_uninstall "miniforge3" "NOT_LOADED_IN_PATH"
             stella_feature_install "miniforge3" "NOT_LOADED_IN_PATH"
             ;;
         # runtimes --
         python)
-            python_install
+            python_install "${reinstall}"
             ;;
         nodejs)
-            node_install
+            node_install "$other_option"
             ;;
         bun)
+			# NOTE: bun is always reinstalled in bun_install
+			[ "${reinstall}" = "false" ] && echo "bun runtime is always fully reinstalled"
             bun_install
             ;;
 		rust)
+			# NOTE: rust is always reinstalled in rust_install
+			[ "${reinstall}" = "false" ] && echo "rust runtime is always fully reinstalled"
 			rust_install
 			;;
         # modules --
@@ -1043,6 +1056,31 @@ aistack_component_get_search_path() {
 
 
 # --------------- SPECIFIC INSTALLER -----------------------------
+stella_feature_uninstall() {
+    local f="$1"
+    local opt="$2"
+    local o
+    local loaded_in_path_during_aistack_run="ON"
+	for o in $opt; do
+		[ "$o" = "LOADED_IN_PATH" ] && loaded_in_path_during_aistack_run="ON"
+		[ "$o" = "NOT_LOADED_IN_PATH" ] && loaded_in_path_during_aistack_run=""
+	done
+
+	if [ "${loaded_in_path_during_aistack_run}" = "ON" ]; then
+        $STELLA_API feature_remove "${f}"
+	else
+        local _feature=""
+        local _feature_name=""
+
+        $STELLA_API select_official_schema "${f}" "_feature" "_feature_name"
+        if [ ! "$_feature" = "" ]; then
+            echo "-- remove ${_feature}"
+            rm -Rf "${AISTACK_ISOLATED_ROOT}/${_feature_name}"
+        else
+            echo "!! WARN : ${f} is not a valid feature for stella framework"
+        fi
+	fi
+}
 
 
 stella_feature_install() {

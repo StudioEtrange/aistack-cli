@@ -44,6 +44,7 @@ bun_is_installed() {
 #  see https://bun.sh/install for more details
 # This function relies on the following environment variables to be set:
 # - BUN_FEAT_INSTALL_ROOT: The directory where bun will be installed.
+# NOTE: bun is always reinstalled in bun_install
 bun_install() {
 	local r m
     local version="$1"
