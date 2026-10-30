@@ -67,6 +67,58 @@ node_integration_assert_npm_helpers() {
 	node_integration_assert_npm_helpers "${empty_path}"
 }
 
+@test "node integration isolated helpers preserve the configured registry without network access" {
+	local real_npm="${AISTACK_MODULE_NPM_SEARCH_PATH}/npm"
+	local helper
+	unset npm_config_registry NPM_CONFIG_REGISTRY npm_config_globalconfig NPM_CONFIG_GLOBALCONFIG
+	export npm_config_userconfig="${NODE_INTEGRATION_TMP}/user npmrc"
+	export NPM_CONFIG_USERCONFIG="${npm_config_userconfig}"
+	printf '' > "${npm_config_userconfig}"
+	mkdir -p "${npm_config_prefix}/etc" "${NODE_INTEGRATION_TMP}/npm wrapper"
+	printf '%s\n' 'registry=https://registry.local.org/' > "${npm_config_prefix}/etc/npmrc"
+
+	# Demonstrate the original issue: --prefix changes the global config lookup.
+	run "${real_npm}" config get registry --prefix "${NODE_INTEGRATION_PREFIX}" -g
+	assert_success
+	assert_output 'https://registry.npmjs.org/'
+
+	# Replace only the package operation with a read-only query using real npm.
+	export NODE_REGISTRY_TEST_NPM="${real_npm}"
+	AISTACK_MODULE_NPM_SEARCH_PATH="${NODE_INTEGRATION_TMP}/npm wrapper"
+	cat > "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" <<'EOF'
+#!/bin/sh
+case "${1}" in
+	install|uninstall)
+		shift
+		[ "${1}" != --verbose ] || shift
+		exec "${NODE_REGISTRY_TEST_NPM}" config get registry "${@}"
+		;;
+	*) exec "${NODE_REGISTRY_TEST_NPM}" "${@}" ;;
+esac
+EOF
+	chmod +x "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm"
+	for helper in node_isolated_package_install node_isolated_package_uninstall; do
+		run "${helper}" "${NODE_INTEGRATION_PREFIX}"
+		assert_success
+		assert_output 'https://registry.local.org/'
+		npm_config_registry="https://override.local.org/" run "${helper}" "${NODE_INTEGRATION_PREFIX}"
+		assert_success
+		assert_output 'https://override.local.org/'
+		printf '%s\n' 'registry=https://user.local.org/' > "${npm_config_userconfig}"
+		run "${helper}" "${NODE_INTEGRATION_PREFIX}"
+		assert_success
+		assert_output 'https://user.local.org/'
+		printf '' > "${npm_config_userconfig}"
+		run "${helper}" "${NODE_INTEGRATION_PREFIX}" --registry=https://option.local.org/
+		assert_success
+		assert_output 'https://option.local.org/'
+		printf '%s\n' 'registry=https://custom-config.local.org/' > "${NODE_INTEGRATION_TMP}/custom npmrc"
+		npm_config_globalconfig="${NODE_INTEGRATION_TMP}/custom npmrc" run "${helper}" "${NODE_INTEGRATION_PREFIX}"
+		assert_success
+		assert_output 'https://custom-config.local.org/'
+	done
+}
+
 @test "node integration npm helpers prefer managed Node over a system Node" {
 	local fake_bin="${NODE_INTEGRATION_TMP}/fake system bin"
 	mkdir -p "${fake_bin}"

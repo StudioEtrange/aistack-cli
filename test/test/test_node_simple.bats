@@ -10,6 +10,36 @@ teardown() {
     true
 }
 
+@test "node isolated helpers reject a missing prefix before invoking npm" {
+	AISTACK_MODULE_NPM_SEARCH_PATH="${BATS_TEST_TMPDIR}/missing npm"
+	local helper
+	for helper in node_isolated_package_install node_isolated_package_uninstall; do
+		run "${helper}"
+		assert_failure
+		assert_output ''
+	done
+}
+
+@test "node isolated helpers propagate configuration lookup failure without installing" {
+	AISTACK_MODULE_NPM_SEARCH_PATH="${BATS_TEST_TMPDIR}/npm wrapper"
+	mkdir -p "${AISTACK_MODULE_NPM_SEARCH_PATH}"
+	cat > "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" <<'EOF'
+#!/bin/sh
+if [ "${1}" = config ]; then
+	exit 42
+fi
+echo 'unexpected package operation'
+exit 1
+EOF
+	chmod +x "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm"
+	local helper
+	for helper in node_isolated_package_install node_isolated_package_uninstall; do
+		run "${helper}" "${BATS_TEST_TMPDIR}/isolated prefix" test-package
+		assert_equal "${status}" 42
+		assert_output ''
+	done
+}
+
 @test "node_install_version uses latest LTS when no version is provided" {
 	AISTACK_MODULE_NVM_LOADED="true"
 	AISTACK_INIT_FORCE_NODE_GBC=""

@@ -341,13 +341,18 @@ node_package_uninstall() {
 #         └── ...                     # Shared dependencies
 node_isolated_package_install() {
 	local prefix="${1}"
+	local globalconfig
 	[ -n "${prefix}" ] || return 1
 	shift
-	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" install --verbose --prefix "${prefix}" -g "${@}"
+	# Resolve configuration before --prefix changes npm's default globalconfig path.
+	globalconfig="$(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" config get globalconfig)" || return $?
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" install --verbose --globalconfig "${globalconfig}" --prefix "${prefix}" -g "${@}"
 }
 node_isolated_package_uninstall() {
 	local prefix="${1}"
+	local globalconfig
 	[ -n "$prefix" ] || return 1
 	shift
-	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" uninstall --prefix "${prefix}"  -g "${@}"
+	globalconfig="$(PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" config get globalconfig)" || return $?
+	PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${PATH}" "${AISTACK_MODULE_NPM_SEARCH_PATH}/npm" uninstall --globalconfig "${globalconfig}" --prefix "${prefix}"  -g "${@}"
 }
