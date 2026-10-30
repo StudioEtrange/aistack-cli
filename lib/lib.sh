@@ -1002,7 +1002,7 @@ aistack_component_install() {
         json5|pnpm) 
             aistack_runtime_require "nodejs"
             #PATH="${AISTACK_RUNTIME_NODEJS_SEARCH_PATH}:${STELLA_ORIGINAL_SYSTEM_PATH}" npm install -g "${c}" 1>/dev/null
-            node_package_install "${c}" 1>/dev/null
+            node_package_install "${c}" --allow-scripts="${c}" 1>/dev/null
 			[ $? -ne 0 ] && {
                 echo "ERROR : installing module ${c}"
                 return 1
