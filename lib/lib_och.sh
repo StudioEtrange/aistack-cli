@@ -194,6 +194,9 @@ openchamber_context_load_register_for_shell() {
 			"bash"|"zsh"|"ksh"|"sh"|"dash"|"mksh")
 				if ! grep -Fq "$BEGIN_MARK" "${rc_file}"; then
 					{
+						if [ -s "${rc_file}" ] && [ -n "$(tail -c 1 "${rc_file}")" ]; then
+							printf '\n'
+						fi
 						echo "$BEGIN_MARK"
 						echo 'case "${OPENCHAMBER_RUNTIME:-}" in'
 						echo '	desktop|web|ssh-remote)'

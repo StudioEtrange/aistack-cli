@@ -1241,9 +1241,12 @@ register_path_named_bloc_for_shell() {
 			"bash"|"zsh"|"ksh"|"sh"|"dash"|"mksh")
 				if ! grep -Fq "$BEGIN_MARK" "${rc_file}"; then
 					{
-						echo "$BEGIN_MARK"
-						echo "export PATH=\"${path_to_add}:\$PATH\""
-						echo "$END_MARK"
+						if [ -s "${rc_file}" ] && [ -n "$(tail -c 1 "${rc_file}")" ]; then
+							printf '\n'
+						fi
+						printf '%s\n' "${BEGIN_MARK}"
+						printf 'export PATH="%s:$PATH"\n' "${path_to_add}"
+						printf '%s\n' "${END_MARK}"
 					} >> "${rc_file}" || return $?
 				fi
 				echo "- register ${name} PATH for shell ${s} into ${rc_file}"

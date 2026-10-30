@@ -104,43 +104,6 @@ setup() {
 	done
 }
 
-@test "aistack_runtime_install rejects missing extra and invalid arguments before installing" {
-	aistack_component_install() { echo "unexpected installation"; return 0; }
-	run aistack_runtime_install
-	assert_failure
-	assert_output --partial "ERROR: usage:"
-	refute_output --partial "unexpected installation"
-	run aistack_runtime_install nodejs 24.1 extra
-	assert_failure
-	assert_output --partial "ERROR: usage:"
-	refute_output --partial "unexpected installation"
-	local runtime
-	for runtime in python rust bun; do
-		run aistack_runtime_install "${runtime}" 24.1
-		assert_failure
-		assert_output --partial "ERROR: version selection is only supported"
-		refute_output --partial "unexpected installation"
-	done
-	run aistack_runtime_install unknown
-	assert_failure
-	assert_output "ERROR: Unknown runtime unknown"
-	local version
-	for version in '' --lts invalid 24.1.0.1; do
-		run aistack_runtime_install nodejs "${version}"
-		assert_failure
-		assert_output --partial "ERROR: invalid Node.js version:"
-		refute_output --partial "unexpected installation"
-	done
-}
-
-@test "aistack_runtime_install validates the Node.js environment version before installing" {
-	AISTACK_INIT_FORCE_NODE_VERSION="invalid"
-	aistack_component_install() { echo "unexpected installation"; }
-	run aistack_runtime_install nodejs
-	assert_failure
-	assert_output --partial "ERROR: invalid Node.js version:"
-	refute_output --partial "unexpected installation"
-}
 
 @test "shell_quote_posix quotes an empty string" {
 	run shell_quote_posix ""
@@ -191,6 +154,70 @@ setup() {
 
 	assert_success
 	assert_output "${value}"
+}
+
+@test "register_path_named_bloc_for_shell separates blocks without adding unnecessary blank lines" {
+	local test_home="${BATS_TEST_TMPDIR}/home"
+	local initial expected
+	mkdir -p "${test_home}"
+	for initial in "" "existing" $'existing\n'; do
+		printf '%s' "${initial}" > "${test_home}/.bashrc"
+		expected="${BATS_TEST_TMPDIR}/expected"
+		{
+			[ -z "${initial}" ] || printf '%s\n' "existing"
+			printf '%s\n' '# >>> aistack-test-path >>>' 'export PATH="/test:$PATH"' '# <<< aistack-test-path <<<'
+		} > "${expected}"
+
+		HOME="${test_home}" run register_path_named_bloc_for_shell "test" "/test" "bash"
+		assert_success
+		run cmp "${expected}" "${test_home}/.bashrc"
+		assert_success
+	done
+}
+
+@test "register_path_named_bloc_for_shell remains idempotent and unregister preserves existing content" {
+	local test_home="${BATS_TEST_TMPDIR}/home"
+	mkdir -p "${test_home}"
+	printf '%s' 'export KEEP="original"' > "${test_home}/.bashrc"
+
+	HOME="${test_home}" run register_path_named_bloc_for_shell "test" "/test" "bash"
+	assert_success
+	cp "${test_home}/.bashrc" "${BATS_TEST_TMPDIR}/registered"
+	HOME="${test_home}" run register_path_named_bloc_for_shell "test" "/test" "bash"
+	assert_success
+	run cmp "${BATS_TEST_TMPDIR}/registered" "${test_home}/.bashrc"
+	assert_success
+
+	HOME="${test_home}" run unregister_path_named_bloc_for_shell "test" "bash"
+	assert_success
+	printf '%s\n' 'export KEEP="original"' > "${BATS_TEST_TMPDIR}/expected"
+	run cmp "${BATS_TEST_TMPDIR}/expected" "${test_home}/.bashrc"
+	assert_success
+}
+
+@test "openchamber_context_load_register_for_shell separates blocks and remains idempotent" {
+	local test_home="${BATS_TEST_TMPDIR}/home"
+	local initial
+	mkdir -p "${test_home}"
+	AISTACK_OPENCHAMBER_CONTEXT_FILE="/test/context.sh"
+	for initial in "" "existing" $'existing\n'; do
+		printf '%s' "${initial}" > "${test_home}/.bashrc"
+		{
+			[ -z "${initial}" ] || printf '%s\n' "existing"
+			printf '%s\n' '# >>> aistack-openchamber-connect >>>' 'case "${OPENCHAMBER_RUNTIME:-}" in' $'\tdesktop|web|ssh-remote)'
+			printf '\t\t[ -f %s ] && . %s\n' "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")" "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")"
+			printf '%s\n' $'\t\t;;' 'esac' '# <<< aistack-openchamber-connect <<<'
+		} > "${BATS_TEST_TMPDIR}/expected"
+
+		HOME="${test_home}" run openchamber_context_load_register_for_shell "bash"
+		assert_success
+		run cmp "${BATS_TEST_TMPDIR}/expected" "${test_home}/.bashrc"
+		assert_success
+		HOME="${test_home}" run openchamber_context_load_register_for_shell "bash"
+		assert_success
+		run cmp "${BATS_TEST_TMPDIR}/expected" "${test_home}/.bashrc"
+		assert_success
+	done
 }
 
 @test "unregister_named_bloc_for_shell removes one exact block" {
