@@ -167,6 +167,14 @@ LLM             = model used by X Agent
     | *Global* | ~/.gemini/skills/ | ~/.gemini/antigravity-cli/skills/  |
     | *Workspace* |.gemini/skills/ or .agents/skills/ | .agents/skills/ |
 
+* configuration locations loaded:
+  - opencode project scope: `.opencode/skills/<name>/SKILL.md`
+  - opencode global scope: `~/.config/opencode/skills/<name>/SKILL.md`
+  - claude project scope: `.claude/skills/<name>/SKILL.md`
+  - claude global scope: `~/.claude/skills/<name>/SKILL.md`
+  - generic agent project scope: `.agents/skills/<name>/SKILL.md`
+  - generic agent global scope: `~/.agents/skills/<name>/SKILL.md`
+
 ### skills catalogs
 
 * Anthropic skills

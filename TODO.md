@@ -284,23 +284,12 @@
   * lightpanda browser
     * https://github.com/lightpanda-io/browser
 
-
-
-
-* llamafile
-  * https://github.com/mozilla-ai/llamafile
-  * make LLM distributable as executable. To interact with LLM it includes a chat box (in TUI), a cli and an OpenAI Compatible API
-
-* OpenRAG
-  * https://github.com/langflow-ai/openrag  
-  * RAG Platform. Ingestion, indexing, search and Q&A, Interface drag-and-drop
-  * Built on Langflow, Docling, and Opensearch.
-
-* privacy-filter
-  * https://github.com/openai/privacy-filter
-  * https://huggingface.co/openai/privacy-filter
-  * open source model that detect privacy data
-  * best work on english text
+* multi agent running
+  * https://github.com/izll/agent-session-manager
+    * session manager for AI coding agents (Claude, Gemini, Aider, OpenCode)
+    * use tmux on linux and psmux on win
+    * Windows — psmux
+    * desktop app https://github.com/izll/agent-session-manager-desktop
 
 * Security
   * CyberStrikeAI
@@ -327,22 +316,6 @@
     * https://github.com/jamiepine/voicebox
     * Desktop App - Clone voices, generate speech across seven TTS engines
     * https://voicebox.sh/
-
-
-* subwave
-  * https://github.com/perminder-klair/subwave
-  * https://www.getsubwave.com/
-  * Personal internet radio with AI - stream music (icecast), not a playlist
-  * use liquidsoap (https://www.liquidsoap.info/)
-  * use navidrome : 
-    * streaming audio service
-    * https://github.com/navidrome/navidrome/
-    * https://www.navidrome.org
-
-* Alexandria
-  * https://korben.info/alexandria-ebook-livre-audio-multivoix.html
-  * at least 8 GB of VRAM (16+ GB for decent performance);
-  * generate multi-voice audiobooks entirely locally, using an LLM to annotate the text for each character and the Qwen3-TTS (https://github.com/QwenLM/Qwen3-TTS) to generate audio. Offers 9 pre-trained voices, voice cloning from 5–15 seconds of audio, voice generation via text description. 
 
 
 
@@ -379,3 +352,37 @@
     * https://github.com/alvinunreal/oh-my-opencode-slim
     * https://ohmyopencodeslim.com/
     * Lean, fine tuned Opencode multi agent suite · Mix any models · Auto delegate tasks
+
+* Various
+
+  * llamafile
+    * https://github.com/mozilla-ai/llamafile
+    * make LLM distributable as executable. To interact with LLM it includes a chat box (in TUI), a cli and an OpenAI Compatible API
+
+  * OpenRAG
+    * https://github.com/langflow-ai/openrag  
+    * RAG Platform. Ingestion, indexing, search and Q&A, Interface drag-and-drop
+    * Built on Langflow, Docling, and Opensearch.
+
+  * privacy-filter
+    * https://github.com/openai/privacy-filter
+    * https://huggingface.co/openai/privacy-filter
+    * open source model that detect privacy data
+    * best work on english text
+
+  * subwave
+    * https://github.com/perminder-klair/subwave
+    * https://www.getsubwave.com/
+    * Personal internet radio with AI - stream music (icecast), not a playlist
+    * use liquidsoap (https://www.liquidsoap.info/)
+    * use navidrome : 
+      * streaming audio service
+      * https://github.com/navidrome/navidrome/
+      * https://www.navidrome.org
+
+  * Alexandria
+    * https://korben.info/alexandria-ebook-livre-audio-multivoix.html
+    * at least 8 GB of VRAM (16+ GB for decent performance);
+    * generate multi-voice audiobooks entirely locally, using an LLM to annotate the text for each character and the Qwen3-TTS (https://github.com/QwenLM/Qwen3-TTS) to generate audio. Offers 9 pre-trained voices, voice cloning from 5–15 seconds of audio, voice generation via text description. 
+
+
