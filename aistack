@@ -84,6 +84,15 @@ Options:
                                                                 Set a 'default' and 'small' model else pick the first CLIProxyAPI model as default.
                                                                 NOTE: small model is for generation of title, commit message, prompt enhancement, and other quick tasks.
     ----
+    cc : Claude Code - https://code.claude.com
+    cc install                          Download latest native Claude Code into its isolated directory using the official bootstrap, without running claude install.
+    cc uninstall                        Remove Claude Code and unregister its launcher; keep user configuration.
+    cc info                             Print Claude Code installation information.
+    cc register [<current|shell list|vs>]       Register the Claude Code launcher in shell or VS Code terminal PATH.
+    cc unregister [<all|current|shell list|vs>] Unregister the Claude Code launcher. Default: all.
+    cc launch [context folder] -- <Claude Code options>
+                                        Launch Claude Code, or use 'claude' after 'aistack cc register'.
+    ----
     orla : Orla - hhttps://github.com/harvard-cns/orla
     orla install                      Install and configure Orla.
     orla uninstall                    Uninstalling Orla and unregister Orla PATH. (keep all configuration unchanged, to remove configuration use 'aistack orla reset' command)
@@ -425,6 +434,9 @@ main() {
         orla)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_orla.sh"
             ;;
+		cc)
+			. "${AISTACK_CURRENT_FILE_DIR}/lib/main_cc.sh"
+			;;
         bmad)
             . "${AISTACK_CURRENT_FILE_DIR}/lib/main_bmad.sh"
             ;;

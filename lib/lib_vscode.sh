@@ -259,6 +259,7 @@ vscode_path_unregister_all_for_vs_terminal() {
 			gemini_path_unregister_for_vs_terminal
 			opencode_path_unregister_for_vs_terminal
 			orla_path_unregister_for_vs_terminal
+			claude_path_unregister_for_vs_terminal
 			bmad_path_unregister_for_vs_terminal
 			#gsd_path_unregister_for_vs_terminal
 			adk_path_unregister_for_vs_terminal

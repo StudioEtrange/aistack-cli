@@ -3,7 +3,7 @@
 
 # AIStack CLI
 
-AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools _([see full list](#integrations))_ including `Antigravity CLI`, `OpenCode`, `playwright-cli`, `Kilo Code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `BMAD-method`, `get-shit-done-cc` or `ADK`. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact to test and use them.
+AIStack CLI is an experimental swiss-knife command-line application designed to streamline the installation and management of AI development tools _([see full list](#integrations))_ including `Claude Code`, `Antigravity CLI`, `OpenCode`, `playwright-cli`, `Kilo Code`, `orla` and various MCP servers, plugin, extensions, skills, frameworks like `BMAD-method`, `get-shit-done-cc` or `ADK`. The main goal is to provide a convenient way to install and configure AI tools, ensuring no host impact to test and use them.
 
 ## Key Features of AIStack
 
@@ -90,6 +90,7 @@ AIStack CLI offers functionalities for these tools
 * [Geiger](doc/geiger.md) — inventory AI agents, MCP servers, hooks and extensions and their exposure.
 * [Kilo Code](doc/kilocode.md)
 * [Orla](doc/orla.md)
+* [Claude Code](doc/claudecode.md)
 * [llmfit](doc/llmfit.md)
 * [BMAD](doc/bmad.md)
 * [GSD - Get Shit Done](https://opengsd.net/) ([source](https://github.com/open-gsd/gsd-core))

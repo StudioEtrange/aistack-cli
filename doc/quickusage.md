@@ -19,6 +19,7 @@ Right to the point how-to
   - [Case 13 : install gemini-cli](#case-13--install-gemini-cli)
   - [Case 14 : gemini-cli and local MCP server](#case-14--gemini-cli-and-local-mcp-server)
   - [Case 15 : inventory AI tools with Geiger](#case-15--inventory-ai-tools-with-geiger)
+  - [Case 16 : install Claude Code](#case-16--install-claude-code)
 
 ## Case 0 : AIStack install and init
 
@@ -420,3 +421,17 @@ After initializing AIStack once with `./aistack init`:
 ```
 
 See [Geiger](geiger.md) for launcher registration, scan scope and limitations.
+
+## Case 16 : install Claude Code
+
+After initializing AIStack once with `./aistack init`:
+
+```bash
+./aistack cc install
+./aistack cc info
+./aistack cc launch -- --version
+./aistack cc launch /path/to/project
+./aistack cc register
+```
+
+Use `claude` in a new shell after registration. See [Claude Code](claudecode.md) for download-only installation behavior and runtime configuration.

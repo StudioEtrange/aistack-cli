@@ -73,6 +73,7 @@ aistack_initialize() {
 	openchamber_init
     cpa_init
     orla_init
+	claude_init
     kilo_init
     bmad_init
 	gsd_init
@@ -757,6 +758,7 @@ aistack_tool_launcher_and_context_files_regenerate() (
 	opencode_launcher_and_context_files_manage "refresh_if_exists"
 	openchamber_launcher_and_context_files_manage "refresh_if_exists"
 	orla_launcher_and_context_files_manage "refresh_if_exists"
+	claude_launcher_and_context_files_manage "refresh_if_exists"
 	llmfit_launcher_and_context_files_manage "refresh_if_exists"
 	sktor_launcher_and_context_files_manage "refresh_if_exists"
 	ciss_launcher_and_context_files_manage "refresh_if_exists"
@@ -779,6 +781,7 @@ aistack_tool_launcher_and_context_files_remove() (
 	opencode_launcher_and_context_files_manage "delete"
 	openchamber_launcher_and_context_files_manage "delete"
 	orla_launcher_and_context_files_manage "delete"
+	claude_launcher_and_context_files_manage "delete"
 	llmfit_launcher_and_context_files_manage "delete"
 	sktor_launcher_and_context_files_manage "delete"
 	ciss_launcher_and_context_files_manage "delete"
@@ -801,6 +804,7 @@ aistack_tool_detect() {
 	kilo_is_installed
 	opencode_is_installed
 	orla_is_installed
+	claude_is_installed
 	llmfit_is_installed
     sktor_is_installed
 	ciss_is_installed

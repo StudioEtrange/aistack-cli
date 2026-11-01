@@ -25,6 +25,7 @@ fi
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_och.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_kilo.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_orla.sh"
+. "${AISTACK_CURRENT_FILE_DIR}/lib/lib_claude.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_bmad.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_gsd.sh"
 . "${AISTACK_CURRENT_FILE_DIR}/lib/lib_adk.sh"
