@@ -329,7 +329,8 @@ __generate_environment_id() {
         darwin*)
             os_id="macos"
             machine_id=$(ioreg -rd1 -c IOPlatformExpertDevice | awk -F '"' '/IOPlatformUUID/ {print $4}')
-            ;;
+            machine_name="$(scutil --get LocalHostName 2>/dev/null)" || "$(uname -n 2>/dev/null)"
+			;;
         *)
             os_id=$(
                 unset ID
@@ -341,10 +342,22 @@ __generate_environment_id() {
                 printf '%s' "${ID:-unknown}"
             )
             machine_id=$(cat /etc/machine-id 2>/dev/null)
+			if [ -r "/etc/hostname" ]; then
+				IFS= read -r machine_name < "/etc/hostname"
+			else
+				machine_name=$(uname -n 2>/dev/null)
+			fi
             ;;
     esac
 
-    machine_name=$(uname -n)
+	# NOTE : on macos (and sometimes on linux) uname -n are not stable on each network change
+	# Keep only characters suitable for a directory name.
+	machine_name="$(
+		printf '%s' "${machine_name}" |
+			LC_ALL=C tr -cs 'A-Za-z0-9._-' '-' |
+			LC_ALL=C tr '[:upper:]' '[:lower:]'
+	)"
+	machine_name="${machine_name:-unknown-machine}"
     machine_arch=$(uname -m)
 
     machine_hash=$(
@@ -926,6 +939,8 @@ __select_version_from_list() {
 #  1.1.0 1.1.1 1.1.1a 1.1.1b
 #__sort_version "1.1.0 1.1.1 1.1.1a 1.1.1b" "ASC SEP . ENDING_CHAR_REVERSE"
 #  1.1.0 1.1.1a 1.1.1b 1.1.1
+#__sort_version "1_4_19 1_4_19s2 1_4_18 1_4_17" "DESC ENDING_CHAR_REVERSE SEP _"
+# 1_4_19 1_4_19s2 1_4_18 1_4_17
 __sort_version() {
 	local list=$1
 	local opt="$2"

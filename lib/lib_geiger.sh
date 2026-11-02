@@ -46,8 +46,7 @@ geiger_is_installed() {
 
 geiger_install() {
 	local r m
-	local version="$1"
-	[ -z "${version}" ] && version="@latest"
+	local version="${1:-@latest}"
 
 	for r in ${AISTACK_GEIGER_RUNTIME_REQUIRED}; do
 		echo "INFO: Geiger requires ${r} managed runtime"

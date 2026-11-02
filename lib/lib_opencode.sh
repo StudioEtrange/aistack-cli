@@ -56,7 +56,7 @@ opencode_is_installed() {
 	export AISTACK_OPENCODE_TOOL_SEARCH_PATH="${OPENCODE_FEAT_INSTALL_ROOT}/bin"
 	export AISTACK_OPENCODE_TOOL_PATH="${AISTACK_OPENCODE_TOOL_SEARCH_PATH}/opencode"
 
-	# NOTE : we do not use it
+	# NOTE : we do not use it in openchamber
 	# export OPENCODE_BINARY="$AISTACK_OPENCODE_LAUNCHER_FILE"
 	return 0
 }

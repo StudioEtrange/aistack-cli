@@ -270,6 +270,7 @@ vscode_path_unregister_all_for_vs_terminal() {
 			llmfit_path_unregister_for_vs_terminal
 			sktor_path_unregister_for_vs_terminal
 			ciss_path_unregister_for_vs_terminal
+			openchamber_path_unregister_for_vs_terminal
 		fi
 	fi
 }

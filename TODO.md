@@ -5,7 +5,7 @@
 * various AI tools catalog and cartography : https://stackmap.shipwithai.xyz/
 * various AI topics and tools in french ; https://korben.info/categories/intelligence-artificielle/
 
-## features TODO
+## TODO
 
 * CPA : add a way to set port and host
 
@@ -19,6 +19,10 @@
   * use aistack-bootstrap.sh in aistack instead of init sequence
   * prefix EVERY function with ais_xxx
   * include aistack-bootstrap.sh in other shell app
+
+* <TOOL>_CONFIG_FILE are configured in init functions, but are not always used in the tool launcher : tool --config <config file> like in cpa or orla
+
+* <TOOL>_is_installed should be incorporated un action function like orla_launch, opencode_launch, cpa_daemon_up instead of beeing called in main_tool ?
 
 * get llm metadata context size and prices
   * https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json

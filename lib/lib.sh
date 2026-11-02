@@ -404,6 +404,7 @@ aistack_context_file_export_path() {
 
 
 # add an export section of variable in a sh context file
+# each call of this function add varianle to the context file, this is cumulative
 aistack_context_file_export_variables() {
 	local file="$1"
 	local variable_list="$2"
@@ -800,6 +801,7 @@ aistack_tool_detect() {
 	gsd_is_installed
 	kilo_is_installed
 	opencode_is_installed
+	openchamber_is_installed
 	orla_is_installed
 	llmfit_is_installed
     sktor_is_installed

@@ -82,7 +82,7 @@ agy
 AIStack CLI offers functionalities for these tools
 
 * [Opencode](doc/opencode.md)
-* [OpenChamber](doc/openchamber.md)
+* [OpenChamber](doc/openchamber.md) — isolated CLI/Web installation (`och install`), Web/PWA server (`och up`), native lifecycle commands and Desktop/VS Code integration.
 * [CLIProxyAPI](doc/cliproxyapi.md) 
 * [Antigravity CLI](doc/antigravity.md)
 * [asm - agent skill manager](doc/asm.md)

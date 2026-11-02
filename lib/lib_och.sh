@@ -2,9 +2,19 @@
 openchamber_init() {
 	# openchamber specific variables
 	export AISTACK_OPENCHAMBER_CONFIG_HOME="${OPENCHAMBER_DATA_DIR:-${HOME}/.config/openchamber}"
+	mkdir -p "${AISTACK_OPENCHAMBER_CONFIG_HOME}" || return $?
 	export AISTACK_OPENCHAMBER_CONFIG_FILE="${AISTACK_OPENCHAMBER_CONFIG_HOME}/settings.json"
+	export OPENCHAMBER_FEAT_INSTALL_ROOT="${AISTACK_ISOLATED_ROOT}/openchamber"
+	mkdir -p "${OPENCHAMBER_FEAT_INSTALL_ROOT}"
 	
+	export AISTACK_OPENCHAMBER_UI_PASSWORD_FILE="${AISTACK_OPENCHAMBER_CONFIG_HOME}/ui-password"
+	[ -f "${AISTACK_OPENCHAMBER_UI_PASSWORD_FILE}" ] && export AISTACK_OPENCHAMBER_UI_PASSWORD="$(cat "$AISTACK_OPENCHAMBER_UI_PASSWORD_FILE")"
+
+
 	# openchamber launcher
+	export AISTACK_OPENCHAMBER_LAUNCHER_HOME="${AISTACK_LAUNCHER_HOME}/openchamber"
+	mkdir -p "${AISTACK_OPENCHAMBER_LAUNCHER_HOME}"
+	export AISTACK_OPENCHAMBER_LAUNCHER_FILE="${AISTACK_OPENCHAMBER_LAUNCHER_HOME}/openchamber"
 
 	# openchamber context
 	export AISTACK_OPENCHAMBER_CONTEXT_HOME="${AISTACK_CONTEXT_HOME}/openchamber"
@@ -14,32 +24,139 @@ openchamber_init() {
 	# NOTE: do not need to declare those variables:
 	#		AISTACK_*_CONTEXT_FILE and AISTACK_GENERIC_CONTEXT_FILE are already exported
 	#		every *_SEARCH_PATH variable related to a REQUIRED_RUNTIME or REQUIRED_MODULE are already exported
-	export AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES=""
+	export AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES="AISTACK_OPENCHAMBER_TOOL_PATH AISTACK_OPENCHAMBER_CONFIG_HOME AISTACK_OPENCHAMBER_UI_PASSWORD AISTACK_OPENCODE_LAUNCHER_HOME AISTACK_OPENCODE_LAUNCHER_FILE"
 
-	# openchamber requirement - those will be installed and presence checked to run the current component
+	# openchamber requirements - those will be installed and presence checked to run the current component
 	# NOTE:	those search path will be injected in context file
-	export AISTACK_OPENCHAMBER_RUNTIME_REQUIRED=""
+	export AISTACK_OPENCHAMBER_RUNTIME_REQUIRED="nodejs"
 	export AISTACK_OPENCHAMBER_MODULE_REQUIRED=""
 	# remove from context any runtime or module any item already in generic aistack context
 	export AISTACK_OPENCHAMBER_RUNTIME_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_OPENCHAMBER_RUNTIME_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_RUNTIME}")"
 	export AISTACK_OPENCHAMBER_MODULE_REQUIRED_IN_CONTEXT="$($STELLA_API filter_list_with_list "${AISTACK_OPENCHAMBER_MODULE_REQUIRED}" "${AISTACK_GENERIC_CONTEXT_ADD_MODULE}")"
 }
 
+# test if openchamber is installed
+# return 0 : is installed
+# return 1 : tool is not installed
+# return 2 : missing runtime
+openchamber_is_installed() {
+	local r m
+	export AISTACK_OPENCHAMBER_TOOL_AVAILABLE="false"
+	export AISTACK_OPENCHAMBER_TOOL_SEARCH_PATH=""
+	export AISTACK_OPENCHAMBER_TOOL_PATH=""
+	for r in ${AISTACK_OPENCHAMBER_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
+	for m in ${AISTACK_OPENCHAMBER_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
+	[ -x "${OPENCHAMBER_FEAT_INSTALL_ROOT}/bin/openchamber" ] || return 1
+	export AISTACK_OPENCHAMBER_TOOL_AVAILABLE="true"
+	export AISTACK_OPENCHAMBER_TOOL_SEARCH_PATH="${OPENCHAMBER_FEAT_INSTALL_ROOT}/bin"
+	export AISTACK_OPENCHAMBER_TOOL_PATH="${AISTACK_OPENCHAMBER_TOOL_SEARCH_PATH}/openchamber"
+	return 0
+}
 
-# NOTE: openchamber does not have launcher, only context file
+
+openchamber_install() {
+	local r m
+	local version="${1:-@latest}"
+
+	for r in ${AISTACK_OPENCHAMBER_RUNTIME_REQUIRED}; do 
+		echo "INFO: require ${r} managed runtime"
+		aistack_runtime_require "${r}"
+	done
+
+	for m in ${AISTACK_OPENCHAMBER_MODULE_REQUIRED}; do 
+		echo "INFO: require ${m} managed module"
+		aistack_module_require "${m}"
+	done
+
+	echo "INFO: Installing OpenChamber ${version}"
+	node_isolated_package_install "${OPENCHAMBER_FEAT_INSTALL_ROOT}" --allow-scripts="@openchamber/web" "@openchamber/web${version}" || return $?
+	openchamber_is_installed
+
+	return $?
+}
+
+openchamber_uninstall() {
+	if openchamber_is_installed; then
+
+		openchamber_server_down || :
+		node_isolated_package_uninstall "${OPENCHAMBER_FEAT_INSTALL_ROOT}" --allow-scripts="@openchamber/web" "@openchamber/web" || return $?
+		rm -Rf "${OPENCHAMBER_FEAT_INSTALL_ROOT}"
+		openchamber_is_installed && return 1
+		return 0
+	else
+		echo "WARN: OpenChamber is not installed or its managed Node.js runtime is missing"
+	fi
+}
+
+openchamber_path_register_for_shell() {
+	local shell_name="${1:-current}"
+	if openchamber_is_installed; then
+		register_path_named_bloc_for_shell "openchamber" "${AISTACK_OPENCHAMBER_LAUNCHER_HOME}" "$shell_name"
+	fi
+}
+openchamber_path_unregister_for_shell() {
+    local shell_name="${1:-all}"
+	unregister_path_named_bloc_for_shell "openchamber" "$shell_name"
+}
+openchamber_path_register_for_vs_terminal() {
+	if openchamber_is_installed; then
+		vscode_path_register_for_vs_terminal "openchamber" "${AISTACK_OPENCHAMBER_LAUNCHER_HOME}"
+	fi
+}
+openchamber_path_unregister_for_vs_terminal() {
+	vscode_path_unregister_for_vs_terminal "openchamber" "${AISTACK_OPENCHAMBER_LAUNCHER_HOME}"
+}
+
+
+# todo review this if only use desktop independently and och connect command alone
+openchamber_launch() {
+	(
+		[ ! -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] || . "${AISTACK_GENERIC_CONTEXT_FILE}" || return $?
+		[ ! -f "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" ] || . "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" || return $?
+		
+		export OPENCHAMBER_DATA_DIR="${AISTACK_OPENCHAMBER_CONFIG_HOME}"
+		if [ -x "${AISTACK_OPENCODE_LAUNCHER_FILE}" ]; then
+			export PATH="${AISTACK_OPENCODE_LAUNCHER_HOME}:${PATH}"
+			export OPENCODE_BINARY="${AISTACK_OPENCODE_LAUNCHER_FILE}"
+
+		fi
+		export OPENCHAMBER_UI_PASSWORD="${AISTACK_OPENCHAMBER_UI_PASSWORD}"
+		
+		"${AISTACK_OPENCHAMBER_TOOL_PATH}" "${@}"
+	)
+}
+
 openchamber_launcher_and_context_files_manage() {
     local action="${1:-create}"
 
-	case $action in
+	case ${action} in
 		create)
-			# GENERATE CONTEXT FILE ----
-			openchamber_context_file_generate
+			if openchamber_is_installed; then
+				# GENERATE CONTEXT FILE ----
+				openchamber_context_file_generate
+				
+				# GENERATE LAUNCHER FILE ----
+				{
+					echo '#!/bin/sh'
+
+					printf 'export %s=%s\n' "AISTACK_GENERIC_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_GENERIC_CONTEXT_FILE}")"
+					printf 'export %s=%s\n' "AISTACK_OPENCHAMBER_CONTEXT_FILE" "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")"
+
+					declare -f openchamber_launch
+
+					echo openchamber_launch \"\$@\"
+				} > "${AISTACK_OPENCHAMBER_LAUNCHER_FILE}"
+
+				chmod +x "${AISTACK_OPENCHAMBER_LAUNCHER_FILE}"
+			fi
             ;;
         delete)
+			rm -Rf "${AISTACK_OPENCHAMBER_LAUNCHER_HOME}"
+			mkdir -p "${AISTACK_OPENCHAMBER_LAUNCHER_HOME}"
 			openchamber_context_file_generate_remove
             ;;
 		refresh_if_exists)
-			[ -f "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" ] && ( openchamber_launcher_and_context_files_manage "delete"; openchamber_launcher_and_context_files_manage "create" )
+			[ -f "${AISTACK_OPENCHAMBER_LAUNCHER_FILE}" ] && ( openchamber_launcher_and_context_files_manage "delete"; openchamber_launcher_and_context_files_manage "create" )
 			;;
     esac
 }
@@ -51,16 +168,7 @@ openchamber_context_file_generate() {
 	chmod +x "${AISTACK_OPENCHAMBER_CONTEXT_FILE}"
 
 	# VARIABLES
-	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "AISTACK_GENERIC_CONTEXT_FILE AISTACK_OPENCODE_CONTEXT_FILE ${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES}"
-
-	# NOTE: special case, because it is normaly the launcher which includes those files, but there is no launcher script for openchamber
-	{
-		echo '[ -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] && . "${AISTACK_GENERIC_CONTEXT_FILE}"'
-		#if opencode_is_installed; then
-        #	echo '[ -f "${AISTACK_OPENCODE_CONTEXT_FILE}" ] && . "${AISTACK_OPENCODE_CONTEXT_FILE}"'
-		#fi
-
-	} >> "${AISTACK_OPENCHAMBER_CONTEXT_FILE}"
+	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES}"
 
 	# PATH
 	local m r list_path
@@ -74,10 +182,21 @@ openchamber_context_file_generate_remove() {
 }
 
 openchamber_info() {
-	echo "OpenChamber context file : $AISTACK_OPENCHAMBER_CONTEXT_FILE"
-	echo "OpenChamber Configuration file : $AISTACK_OPENCHAMBER_CONFIG_FILE"
+	echo "OpenChamber available : ${AISTACK_OPENCHAMBER_TOOL_AVAILABLE}"
+	echo "OpenChamber CLI path : ${AISTACK_OPENCHAMBER_TOOL_PATH}"
+	echo "OpenChamber needed managed runtime : ${AISTACK_OPENCHAMBER_RUNTIME_REQUIRED}"
+	echo "OpenChamber needed managed module : ${AISTACK_OPENCHAMBER_MODULE_REQUIRED}"
+	echo "OpenChamber install root : ${OPENCHAMBER_FEAT_INSTALL_ROOT}"
+	echo "OpenChamber launcher : ${AISTACK_OPENCHAMBER_LAUNCHER_FILE}"
+	echo "OpenChamber context file : ${AISTACK_OPENCHAMBER_CONTEXT_FILE}"
+	echo "OpenChamber Configuration file : ${AISTACK_OPENCHAMBER_CONFIG_FILE}"
+	echo "OpenChamber UI password file : ${AISTACK_OPENCHAMBER_UI_PASSWORD_FILE}"
+	echo
+    [ -n "$AISTACK_OPENCHAMBER_UI_PASSWORD" ] && echo "OpenChamber UI password : $AISTACK_OPENCHAMBER_UI_PASSWORD (from file : $AISTACK_OPENCHAMBER_UI_PASSWORD_FILE)" || \
+        echo "No OpenChamber UI password"
 }
 
+# generic config management -----------------
 openchamber_show_config() {
     if [ -f "$AISTACK_OPENCHAMBER_CONFIG_FILE" ]; then
         cat "$AISTACK_OPENCHAMBER_CONFIG_FILE"
@@ -86,9 +205,10 @@ openchamber_show_config() {
     fi
 }
 
+openchamber_settings_configure() {
+	openchamber_settings_ui_password_create
+}
 
-
-# generic config management -----------------
 openchamber_settings_remove() {
 	rm -Rf "$AISTACK_OPENCHAMBER_CONFIG_HOME"
 }
@@ -111,10 +231,8 @@ openchamber_set_config() {
 }
 
 
-
-
 # integration  management -----------------
-openchamber_connect_aistack() {
+openchamber_connect_to_aistack() {
 	local shell_name_list="${1:-current}"
 	local result
 
@@ -133,7 +251,6 @@ openchamber_connect_aistack() {
 	# force openchamber to use opencode from aistack
 	if opencode_is_installed; then
 		# NOTE : to locate opencode binary we do prefer explicit settings in settings file over relying on OPENCODE_BINARY
-
 		# openchamber setting file shared setting used by Desktop, Web and the VS Code extension
 		openchamber_set_config "opencodeBinary" "\"${AISTACK_OPENCODE_LAUNCHER_FILE}\""
 
@@ -156,6 +273,7 @@ openchamber_disconnect_aistack() {
 	vscode_remove_config "openchamber\.opencodeBinary"
 }
 
+# TODO what is this
 # allow to inject openchamber context file in shell launched by openchamber builtin terminal
 # env var OPENCHAMBER_RUNTIME allow to detect if the current shell was launched by openchamber (desktop, web or remote ssh)
 # OPENCHAMBER_RUNTIME is not documented, see https://github.com/search?q=repo%3Aopenchamber%2Fopenchamber+OPENCHAMBER_RUNTIME&type=code
@@ -200,6 +318,7 @@ openchamber_context_load_register_for_shell() {
 						echo "$BEGIN_MARK"
 						echo 'case "${OPENCHAMBER_RUNTIME:-}" in'
 						echo '	desktop|web|ssh-remote)'
+						printf '\t\t[ -f %s ] && . %s\n' "$(shell_quote_posix "${AISTACK_GENERIC_CONTEXT_FILE}")" "$(shell_quote_posix "${AISTACK_GENERIC_CONTEXT_FILE}")"
 						printf '\t\t[ -f %s ] && . %s\n' "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")" "$(shell_quote_posix "${AISTACK_OPENCHAMBER_CONTEXT_FILE}")"
 						echo '		;;'
 						echo 'esac'
@@ -217,4 +336,79 @@ openchamber_context_load_register_for_shell() {
 
 	return ${res}
 }
+
+# UI password management ------------------------
+openchamber_settings_ui_password_create() {
+	local password
+	password="$("${STELLA_API}" generate_password 12 "[:alnum:]")" || return $?
+	openchamber_settings_ui_password_set "${password}"
+	
+	echo "New UI password created : $password"
+
+	# each time a password is generated we need to refresh the launcher to update env vars
+    openchamber_launcher_and_context_files_manage
+}
+
+openchamber_settings_ui_password_set() {
+    local password="${1:-}"
+    echo "${password}" > "${AISTACK_OPENCHAMBER_UI_PASSWORD_FILE}"
+	export AISTACK_OPENCHAMBER_UI_PASSWORD="${password}"
+}
+
+openchamber_settings_ui_password_get() {
+    [ -f "$AISTACK_OPENCHAMBER_UI_PASSWORD_FILE" ] && cat "${AISTACK_OPENCHAMBER_UI_PASSWORD_FILE}"
+}
+
+openchamber_settings_ui_password_reset() {
+	openchamber_settings_ui_password_set ""
+}
+
+
+# openchamber server management ----------------------
+openchamber_server_up() {
+    openchamber_launch "serve" "${@}"
+}
+openchamber_server_down() {
+    openchamber_launch "stop" "${@}"
+}
+openchamber_server_restart() {
+	openchamber_launch "restart" "${@}"
+}
+openchamber_server_status() {
+    openchamber_launch "status" "${@}"
+}
+openchamber_server_logs() {
+	openchamber_launch "logs" "${@}"
+}
+
+
+# Check an HTTP address, independently of the managed CLI installation.
+# Return 0 only for HTTP 200
+openchamber_server_instance_reachable() {
+	local address="${1:-http://127.0.0.1:3000}"
+	local http_code
+	local curl_rc
+
+	http_code="$(
+		curl -skL \
+			-X GET "${address}" \
+			-H "Content-Type: application/json" \
+			-o /dev/null \
+			-w "%{http_code}" \
+			2>/dev/null
+	)" && curl_rc=0 || curl_rc=$?
+
+	if [ "${curl_rc}" -ne 0 ]; then
+		echo "ERROR: unable to reach server: ${address}" >&2
+		return 1
+	fi
+
+	if [ "${http_code}" != "200" ]; then
+		echo "ERROR: server returned HTTP ${http_code} for ${address}" >&2
+		return 1
+	fi
+
+	return 0
+}
+
 
