@@ -368,7 +368,7 @@ ssh_connection() {
 
     # Create a temporary directory on the distant host
     TMP_REMOTE_DIR=$(ssh "${SSH_OPTIONS[@]}" -- "$HOST" 'mktemp -d /tmp/opencode-transfer.XXXXXXXX')
-    [ "$TMP_REMOTE_DIR" =~ ^/tmp/opencode-transfer\.[a-zA-Z0-9]+$ ] || {
+    [[ "$TMP_REMOTE_DIR" =~ ^/tmp/opencode-transfer\.[a-zA-Z0-9]+$ ]] || {
         log "ERROR" "Unexpected remote temporary directory: $TMP_REMOTE_DIR" >&2
         return 1
     }
