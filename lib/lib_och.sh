@@ -114,14 +114,6 @@ openchamber_launch() {
 		[ ! -f "${AISTACK_GENERIC_CONTEXT_FILE}" ] || . "${AISTACK_GENERIC_CONTEXT_FILE}" || return $?
 		[ ! -f "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" ] || . "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" || return $?
 		
-		export OPENCHAMBER_DATA_DIR="${AISTACK_OPENCHAMBER_CONFIG_HOME}"
-		if [ -x "${AISTACK_OPENCODE_LAUNCHER_FILE}" ]; then
-			export PATH="${AISTACK_OPENCODE_LAUNCHER_HOME}:${PATH}"
-			export OPENCODE_BINARY="${AISTACK_OPENCODE_LAUNCHER_FILE}"
-
-		fi
-		export OPENCHAMBER_UI_PASSWORD="${AISTACK_OPENCHAMBER_UI_PASSWORD}"
-		
 		"${AISTACK_OPENCHAMBER_TOOL_PATH}" "${@}"
 	)
 }
@@ -169,12 +161,16 @@ openchamber_context_file_generate() {
 
 	# VARIABLES
 	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES}"
+	export OPENCHAMBER_DATA_DIR="${AISTACK_OPENCHAMBER_CONFIG_HOME}"
+	export OPENCHAMBER_UI_PASSWORD="${AISTACK_OPENCHAMBER_UI_PASSWORD}"
+	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES} OPENCHAMBER_DATA_DIR OPENCHAMBER_UI_PASSWORD}"
 
 	# PATH
 	local m r list_path
 	for r in ${AISTACK_OPENCHAMBER_RUNTIME_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "runtime" "${r}" "VARIABLE_LIST") ${list_path}"; done
 	for m in ${AISTACK_OPENCHAMBER_MODULE_REQUIRED_IN_CONTEXT}; do list_path="$(aistack_component_get_search_path "module" "${m}" "VARIABLE_LIST") ${list_path}"; done
 	aistack_context_file_export_path "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "${list_path}" "VARIABLE_LIST"
+
 }
 
 openchamber_context_file_generate_remove() {
@@ -242,7 +238,7 @@ openchamber_connect_to_aistack() {
 	# register a shell hook that loads the openchamber context file when openchamber desktop, web or ssh, launch a selected shell with its builtin terminal
 	# Load the OpenChamber context file when OPENCHAMBER_RUNTIME is setted in such process launched by OpenChamber.
 	# This allows for openchamber to use aistack managed tools and runtime
-	openchamber_context_load_register_for_shell "$shell_name_list" || return $?
+	openchamber_context_load_register_for_shell "${shell_name_list}" || return $?
 
 	# OpenChamber VS Code extension does not set OPENCHAMBER_RUNTIME.
 	# openchamber vs code extension using the opencode launcher loads the OpenCode context file for the OpenCode server and its child processes.
@@ -259,6 +255,12 @@ openchamber_connect_to_aistack() {
 		if [ -n "${AISTACK_VSCODE_CONFIG_FILE}" ]; then
 			vscode_set_config "openchamber\.opencodeBinary" "\"${AISTACK_OPENCODE_LAUNCHER_FILE}\""
 		fi
+
+		# TODO : this is not persitent ! need to redo it after each openchamber_launcher_and_context_files_manage call
+		# modify openchamber context file to inject opencode related variables and search PATH
+		export OPENCODE_BINARY="${AISTACK_OPENCODE_LAUNCHER_FILE}"
+		aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "OPENCODE_BINARY"
+		aistack_context_file_export_path "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "AISTACK_OPENCODE_LAUNCHER_HOME"
 	fi
 }
 
@@ -274,7 +276,7 @@ openchamber_disconnect_aistack() {
 }
 
 # TODO what is this
-# allow to inject openchamber context file in shell launched by openchamber builtin terminal
+# allow to inject openchamber context files in shell launched by openchamber builtin terminal
 # env var OPENCHAMBER_RUNTIME allow to detect if the current shell was launched by openchamber (desktop, web or remote ssh)
 # OPENCHAMBER_RUNTIME is not documented, see https://github.com/search?q=repo%3Aopenchamber%2Fopenchamber+OPENCHAMBER_RUNTIME&type=code
 openchamber_context_load_register_for_shell() {

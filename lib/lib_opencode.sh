@@ -48,7 +48,6 @@ opencode_is_installed() {
 	export AISTACK_OPENCODE_TOOL_AVAILABLE="false"
 	export AISTACK_OPENCODE_TOOL_SEARCH_PATH=""
 	export AISTACK_OPENCODE_TOOL_PATH=""
-	#export OPENCODE_BINARY=""
 	for r in ${AISTACK_OPENCODE_RUNTIME_REQUIRED}; do aistack_runtime_is_detected "${r}" || return 2; done
 	for m in ${AISTACK_OPENCODE_MODULE_REQUIRED}; do aistack_module_is_detected "${m}" || return 2; done
 	[ -x "${OPENCODE_FEAT_INSTALL_ROOT}/bin/opencode" ] || return 1
@@ -56,8 +55,6 @@ opencode_is_installed() {
 	export AISTACK_OPENCODE_TOOL_SEARCH_PATH="${OPENCODE_FEAT_INSTALL_ROOT}/bin"
 	export AISTACK_OPENCODE_TOOL_PATH="${AISTACK_OPENCODE_TOOL_SEARCH_PATH}/opencode"
 
-	# NOTE : we do not use it in openchamber
-	# export OPENCODE_BINARY="$AISTACK_OPENCODE_LAUNCHER_FILE"
 	return 0
 }
 

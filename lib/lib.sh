@@ -361,10 +361,11 @@ aistack_context_load_module_path() {
     [ -n "${list_path}" ] && export PATH="${list_path}:${PATH}"
 }
 
-# add to a sh context file PATH declaration
-# PATH values to add could be values list (VALUE_LIST) or list of variable names (VARIABLE_LIST)
-# VALUE_LIST : consider list_path as raw path to append to path list PATH=/foo/bar:$PATH
+# add to a sh context file search PATH declaration
+# search PATH values to add could be values list (VALUE_LIST) or list of variable names (VARIABLE_LIST)
+# VALUE_LIST : consider list_path as raw path to append to path list PATH=/foo/bar:${PATH}
 # VARIABLE_LIST : consider list_path as variables names to append to path list PATH=${VAR}:$PATH
+# 				take care of injecting variable declaration into context file too by calling aistack_context_file_export_variables
 aistack_context_file_export_path() {
 	local file="$1"
 	local list_path="$2"

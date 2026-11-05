@@ -112,15 +112,15 @@ OpenChamber listens on `127.0.0.1` by default. Keep this default unless remote a
     OPENCODE_BINARY: path to OpenCode
     OPENCHAMBER_DATA_DIR: Configuration and runtime data
     OPENCHAMBER_UI_PASSWORD
-    OPENCHAMBER_HOST: 0.0.0.0  # Bind address
-
+    OPENCHAMBER_HOST: 0.0.0.0  # bind address for listening openchamber server
+    OPENCHAMBER_API_ONLY: if true disable Web UI, keep API
+    OPENCHAMBER_LAN_URL: explicit url (host and port) to reach openchamber server. May be usefull in docker context
 
     # use an external opencode instance
     OPENCODE_HOST: http://172.17.0.1:4096 # Connect to external OpenCode server
-    OPENCODE_SKIP_START: true
-    OPENCODE_SKIP_START
+    OPENCODE_SKIP_START: true # Prevents OpenChamber from starting its own OpenCode server
 
-    # bind the internal opencode server controlled by openchamber to adress instead of localhost only 
+    # bind the internal opencode server controlled/launched by openchamber to address instead of localhost only 
     OPENCHAMBER_OPENCODE_HOSTNAME: 0.0.0.0 
     ```
 
@@ -135,7 +135,7 @@ OpenChamber listens on `127.0.0.1` by default. Keep this default unless remote a
 ## NOTES
 
 - OpenChamber installs its own opencode binary tool and use the standard opencode config file location
-- OpenChamber uses the login shell, adds the OpenCode binary to `PATH`, and requires a full restart after any environment or `PATH` changes.
+- OpenChamber uses the login shell, adds the OpenCode binary to search `PATH`, and requires a full restart after any environment or search `PATH` env var changes.
 - OpenChamber resolution order for OpenCode binary is
   1. [ONLY VSCODE EXTENSION] VS Code settings openchamber.opencodeBinary
   2. OpenChamber config file key "opencodeBinary"
@@ -154,7 +154,7 @@ OpenChamber listens on `127.0.0.1` by default. Keep this default unless remote a
     * openchamber.apiUrl - URL of an external OpenCode API server. Leave empty to auto-start a local instance. Authenticates with OPENCODE_PASSWORD (or the legacy OPENCODE_SERVER_PASSWORD); when both are unset and the URL points at OpenCode's background service (opencode service start), the service's own password is used.
     * openchamber.opencodeBinary - Absolute path to the opencode CLI binary.  Requires window reload to apply.  
 
-
+- OpenChamber server in a container behind nginx : https://github.com/cloud-in-a-bottle/bottled-openchamber/tree/main
 
 
 
