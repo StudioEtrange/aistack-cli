@@ -163,7 +163,7 @@ openchamber_context_file_generate() {
 	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES}"
 	export OPENCHAMBER_DATA_DIR="${AISTACK_OPENCHAMBER_CONFIG_HOME}"
 	export OPENCHAMBER_UI_PASSWORD="${AISTACK_OPENCHAMBER_UI_PASSWORD}"
-	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES} OPENCHAMBER_DATA_DIR OPENCHAMBER_UI_PASSWORD}"
+	aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "${AISTACK_OPENCHAMBER_CONTEXT_EXPORT_VARIABLES} OPENCHAMBER_DATA_DIR OPENCHAMBER_UI_PASSWORD"
 
 	# PATH
 	local m r list_path
@@ -260,7 +260,7 @@ openchamber_connect_to_aistack() {
 		# modify openchamber context file to inject opencode related variables and search PATH
 		export OPENCODE_BINARY="${AISTACK_OPENCODE_LAUNCHER_FILE}"
 		aistack_context_file_export_variables "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "OPENCODE_BINARY"
-		aistack_context_file_export_path "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "AISTACK_OPENCODE_LAUNCHER_HOME"
+		aistack_context_file_export_path "${AISTACK_OPENCHAMBER_CONTEXT_FILE}" "AISTACK_OPENCODE_LAUNCHER_HOME" "VARIABLE_LIST"
 	fi
 }
 
